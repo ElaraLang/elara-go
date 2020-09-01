@@ -1,11 +1,21 @@
 package lexer
 
+import "unicode"
+
 func isWhitespace(ch rune) bool {
-	return ch == ' ' || ch == '\t' || ch == '\n'
+	return unicode.IsSpace(ch)
 }
 
 func isValidIdentifier(ch rune) bool {
 	return !IllegalIdentifierChars[ch] && !isWhitespace(ch)
 }
 
-var eof = rune(0)
+func isNumerical(ch rune) bool {
+	return unicode.IsNumber(ch)
+}
+
+func isOperatorSymbol(ch rune) bool {
+	return ch == '=' || ch == '+'
+}
+
+var eof = rune(-1)

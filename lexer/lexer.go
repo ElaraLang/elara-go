@@ -1,5 +1,24 @@
 package lexer
 
-func lex(code string) {
+import (
+	"strings"
+)
 
+func lex(code string) []Token {
+	reader := strings.NewReader(code)
+	scanner := NewScanner(reader)
+
+	tokens := make([]Token, 0)
+	for {
+		tok, str := scanner.Read()
+		if tok == EOF {
+			break
+		}
+
+		tokens = append(tokens, Token{
+			tokenType: tok,
+			text:      str,
+		})
+	}
+	return tokens
 }
