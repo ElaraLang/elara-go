@@ -7,7 +7,6 @@ const (
 	ILLEGAL Token = iota
 	EOF
 	WS
-	NEWLINE
 
 	LPAREN
 	RPAREN
@@ -61,4 +60,71 @@ const (
 	SLASH
 
 	IDENTIFIER
+	UNDERSCORE
 )
+
+var TokenNames = map[Token]string{
+	ILLEGAL: "ILLEGAL",
+	EOF:     "EOF",
+	WS:      "WS",
+
+	LPAREN:        "LPAREN",
+	RPAREN:        "RPAREN",
+	LBRACE:        "LBRACE",
+	RBRACE:        "RBRACE",
+	LANGLE:        "LANGLE",
+	RANGLE:        "RANGLE",
+	LET:           "LET",
+	EXTEND:        "EXTEND",
+	RETURN:        "RETURN",
+	WHILE:         "WHILE",
+	MUT:           "MUT",
+	STRUCT:        "STRUCT",
+	NAMESPACE:     "NAMESPACE",
+	IMPORT:        "IMPORT",
+	IF:            "IF",
+	ELSE:          "ELSE",
+	MATCH:         "MATCH",
+	ADD:           "ADD",
+	SUBTRACT:      "SUBTRACT",
+	MULTIPLY:      "MULTIPLY",
+	DIVIDE:        "DIVIDE",
+	MOD:           "MOD",
+	AND:           "AND",
+	OR:            "OR",
+	XOR:           "XOR",
+	EQUALS:        "EQUALS",
+	NOT_EQUALS:    "NOT_EQUALS",
+	GREATER_EQUAL: "GREATER_EQUAL",
+	GREATER:       "GREATER",
+	LESSER:        "LESSER",
+	LESSER_EQUAL:  "LESSER_EQUAL",
+	NOT:           "NOT",
+	EQUAL:         "EQUAL",
+	ARROW:         "ARROW",
+	DOT:           "DOT",
+	BOOLEAN:       "BOOLEAN",
+	STRING:        "STRING",
+	INT:           "INT",
+	FLOAT:         "FLOAT",
+
+	COMMA: "COMMA",
+	COLON: "COLON",
+	SLASH: "SLASH",
+
+	IDENTIFIER: "IDENTIFIER",
+	UNDERSCORE: "UNDERSCORE",
+}
+var IllegalIdentifierChars = map[rune]bool{
+	',': true,
+	'.': true,
+	':': true,
+	'#': true,
+	'[': true,
+	']': true,
+	'(': true,
+	')': true,
+	'{': true,
+	'}': true,
+	'"': true,
+}
