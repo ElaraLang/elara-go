@@ -73,7 +73,7 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 		return s.readIdentifier()
 	}
 
-	return ILLEGAL, string(ch)
+	return Illegal, string(ch)
 }
 
 //Consume all whitespace until we reach an eof or a non-whitespace character
@@ -109,31 +109,31 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 	str := buf.String()
 	switch str {
 	case "let":
-		return LET, str
+		return Let, str
 	case "mut":
-		return MUT, str
+		return Mut, str
 	}
 
-	return IDENTIFIER, str
+	return Identifier, str
 }
 
 func (s *Scanner) readBracket() (tok TokenType, text string) {
 	str := s.read()
 	switch str {
 	case '(':
-		return LPAREN, string(str)
+		return LParen, string(str)
 	case ')':
-		return RPAREN, string(str)
+		return RParen, string(str)
 	case '{':
-		return LBRACE, string(str)
+		return LBrace, string(str)
 	case '}':
-		return RBRACE, string(str)
+		return RBrace, string(str)
 	case '<':
-		return LESSER, string(str)
+		return Lesser, string(str)
 	case '>':
-		return GREATER, string(str)
+		return Greater, string(str)
 	}
-	return ILLEGAL, string(str)
+	return Illegal, string(str)
 }
 
 func (s *Scanner) readSymbol() (tok TokenType, text string) {
@@ -141,17 +141,17 @@ func (s *Scanner) readSymbol() (tok TokenType, text string) {
 
 	switch ch {
 	case '.':
-		return DOT, string(ch)
+		return Dot, string(ch)
 	case '=':
 		peeked := s.peek()
 		if peeked == '>' {
 			s.read()
-			return ARROW, string(ch) + string(peeked)
+			return Arrow, string(ch) + string(peeked)
 		}
-		return EQUAL, string(ch)
+		return Equal, string(ch)
 	}
 
-	return ILLEGAL, string(ch)
+	return Illegal, string(ch)
 }
 
 func (s *Scanner) readOperator() (tok TokenType, text string) {
@@ -171,12 +171,12 @@ func (s *Scanner) readOperator() (tok TokenType, text string) {
 	str := buf.String()
 	switch str {
 	case "==":
-		return EQUALS, str
+		return Equals, str
 	case "+":
-		return ADD, str
+		return Add, str
 	}
 
-	return ILLEGAL, str
+	return Illegal, str
 }
 
 func (s *Scanner) readString() (tok TokenType, text string) {
@@ -192,21 +192,21 @@ func (s *Scanner) readString() (tok TokenType, text string) {
 			buf.WriteRune(ch)
 		}
 	}
-	return STRING, buf.String()
+	return String, buf.String()
 }
 
 func (s *Scanner) readNumber() (tok TokenType, text string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
-	numType := INT
+	numType := Int
 	for {
 		ch := s.read()
 		if ch == eof {
 			break
 		}
 		if ch == '.' {
-			numType = FLOAT
+			numType = Float
 		} else if !unicode.IsNumber(ch) {
 			break
 		}

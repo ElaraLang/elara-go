@@ -4,64 +4,66 @@ type TokenType int
 
 const (
 	//special tokens
-	ILLEGAL TokenType = iota
+	Illegal TokenType = iota
 	EOF
 
 	//Brackets
-	LPAREN
-	RPAREN
-	LBRACE
-	RBRACE
-	LANGLE
-	RANGLE
+	LParen
+	RParen
+	LBrace
+	RBrace
+	LAngle
+	RAngle
+	LSquare
+	RSquare
 
 	//Keywords
-	LET
-	EXTEND
-	RETURN
-	WHILE
-	MUT
-	STRUCT
-	NAMESPACE
-	IMPORT
-	IF
-	ELSE
-	MATCH
+	Let
+	Extend
+	Return
+	While
+	Mut
+	Struct
+	Namespace
+	Import
+	If
+	Else
+	Match
 
 	//Operators
-	ADD
-	SUBTRACT
-	MULTIPLY
-	DIVIDE
-	MOD
-	AND
-	OR
-	XOR
-	EQUALS
-	NOT_EQUALS
-	GREATER_EQUAL
-	GREATER
-	LESSER
-	LESSER_EQUAL
-	NOT
+	Add
+	Subtract
+	Multiply
+	Divide
+	Mod
+	And
+	Or
+	Xor
+	Equals
+	NotEquals
+	GreaterEqual
+	Greater
+	Lesser
+	LesserEqual
+	Not
 
 	//Symbol
-	EQUAL
-	ARROW
-	DOT
+	Equal
+	Arrow
+	Dot
 
 	//Literals
-	BOOLEAN
-	STRING
-	INT
-	FLOAT
+	Boolean
+	String
+	Int
+	Float
 
-	COMMA
-	COLON
-	SLASH
+	Comma
+	Colon
+	Slash
 
-	IDENTIFIER
-	UNDERSCORE
+	Identifier
+	Underscore
 )
 
 func (token *TokenType) string() string {
@@ -69,55 +71,57 @@ func (token *TokenType) string() string {
 }
 
 var TokenNames = map[TokenType]string{
-	ILLEGAL: "ILLEGAL",
+	Illegal: "Illegal",
 	EOF:     "EOF",
 
-	LPAREN:        "LPAREN",
-	RPAREN:        "RPAREN",
-	LBRACE:        "LBRACE",
-	RBRACE:        "RBRACE",
-	LANGLE:        "LANGLE",
-	RANGLE:        "RANGLE",
-	LET:           "LET",
-	EXTEND:        "EXTEND",
-	RETURN:        "RETURN",
-	WHILE:         "WHILE",
-	MUT:           "MUT",
-	STRUCT:        "STRUCT",
-	NAMESPACE:     "NAMESPACE",
-	IMPORT:        "IMPORT",
-	IF:            "IF",
-	ELSE:          "ELSE",
-	MATCH:         "MATCH",
-	ADD:           "ADD",
-	SUBTRACT:      "SUBTRACT",
-	MULTIPLY:      "MULTIPLY",
-	DIVIDE:        "DIVIDE",
-	MOD:           "MOD",
-	AND:           "AND",
-	OR:            "OR",
-	XOR:           "XOR",
-	EQUALS:        "EQUALS",
-	NOT_EQUALS:    "NOT_EQUALS",
-	GREATER_EQUAL: "GREATER_EQUAL",
-	GREATER:       "GREATER",
-	LESSER:        "LESSER",
-	LESSER_EQUAL:  "LESSER_EQUAL",
-	NOT:           "NOT",
-	EQUAL:         "EQUAL",
-	ARROW:         "ARROW",
-	DOT:           "DOT",
-	BOOLEAN:       "BOOLEAN",
-	STRING:        "STRING",
-	INT:           "INT",
-	FLOAT:         "FLOAT",
+	LParen:       "LParen",
+	RParen:       "RParen",
+	LBrace:       "LBrace",
+	RBrace:       "RBrace",
+	LAngle:       "LAngle",
+	RAngle:       "RAngle",
+	LSquare:      "LSquare",
+	RSquare:      "RSquare",
+	Let:          "Let",
+	Extend:       "Extend",
+	Return:       "Return",
+	While:        "While",
+	Mut:          "Mut",
+	Struct:       "Struct",
+	Namespace:    "Namespace",
+	Import:       "Import",
+	If:           "If",
+	Else:         "Else",
+	Match:        "Match",
+	Add:          "Add",
+	Subtract:     "Subtract",
+	Multiply:     "Multiply",
+	Divide:       "Divide",
+	Mod:          "Mod",
+	And:          "And",
+	Or:           "Or",
+	Xor:          "Xor",
+	Equals:       "Equals",
+	NotEquals:    "NOT_EQUALS",
+	GreaterEqual: "GREATER_EQUAL",
+	Greater:      "Greater",
+	Lesser:       "Lesser",
+	LesserEqual:  "LESSER_EQUAL",
+	Not:          "Not",
+	Equal:        "Equal",
+	Arrow:        "Arrow",
+	Dot:          "Dot",
+	Boolean:      "Boolean",
+	String:       "String",
+	Int:          "Int",
+	Float:        "Float",
 
-	COMMA: "COMMA",
-	COLON: "COLON",
-	SLASH: "SLASH",
+	Comma: "Comma",
+	Colon: "Colon",
+	Slash: "Slash",
 
-	IDENTIFIER: "IDENTIFIER",
-	UNDERSCORE: "UNDERSCORE",
+	Identifier: "Identifier",
+	Underscore: "Underscore",
 }
 var IllegalIdentifierChars = map[rune]bool{
 	',': true,
