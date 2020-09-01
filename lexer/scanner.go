@@ -136,6 +136,10 @@ func (s *Scanner) readBracket() (tok TokenType, text string) {
 		return Lesser, string(str)
 	case '>':
 		return Greater, string(str)
+	case '[':
+		return LSquare, string(str)
+	case ']':
+		return RSquare, string(str)
 	}
 	return Illegal, string(str)
 }

@@ -7,7 +7,7 @@ func isWhitespace(ch rune) bool {
 }
 
 func isBracket(ch rune) bool {
-	return ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '<' || ch == '>'
+	return ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '<' || ch == '>' || ch == '[' || ch == ']'
 }
 
 func isStartOfSymbol(ch rune) bool {

@@ -109,3 +109,23 @@ func TestHelloWorldLexing(t *testing.T) {
 		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
 	}
 }
+
+func TestBracketLexing(t *testing.T) {
+	code := `()[]{}<>`
+	tokens := lex(code)
+
+	expectedTokens := []Token{
+		CreateToken(LParen, "("),
+		CreateToken(RParen, ")"),
+		CreateToken(LSquare, "["),
+		CreateToken(RSquare, "]"),
+		CreateToken(LBrace, "{"),
+		CreateToken(RBrace, "}"),
+		CreateToken(Lesser, "<"),
+		CreateToken(Greater, ">"),
+	}
+
+	if !reflect.DeepEqual(tokens, expectedTokens) {
+		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
+	}
+}
