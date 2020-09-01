@@ -1,0 +1,44 @@
+package lexer
+
+type Token int
+
+const (
+	//special tokens
+	ILLEGAL Token = iota
+	EOF
+	WS
+	NEWLINE
+
+	LPAREN
+	RPAREN
+	LBRACE
+	RBRACE
+	LANGLE
+	RANGLE
+
+	//Keywords
+	LET
+	EXTEND
+	RETURN
+	WHILE
+	MUT
+	STRUCT
+	NAMESPACE
+	IMPORT
+	IF
+	ELSE
+	MATCH
+
+	//Operators
+	ADD
+	SUBTRACT
+	MULTIPLY
+	DIVIDE
+	MOD
+	AND
+	OR
+	XOR
+	EQUALS
+	NOT_EQUALS
+
+)
