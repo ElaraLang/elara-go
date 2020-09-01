@@ -72,3 +72,24 @@ func TestSimpleFunctionLexing(t *testing.T) {
 		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
 	}
 }
+
+func TestHelloWorldLexing(t *testing.T) {
+	code := `let hello-world => print "Hello World" 
+             hello-world()`
+	tokens := lex(code)
+
+	expectedTokens := []Token{
+		CreateToken(LET, "let"),
+		CreateToken(IDENTIFIER, "hello-world"),
+		CreateToken(ARROW, "=>"),
+		CreateToken(IDENTIFIER, "print"),
+		CreateToken(STRING, "Hello World"),
+		CreateToken(IDENTIFIER, "hello-world"),
+		CreateToken(LPAREN, "("),
+		CreateToken(RPAREN, ")"),
+	}
+
+	if !reflect.DeepEqual(tokens, expectedTokens) {
+		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
+	}
+}
