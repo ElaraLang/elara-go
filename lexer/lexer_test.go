@@ -53,6 +53,22 @@ func TestStringAssignmentLexing(t *testing.T) {
 	}
 }
 
+func TestBooleanAssignmentLexing(t *testing.T) {
+	code := `let a = true`
+	tokens := lex(code)
+
+	expectedTokens := []Token{
+		CreateToken(Let, "let"),
+		CreateToken(Identifier, "a"),
+		CreateToken(Equal, "="),
+		CreateToken(Boolean, "true"),
+	}
+
+	if !reflect.DeepEqual(tokens, expectedTokens) {
+		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
+	}
+}
+
 func TestSimpleFunctionLexing(t *testing.T) {
 	code := `let a = () => {}`
 	tokens := lex(code)

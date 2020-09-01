@@ -112,6 +112,10 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 		return Let, str
 	case "mut":
 		return Mut, str
+	case "true":
+		return Boolean, str
+	case "false":
+		return Boolean, str
 	}
 
 	return Identifier, str
