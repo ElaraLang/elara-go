@@ -7,6 +7,7 @@ const (
 	ILLEGAL TokenType = iota
 	EOF
 
+	//Brackets
 	LPAREN
 	RPAREN
 	LBRACE
@@ -43,9 +44,10 @@ const (
 	LESSER
 	LESSER_EQUAL
 	NOT
+
+	//Symbol
 	EQUAL
 	ARROW
-
 	DOT
 
 	//Literals

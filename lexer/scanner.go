@@ -26,6 +26,12 @@ func (s *Scanner) read() rune {
 //places the previously read rune back on the reader
 func (s *Scanner) unread() { _ = s.r.UnreadRune() }
 
+func (s *Scanner) peek() rune {
+	peeked := s.read()
+	s.unread()
+	return peeked
+}
+
 func (s *Scanner) Read() (tok TokenType, text string) {
 	ch := s.read()
 
@@ -36,6 +42,16 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 	if isWhitespace(ch) {
 		s.consumeWhitespace()
 		return s.Read()
+	}
+
+	if isBracket(ch) {
+		s.unread()
+		return s.readBracket()
+	}
+
+	if isStartOfSymbol(ch) {
+		s.unread()
+		return s.readSymbol()
 	}
 
 	if isOperatorSymbol(ch) {
@@ -101,6 +117,43 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 	return IDENTIFIER, str
 }
 
+func (s *Scanner) readBracket() (tok TokenType, text string) {
+	str := s.read()
+	switch str {
+	case '(':
+		return LPAREN, string(str)
+	case ')':
+		return RPAREN, string(str)
+	case '{':
+		return LBRACE, string(str)
+	case '}':
+		return RBRACE, string(str)
+	case '<':
+		return LESSER, string(str)
+	case '>':
+		return GREATER, string(str)
+	}
+	return ILLEGAL, string(str)
+}
+
+func (s *Scanner) readSymbol() (tok TokenType, text string) {
+	ch := s.read()
+
+	switch ch {
+	case '.':
+		return DOT, string(ch)
+	case '=':
+		peeked := s.peek()
+		if peeked == '>' {
+			s.read()
+			return ARROW, string(ch) + string(peeked)
+		}
+		return EQUAL, string(ch)
+	}
+
+	return ILLEGAL, string(ch)
+}
+
 func (s *Scanner) readOperator() (tok TokenType, text string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -117,8 +170,6 @@ func (s *Scanner) readOperator() (tok TokenType, text string) {
 	}
 	str := buf.String()
 	switch str {
-	case "=":
-		return EQUAL, str
 	case "==":
 		return EQUALS, str
 	case "+":
