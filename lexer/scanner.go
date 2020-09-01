@@ -33,7 +33,8 @@ func (s *Scanner) Scan() (tok Token, text string) {
 	}
 	if isWhitespace(ch) {
 		s.unread()
-		return s.readWhitespace()
+		s.readWhitespace()
+		return s.Scan()
 	}
 	if isValidIdentifier(ch) {
 		s.unread()
@@ -43,9 +44,8 @@ func (s *Scanner) Scan() (tok Token, text string) {
 	return ILLEGAL, string(ch)
 }
 
-func (s *Scanner) readWhitespace() (tok Token, text string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+//Consume all whitespace
+func (s *Scanner) readWhitespace() {
 
 	for {
 		if ch := s.read(); ch == eof {
@@ -53,12 +53,8 @@ func (s *Scanner) readWhitespace() (tok Token, text string) {
 		} else if !isWhitespace(ch) {
 			s.unread()
 			break
-		} else {
-			buf.WriteRune(ch)
 		}
 	}
-
-	return WS, buf.String()
 }
 
 func (s *Scanner) readIdentifier() (tok Token, text string) {

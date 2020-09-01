@@ -6,7 +6,6 @@ const (
 	//special tokens
 	ILLEGAL Token = iota
 	EOF
-	WS
 
 	LPAREN
 	RPAREN
@@ -66,7 +65,6 @@ const (
 var TokenNames = map[Token]string{
 	ILLEGAL: "ILLEGAL",
 	EOF:     "EOF",
-	WS:      "WS",
 
 	LPAREN:        "LPAREN",
 	RPAREN:        "RPAREN",
