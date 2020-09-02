@@ -7,11 +7,15 @@ func isWhitespace(ch rune) bool {
 }
 
 func isBracket(ch rune) bool {
-	return ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '<' || ch == '>' || ch == '[' || ch == ']'
+	return ch == '(' || ch == ')' || ch == '{' || ch == '}' || ch == '[' || ch == ']' || isAngleBracket(ch)
 }
 
 func isStartOfSymbol(ch rune) bool {
 	return ch == '.' || ch == '='
+}
+
+func isAngleBracket(ch rune) bool {
+	return ch == '<' || ch == '>'
 }
 
 func isValidIdentifier(ch rune) bool {
@@ -23,7 +27,7 @@ func isNumerical(ch rune) bool {
 }
 
 func isOperatorSymbol(ch rune) bool {
-	return ch == '=' || ch == '+'
+	return ch == '=' || ch == '+' || ch == '-' || ch == '*' || ch == '/' || ch == '%' || ch == '&' || ch == '|' || ch == '^' || ch == '!' || ch == '>' || ch == '<'
 }
 
 var eof = rune(-1)

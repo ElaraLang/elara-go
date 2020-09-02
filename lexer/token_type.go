@@ -12,8 +12,8 @@ const (
 	RParen
 	LBrace
 	RBrace
-	LAngle
-	RAngle
+	LAngle //<
+	RAngle //>
 	LSquare
 	RSquare
 
@@ -42,8 +42,6 @@ const (
 	Equals
 	NotEquals
 	GreaterEqual
-	Greater
-	Lesser
 	LesserEqual
 	Not
 
@@ -103,8 +101,6 @@ var TokenNames = map[TokenType]string{
 	Equals:       "Equals",
 	NotEquals:    "NotEquals",
 	GreaterEqual: "GreaterEqual",
-	Greater:      "Greater",
-	Lesser:       "Lesser",
 	LesserEqual:  "LesserEqual",
 	Not:          "Not",
 	Equal:        "Equal",

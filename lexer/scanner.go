@@ -44,9 +44,9 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 		return s.Read()
 	}
 
-	if isBracket(ch) {
+	if isAngleBracket(ch) {
 		s.unread()
-		return s.readBracket()
+		return s.readAngleBracket()
 	}
 
 	if isStartOfSymbol(ch) {
@@ -56,7 +56,16 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 
 	if isOperatorSymbol(ch) {
 		s.unread()
-		return s.readOperator()
+		op, txt := s.readOperator()
+		if op != Illegal && op != EOF {
+			return op, txt
+		}
+
+	}
+
+	if isBracket(ch) {
+		s.unread()
+		return s.readBracket()
 	}
 
 	if isNumerical(ch) {
@@ -133,9 +142,9 @@ func (s *Scanner) readBracket() (tok TokenType, text string) {
 	case '}':
 		return RBrace, string(str)
 	case '<':
-		return Lesser, string(str)
+		return LAngle, string(str)
 	case '>':
-		return Greater, string(str)
+		return RAngle, string(str)
 	case '[':
 		return LSquare, string(str)
 	case ']':
@@ -156,12 +165,37 @@ func (s *Scanner) readSymbol() (tok TokenType, text string) {
 			s.read()
 			return Arrow, string(ch) + string(peeked)
 		}
+		if peeked == '=' {
+			s.read()
+			return Equals, string(ch) + string(peeked)
+		}
 		return Equal, string(ch)
 	}
 
 	return Illegal, string(ch)
 }
+func (s *Scanner) readAngleBracket() (tok TokenType, text string) {
+	ch1 := s.read()
+	ch := s.peek()
+	if ch1 == '<' {
+		switch ch {
+		case '=':
+			s.read()
+			return LesserEqual, string(ch1) + string(ch)
+		}
+		return LAngle, string(ch1)
+	}
+	if ch1 == '>' {
+		switch ch {
+		case '=':
+			s.read()
+			return GreaterEqual, string(ch1) + string(ch)
+		}
+		return RAngle, string(ch1)
+	}
 
+	return Illegal, string(ch1)
+}
 func (s *Scanner) readOperator() (tok TokenType, text string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
@@ -178,10 +212,38 @@ func (s *Scanner) readOperator() (tok TokenType, text string) {
 	}
 	str := buf.String()
 	switch str {
-	case "==":
-		return Equals, str
 	case "+":
 		return Add, str
+	case "-":
+		return Subtract, str
+	case "*":
+		return Multiply, str
+	case "/":
+		return Slash, str
+	case "%":
+		return Mod, str
+	case "&&":
+		return And, str
+	case "||":
+		return Or, str
+	case "^":
+		return Xor, str
+	case "==":
+		return Equals, str
+	case "!=":
+		return NotEquals, str
+	case ">=":
+		return GreaterEqual, str
+	case "<=":
+		return LesserEqual, str
+	case "!":
+		return Not, str
+
+		//Dirty hack, these 2 should probably be in readBracket but oh well...
+	case ">":
+		return LAngle, str
+	case "<":
+		return RAngle, str
 	}
 
 	return Illegal, str

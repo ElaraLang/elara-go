@@ -121,8 +121,35 @@ func TestBracketLexing(t *testing.T) {
 		CreateToken(RSquare, "]"),
 		CreateToken(LBrace, "{"),
 		CreateToken(RBrace, "}"),
-		CreateToken(Lesser, "<"),
-		CreateToken(Greater, ">"),
+		CreateToken(LAngle, "<"),
+		CreateToken(RAngle, ">"),
+	}
+
+	if !reflect.DeepEqual(tokens, expectedTokens) {
+		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
+	}
+}
+
+func TestOperatorLexing(t *testing.T) {
+	code := `+ - * / % && || ^ == != > >= < <= !`
+	tokens := lex(code)
+
+	expectedTokens := []Token{
+		CreateToken(Add, "+"),
+		CreateToken(Subtract, "-"),
+		CreateToken(Multiply, "*"),
+		CreateToken(Slash, "/"),
+		CreateToken(Mod, "%"),
+		CreateToken(And, "&&"),
+		CreateToken(Or, "||"),
+		CreateToken(Xor, "^"),
+		CreateToken(Equals, "=="),
+		CreateToken(NotEquals, "!="),
+		CreateToken(RAngle, ">"),
+		CreateToken(GreaterEqual, ">="),
+		CreateToken(LAngle, "<"),
+		CreateToken(LesserEqual, "<="),
+		CreateToken(Not, "!"),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {

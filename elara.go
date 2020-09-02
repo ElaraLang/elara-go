@@ -1,7 +1,7 @@
 package main
 
 import (
-	"./lexer"
+	"elara/lexer"
 	"strings"
 )
 
