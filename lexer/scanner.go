@@ -50,6 +50,13 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 	if ch == ':' {
 		return Colon, string(ch)
 	}
+	if ch == '_' {
+		next := s.peek()
+		if isWhitespace(next) || next == eof {
+			return Underscore, string(ch)
+		}
+		s.unread()
+	}
 
 	if isAngleBracket(ch) {
 		s.unread()

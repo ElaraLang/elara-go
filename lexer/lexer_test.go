@@ -156,3 +156,16 @@ func TestOperatorLexing(t *testing.T) {
 		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
 	}
 }
+
+func TestUnderscoreLexing(t *testing.T) {
+	code := `_`
+	tokens := lex(code)
+
+	expectedTokens := []Token{
+		CreateToken(Underscore, "_"),
+	}
+
+	if !reflect.DeepEqual(tokens, expectedTokens) {
+		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
+	}
+}
