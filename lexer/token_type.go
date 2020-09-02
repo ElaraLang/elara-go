@@ -34,7 +34,7 @@ const (
 	Add
 	Subtract
 	Multiply
-	Divide
+	Slash
 	Mod
 	And
 	Or
@@ -60,7 +60,6 @@ const (
 
 	Comma
 	Colon
-	Slash
 
 	Identifier
 	Underscore
@@ -96,7 +95,7 @@ var TokenNames = map[TokenType]string{
 	Add:          "Add",
 	Subtract:     "Subtract",
 	Multiply:     "Multiply",
-	Divide:       "Divide",
+	Slash:        "Slash",
 	Mod:          "Mod",
 	And:          "And",
 	Or:           "Or",
@@ -118,7 +117,6 @@ var TokenNames = map[TokenType]string{
 
 	Comma: "Comma",
 	Colon: "Colon",
-	Slash: "Slash",
 
 	Identifier: "Identifier",
 	Underscore: "Underscore",
