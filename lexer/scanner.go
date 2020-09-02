@@ -44,6 +44,13 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 		return s.Read()
 	}
 
+	if ch == ',' {
+		return Comma, string(ch)
+	}
+	if ch == ':' {
+		return Colon, string(ch)
+	}
+
 	if isAngleBracket(ch) {
 		s.unread()
 		return s.readAngleBracket()
@@ -60,7 +67,6 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 		if op != Illegal && op != EOF {
 			return op, txt
 		}
-
 	}
 
 	if isBracket(ch) {
