@@ -121,6 +121,25 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 		return Let, str
 	case "mut":
 		return Mut, str
+	case "extend":
+		return Extend, str
+	case "return":
+		return Return, str
+	case "while":
+		return While, str
+	case "struct":
+		return Struct, str
+	case "namespace":
+		return Namespace, str
+	case "import":
+		return Import, str
+	case "if":
+		return If, str
+	case "else":
+		return Else, str
+	case "match":
+		return Match, str
+
 	case "true":
 		return Boolean, str
 	case "false":
