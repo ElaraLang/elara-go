@@ -67,6 +67,8 @@ func (BooleanLiteralExpr) exprNode() {}
 func (UnaryExpr) exprNode()          {}
 func (BinaryExpr) exprNode()         {}
 func (GroupExpr) exprNode()          {}
+func (ContextExpr) exprNode()        {}
+func (IfElseExpr) exprNode()         {}
 func (InvocationExpr) exprNode()     {}
 func (AssignmentExpr) exprNode()     {}
 func (VariableExpr) exprNode()       {}
