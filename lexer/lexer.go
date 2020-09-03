@@ -16,8 +16,8 @@ func lex(code string) []Token {
 		}
 
 		tokens = append(tokens, Token{
-			tokenType: tok,
-			text:      str,
+			TokenType: tok,
+			Text:      str,
 		})
 	}
 	return tokens

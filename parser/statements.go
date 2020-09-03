@@ -13,6 +13,7 @@ type BlockStmt struct {
 type VarDefStmt struct {
 	Mutable    bool
 	Identifier string
+	Type       Type
 	Value      Expr
 }
 
@@ -24,7 +25,7 @@ type StructDefStmt struct {
 type IfElseStmt struct {
 	Condition  Expr
 	MainBranch Stmt
-	ElseBranch Stmt
+	ElseBranch *Stmt
 }
 
 type WhileStmt struct {

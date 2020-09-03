@@ -1,13 +1,13 @@
 package lexer
 
 type Token struct {
-	tokenType TokenType
-	text      string
+	TokenType TokenType
+	Text      string
 }
 
 func CreateToken(tokenType TokenType, text string) Token {
 	return Token{
-		tokenType: tokenType,
-		text:      text,
+		TokenType: tokenType,
+		Text:      text,
 	}
 }
