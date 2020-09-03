@@ -152,7 +152,10 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 		return Else, str
 	case "match":
 		return Match, str
-
+	case "as":
+		return As, str
+	case "is":
+		return Is, str
 	case "true":
 		return Boolean, str
 	case "false":

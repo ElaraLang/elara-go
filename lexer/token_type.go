@@ -29,6 +29,8 @@ const (
 	If
 	Else
 	Match
+	As
+	Is
 
 	//Operators
 	Add
@@ -90,6 +92,8 @@ var TokenNames = map[TokenType]string{
 	If:           "If",
 	Else:         "Else",
 	Match:        "Match",
+	As:           "As",
+	Is:           "Is",
 	Add:          "Add",
 	Subtract:     "Subtract",
 	Multiply:     "Multiply",
