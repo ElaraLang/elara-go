@@ -581,5 +581,9 @@ func (p *Parser) primary() (expr Expr, err error) {
 }
 
 func (p *Parser) syncError() {
-
+	for !p.isAtEnd() || p.peek().TokenType != lexer.NEWLINE || p.peek().TokenType != lexer.EOF {
+		p.advance()
+	}
+	for p.match(lexer.NEWLINE) {
+	}
 }
