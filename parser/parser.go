@@ -1,5 +1,6 @@
 package parser
 
+import "C"
 import (
 	lexer "elara/lexer"
 	"fmt"
@@ -93,11 +94,6 @@ func (p *Parser) consume(tokenType TokenType, msg string) (token Token, err erro
 	return
 }
 
-/*
-	Declaration -> let [mut] id = value || Statement
-	Statement ->
-*/
-
 // ----- Statements -----
 
 func (p *Parser) declaration() (stmt Stmt, err error) {
@@ -140,18 +136,18 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 func (p *Parser) statement() (Stmt, error) {
 	switch p.peek().TokenType {
 	case lexer.While:
-		return p.while()
+		return p.whileStatement()
 	case lexer.If:
-		return p.ifStmt()
+		return p.ifStatement()
 	case lexer.LBrace:
-		return p.blockStmt()
+		return p.blockStatement()
 	default:
 		return p.exprStatement()
 	}
 }
 
-func (p *Parser) while() (stmt Stmt, err error) {
-	_, err = p.consume(lexer.While, "Expected while at beginning of while loop")
+func (p *Parser) whileStatement() (stmt Stmt, err error) {
+	_, err = p.consume(lexer.While, "Expected whileStatement at beginning of whileStatement loop")
 	if err != nil {
 		return
 	}
@@ -173,8 +169,8 @@ func (p *Parser) while() (stmt Stmt, err error) {
 	return
 }
 
-func (p *Parser) ifStmt() (stmt Stmt, err error) {
-	_, err = p.consume(lexer.If, "Expected while at beginning of while loop")
+func (p *Parser) ifStatement() (stmt Stmt, err error) {
+	_, err = p.consume(lexer.If, "Expected whileStatement at beginning of whileStatement loop")
 	if err != nil {
 		return
 	}
@@ -195,7 +191,7 @@ func (p *Parser) ifStmt() (stmt Stmt, err error) {
 	var elseBranch *Stmt = nil
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {
-			ebr, err := p.ifStmt()
+			ebr, err := p.ifStatement()
 			if err != nil {
 				return
 			}
@@ -220,7 +216,7 @@ func (p *Parser) ifStmt() (stmt Stmt, err error) {
 	return
 }
 
-func (p *Parser) blockStmt() (stmt Stmt, err error) {
+func (p *Parser) blockStatement() (stmt Stmt, err error) {
 	result := make([]Stmt, 1)
 	_, err = p.consume(lexer.LBrace, "Expected { at beginning of block")
 	if err != nil {
@@ -252,5 +248,223 @@ func (p *Parser) exprStatement() (stmt Stmt, err error) {
 // ----- Expressions -----
 
 func (p *Parser) expression() (Expr, error) {
+	return p.assignment()
+}
+
+func (p *Parser) assignment() (expr Expr, err error) {
+	expr, err = p.logicalOr()
+	if err != nil {
+		return
+	}
+
+	if p.check(lexer.Equal) {
+		eqlTok := p.advance()
+		rhs, err := p.logicalOr()
+		if err != nil {
+			return
+		}
+		switch v := expr.(type) {
+		default:
+			err = ParseError{
+				token:   eqlTok,
+				message: "Invalid type found behind assignment",
+			}
+		case VariableExpr:
+			expr = AssignmentExpr{
+				Identifier: v.Identifier,
+				Value:      rhs,
+			}
+		case ContextExpr:
+			expr = AssignmentExpr{
+				Context:    &v.Context,
+				Identifier: v.Variable.Identifier,
+				Value:      rhs,
+			}
+		}
+	}
+	return
+}
+
+func (p *Parser) logicalOr() (expr Expr, err error) {
+	expr, err = p.logicalAnd()
+	if err != nil {
+		return
+	}
+
+	for p.match(lexer.Or) {
+		op := p.previous()
+		rhs, err := p.logicalAnd()
+		if err != nil {
+			return
+		}
+		expr = BinaryExpr{
+			Lhs: expr,
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) logicalAnd() (expr Expr, err error) {
+	expr, err = p.referenceEquality()
+	if err != nil {
+		return
+	}
+
+	for p.match(lexer.And) {
+		op := p.previous()
+		rhs, err := p.referenceEquality()
+		if err != nil {
+			return
+		}
+		expr = BinaryExpr{
+			Lhs: expr,
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) referenceEquality() (expr Expr, err error) {
+	expr, err = p.comparison()
+	if err != nil {
+		return
+	}
+
+	for p.match(lexer.Equals, lexer.NotEquals) {
+		op := p.previous()
+		rhs, err := p.comparison()
+		if err != nil {
+			return
+		}
+		expr = BinaryExpr{
+			Lhs: expr,
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) comparison() (expr Expr, err error) {
+	expr, err = p.addition()
+	if err != nil {
+		return
+	}
+
+	for p.match(lexer.GreaterEqual, lexer.RAngle, lexer.LesserEqual, lexer.LAngle) {
+		op := p.previous()
+		rhs, err := p.addition()
+		if err != nil {
+			return
+		}
+		expr = BinaryExpr{
+			Lhs: expr,
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) addition() (expr Expr, err error) {
+	expr, err = p.multiplication()
+	if err != nil {
+		return
+	}
+
+	for p.match(lexer.Add, lexer.Subtract) {
+		op := p.previous()
+		rhs, err := p.multiplication()
+		if err != nil {
+			return
+		}
+		expr = BinaryExpr{
+			Lhs: expr,
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) multiplication() (expr Expr, err error) {
+	expr, err = p.unary()
+	if err != nil {
+		return
+	}
+
+	for p.match(lexer.Multiply, lexer.Slash, lexer.Mod) {
+		op := p.previous()
+		rhs, err := p.unary()
+		if err != nil {
+			return
+		}
+		expr = BinaryExpr{
+			Lhs: expr,
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) unary() (expr Expr, err error) {
+	if p.match(lexer.Subtract, lexer.Not, lexer.Add) {
+		op := p.previous()
+		rhs, err := p.unary()
+		if err != nil {
+			return
+		}
+		expr = UnaryExpr{
+			Op:  op.TokenType,
+			Rhs: rhs,
+		}
+		return
+	}
+	expr, err = p.invoke()
+	return
+}
+
+func (p *Parser) invoke() (expr Expr, err error) {
+	expr, err = p.funDef()
+	if err != nil {
+		return
+	}
+	for p.match(lexer.LParen, lexer.Dot) {
+		switch p.previous().TokenType {
+		case lexer.LParen:
+			separator := lexer.Comma
+			args, err := p.invocationParameters(&separator)
+			if err != nil {
+				return
+			}
+			expr = InvocationExpr{
+				Invoker: expr,
+				Args:    args,
+			}
+			break
+		case lexer.Dot:
+			id, err := p.consume(lexer.Identifier, "Expected identifier inside context getter/setter")
+			if err != nil {
+				return
+			}
+			expr = ContextExpr{
+				Context:  expr,
+				Variable: VariableExpr{Identifier: id.Text},
+			}
+			break
+		}
+	}
+	return
+}
+
+func (p *Parser) funDef() (expr Expr, err error) {
+
+}
+
+func (p *Parser) primary() (expr Expr, err error) {
 
 }

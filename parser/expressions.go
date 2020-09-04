@@ -18,10 +18,11 @@ type GroupExpr struct {
 }
 
 type VariableExpr struct {
-	Group Expr
+	Identifier string
 }
 
 type AssignmentExpr struct {
+	Context    *Expr
 	Identifier string
 	Value      Expr
 }
@@ -32,8 +33,8 @@ type InvocationExpr struct {
 }
 
 type ContextExpr struct {
-	Context Expr
-	Expr    Expr
+	Context  Expr
+	Variable VariableExpr
 }
 
 type IfElseExpr struct {
@@ -42,6 +43,11 @@ type IfElseExpr struct {
 	MainResult Expr
 	ElseBranch []Stmt
 	ElseResult Expr
+}
+
+type FuncDefExpr struct {
+	Arguments []FunctionArgument
+	Statement Stmt
 }
 
 type StringLiteralExpr struct {
@@ -60,6 +66,7 @@ type BooleanLiteralExpr struct {
 	Value bool
 }
 
+func (FuncDefExpr) exprNode()        {}
 func (StringLiteralExpr) exprNode()  {}
 func (IntegerLiteralExpr) exprNode() {}
 func (FloatLiteralExpr) exprNode()   {}
