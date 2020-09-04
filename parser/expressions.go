@@ -46,8 +46,9 @@ type IfElseExpr struct {
 }
 
 type FuncDefExpr struct {
-	Arguments []FunctionArgument
-	Statement Stmt
+	Arguments  []FunctionArgument
+	ReturnType *Type
+	Statement  Stmt
 }
 
 type StringLiteralExpr struct {

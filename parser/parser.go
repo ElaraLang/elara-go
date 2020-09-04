@@ -4,6 +4,7 @@ import "C"
 import (
 	lexer "elara/lexer"
 	"fmt"
+	"strconv"
 )
 
 type Scanner = lexer.Scanner
@@ -32,21 +33,33 @@ func (p *Parser) New(tokens []Token) *Parser {
 	}
 }
 
-func (p *Parser) Parse() ([]Stmt, []error) {
+func (p *Parser) Parse() (result []Stmt, error []ParseError) {
 	p.current = 0
-	result := make([]Stmt, 1)
+	result = make([]Stmt, 0)
+	error = make([]ParseError, 0)
 	for !p.isAtEnd() {
-		stmt, error := p.declaration()
-		if error != nil {
-			_ = ParseError{
-				token:   p.peek(),
-				message: error.Error(),
-			}.Error()
+		stmt, err := p.declaration()
+		if err != nil {
+			switch pErr := err.(type) {
+			case ParseError:
+				error = append(error, pErr)
+				break
+			default:
+				break
+			}
+			p.syncError()
 		} else {
 			result = append(result, stmt)
+			if !(p.match(lexer.NEWLINE) || p.match(lexer.EOF)) {
+				pErr := ParseError{
+					token:   p.peek(),
+					message: "Expected new line",
+				}
+				error = append(error, pErr)
+			}
 		}
 	}
-	return result, nil
+	return
 }
 
 func (p *Parser) peek() Token {
@@ -462,9 +475,111 @@ func (p *Parser) invoke() (expr Expr, err error) {
 }
 
 func (p *Parser) funDef() (expr Expr, err error) {
+	if p.match(lexer.LParen) {
+		isFunc, err := p.isFuncDef()
+		if err != nil {
+			return
+		}
+		if isFunc {
+			args, err := p.functionArguments()
+			if err != nil {
+				return
+			}
+			var typ *Type
 
+			if p.match(lexer.Identifier) {
+				typ1 := Type(p.previous().Text)
+				typ = &typ1
+			}
+
+			_, err = p.consume(lexer.Arrow, "Expected arrow at function definition")
+			if err != nil {
+				return
+			}
+
+			stmt, err := p.statement()
+			if err != nil {
+				return
+			}
+			expr = FuncDefExpr{
+				Arguments:  args,
+				ReturnType: typ,
+				Statement:  stmt,
+			}
+			return
+		} else {
+			expr, err = p.expression()
+			if err != nil {
+				return
+			}
+			expr = GroupExpr{Group: expr}
+			return
+		}
+	}
+	return p.primary()
 }
 
 func (p *Parser) primary() (expr Expr, err error) {
+	switch p.peek().TokenType {
+	case lexer.Boolean:
+		truth, err := p.consume(lexer.Boolean, "Expected boolean")
+		if err != nil {
+			return
+		}
+		boolVal, err := strconv.ParseBool(truth.Text)
+		if err != nil {
+			return
+		}
+		expr = BooleanLiteralExpr{Value: boolVal}
+		break
+	case lexer.String:
+		str, err := p.consume(lexer.String, "Expected string")
+		if err != nil {
+			return
+		}
+		expr = StringLiteralExpr{Value: str.Text}
+		break
+	case lexer.Int:
+		integr, err := p.consume(lexer.Int, "Expected integer")
+		if err != nil {
+			return
+		}
+		intVal, err := strconv.ParseInt(integr.Text, 10, 64)
+		if err != nil {
+			return
+		}
+		expr = IntegerLiteralExpr{Value: intVal}
+		break
+	case lexer.Float:
+		flt, err := p.consume(lexer.Float, "Expected float")
+		if err != nil {
+			return
+		}
+		fltVal, err := strconv.ParseFloat(flt.Text, 64)
+		if err != nil {
+			return
+		}
+		expr = FloatLiteralExpr{Value: fltVal}
+		break
+	case lexer.Identifier:
+		str, err := p.consume(lexer.Identifier, "Expected identifier")
+		if err != nil {
+			return
+		}
+		expr = StringLiteralExpr{Value: str.Text}
+		break
+	}
+
+	if expr != nil {
+		err = ParseError{
+			token:   p.peek(),
+			message: "Invalid expression",
+		}
+		return
+	}
+	return
+}
+
+func (p *Parser) syncError() {
 
 }

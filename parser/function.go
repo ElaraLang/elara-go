@@ -5,7 +5,7 @@ import "elara/lexer"
 type FunctionArgument struct {
 	Type     *Type
 	Variable VariableExpr
-	Default  Expr
+	Default  *Expr
 }
 
 func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr, err error) {
@@ -27,11 +27,62 @@ func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr, err er
 	return
 }
 
-func (p *Parser) functionArgument() (args []FunctionArgument, err error) {
-	args := make([]FunctionArgument, 0)
-	for !p.match(lexer.RParen) {
-
+func (p *Parser) functionArguments() (args []FunctionArgument, err error) {
+	args = make([]FunctionArgument, 0)
+	_, err = p.consume(lexer.LParen, "Expected left paren before starting function definition")
+	if err != nil {
+		return
 	}
+	for !p.match(lexer.RParen) {
+		arg, err := p.functionArgument()
+		if err != nil {
+			return
+		}
+		args = append(args, arg)
+	}
+	return
+}
+
+func (p *Parser) functionArgument() (arg FunctionArgument, err error) {
+	i1, err := p.consume(lexer.Identifier, "Invalid argument in function def")
+	if err != nil {
+		return
+	}
+	if p.match(lexer.Equal) {
+		expr, err := p.expression()
+		if err != nil {
+			return
+		}
+		arg = FunctionArgument{
+			Type:     nil,
+			Variable: VariableExpr{Identifier: i1.Text},
+			Default:  &expr,
+		}
+		return
+	}
+	id, err := p.consume(lexer.Identifier, "Invalid argument in function def")
+	if err != nil {
+		return
+	}
+
+	var def *Expr
+
+	if p.match(lexer.Equal) {
+		expr, err := p.expression()
+		if err != nil {
+			return
+		}
+		def = &expr
+	}
+
+	typ := Type(i1.Text)
+
+	arg = FunctionArgument{
+		Type:     &typ,
+		Variable: VariableExpr{Identifier: id.Text},
+		Default:  def,
+	}
+
 	return
 }
 

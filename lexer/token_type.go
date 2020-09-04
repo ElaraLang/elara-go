@@ -6,6 +6,7 @@ const (
 	//special tokens
 	Illegal TokenType = iota
 	EOF
+	NEWLINE
 
 	//Brackets
 	LParen
@@ -72,6 +73,7 @@ func (token *TokenType) string() string {
 var TokenNames = map[TokenType]string{
 	Illegal: "Illegal",
 	EOF:     "EOF",
+	NEWLINE: "\n",
 
 	LParen:       "LParen",
 	RParen:       "RParen",
