@@ -11,14 +11,16 @@ type FunctionArgument struct {
 func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr, err error) {
 	params := make([]Expr, 0)
 	for !p.match(lexer.RParen) {
-		param, err := p.expression()
-		if err != nil {
+		param, error := p.expression()
+		if error != nil {
+			err = error
 			return
 		}
 		params = append(params, param)
 		if separator != nil {
 			_, err = p.consume(*separator, "Expected separator in function parameters")
-			if err != nil {
+			if error != nil {
+				err = error
 				return
 			}
 		}
@@ -29,13 +31,15 @@ func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr, err er
 
 func (p *Parser) functionArguments() (args []FunctionArgument, err error) {
 	args = make([]FunctionArgument, 0)
-	_, err = p.consume(lexer.LParen, "Expected left paren before starting function definition")
-	if err != nil {
+	_, error := p.consume(lexer.LParen, "Expected left paren before starting function definition")
+	if error != nil {
+		err = error
 		return
 	}
 	for !p.match(lexer.RParen) {
-		arg, err := p.functionArgument()
-		if err != nil {
+		arg, error := p.functionArgument()
+		if error != nil {
+			err = error
 			return
 		}
 		args = append(args, arg)
@@ -44,13 +48,15 @@ func (p *Parser) functionArguments() (args []FunctionArgument, err error) {
 }
 
 func (p *Parser) functionArgument() (arg FunctionArgument, err error) {
-	i1, err := p.consume(lexer.Identifier, "Invalid argument in function def")
-	if err != nil {
+	i1, error := p.consume(lexer.Identifier, "Invalid argument in function def")
+	if error != nil {
+		err = error
 		return
 	}
 	if p.match(lexer.Equal) {
-		expr, err := p.expression()
-		if err != nil {
+		expr, error := p.expression()
+		if error != nil {
+			err = error
 			return
 		}
 		arg = FunctionArgument{
@@ -60,16 +66,18 @@ func (p *Parser) functionArgument() (arg FunctionArgument, err error) {
 		}
 		return
 	}
-	id, err := p.consume(lexer.Identifier, "Invalid argument in function def")
-	if err != nil {
+	id, error := p.consume(lexer.Identifier, "Invalid argument in function def")
+	if error != nil {
+		err = error
 		return
 	}
 
 	var def *Expr
 
 	if p.match(lexer.Equal) {
-		expr, err := p.expression()
-		if err != nil {
+		expr, error := p.expression()
+		if error != nil {
+			err = error
 			return
 		}
 		def = &expr
@@ -87,8 +95,9 @@ func (p *Parser) functionArgument() (arg FunctionArgument, err error) {
 }
 
 func (p *Parser) isFuncDef() (result bool, err error) {
-	closing, err := p.findParenClosingPoint()
-	if err != nil {
+	closing, error := p.findParenClosingPoint()
+	if error != nil {
+		err = error
 		return
 	}
 
@@ -102,7 +111,7 @@ func (p *Parser) findParenClosingPoint() (index int, err error) {
 		if p.match(lexer.LBrace) {
 			cur, err = p.findParenClosingPoint()
 			if err != nil {
-				return -1, err
+				return
 			}
 		}
 		cur++

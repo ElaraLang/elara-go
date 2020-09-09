@@ -73,7 +73,7 @@ func (token *TokenType) string() string {
 var TokenNames = map[TokenType]string{
 	Illegal: "Illegal",
 	EOF:     "EOF",
-	NEWLINE: "\n",
+	NEWLINE: "\\n",
 
 	LParen:       "LParen",
 	RParen:       "RParen",

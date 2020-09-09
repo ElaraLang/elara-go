@@ -13,7 +13,7 @@ type BlockStmt struct {
 type VarDefStmt struct {
 	Mutable    bool
 	Identifier string
-	Type       Type
+	Type       *Type
 	Value      Expr
 }
 

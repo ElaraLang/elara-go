@@ -27,9 +27,9 @@ type Parser struct {
 
 type Type string
 
-func (p *Parser) New(tokens []Token) *Parser {
+func NewParser(tokens *[]Token) *Parser {
 	return &Parser{
-		tokens: tokens,
+		tokens: *tokens,
 	}
 }
 
@@ -50,7 +50,7 @@ func (p *Parser) Parse() (result []Stmt, error []ParseError) {
 			p.syncError()
 		} else {
 			result = append(result, stmt)
-			if !(p.match(lexer.NEWLINE) || p.match(lexer.EOF)) {
+			if !(p.match(lexer.NEWLINE) || p.isAtEnd()) {
 				pErr := ParseError{
 					token:   p.peek(),
 					message: "Expected new line",
@@ -113,25 +113,30 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 	if p.match(lexer.Let) {
 		mut := p.match(lexer.Mut)
 
-		id, err := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
-		if err != nil {
+		id, error := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
+		if error != nil {
+			err = error
 			return
 		}
 
 		var typ *Type
 		if p.match(lexer.Colon) {
-			typStr, err := p.consume(lexer.Identifier, "Expected type after colon in variable declaration")
-			if err != nil {
+			typStr, error := p.consume(lexer.Identifier, "Expected type after colon in variable declaration")
+			if error != nil {
+				err = error
 				return
 			}
-			typI := Type(typStr)
+			typI := Type(typStr.Text)
 			typ = &typI
 		}
 
-		expr, err := p.expression()
+		p.consume(lexer.Equal, "Expected Equal on variable declaration")
 
-		if err != nil {
-			return nil, err
+		expr, error := p.expression()
+
+		if error != nil {
+			err = error
+			return
 		}
 
 		stmt = VarDefStmt{
@@ -170,6 +175,10 @@ func (p *Parser) whileStatement() (stmt Stmt, err error) {
 		return
 	}
 
+	_, err = p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
+	if err != nil {
+		return
+	}
 	body, err := p.statement()
 	if err != nil {
 		return
@@ -204,8 +213,9 @@ func (p *Parser) ifStatement() (stmt Stmt, err error) {
 	var elseBranch *Stmt = nil
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {
-			ebr, err := p.ifStatement()
-			if err != nil {
+			ebr, error := p.ifStatement()
+			if error != nil {
+				err = error
 				return
 			}
 			elseBranch = &ebr
@@ -214,8 +224,9 @@ func (p *Parser) ifStatement() (stmt Stmt, err error) {
 			if err != nil {
 				return
 			}
-			ebr, err := p.statement()
-			if err != nil {
+			ebr, error := p.statement()
+			if error != nil {
+				err = error
 				return
 			}
 			elseBranch = &ebr
@@ -236,8 +247,9 @@ func (p *Parser) blockStatement() (stmt Stmt, err error) {
 		return
 	}
 	for !p.check(lexer.RBrace) {
-		decl, err := p.declaration()
-		if err != nil {
+		decl, error := p.declaration()
+		if error != nil {
+			err = error
 			return
 		}
 		result = append(result, decl)
@@ -272,8 +284,9 @@ func (p *Parser) assignment() (expr Expr, err error) {
 
 	if p.check(lexer.Equal) {
 		eqlTok := p.advance()
-		rhs, err := p.logicalOr()
-		if err != nil {
+		rhs, error := p.logicalOr()
+		if error != nil {
+			err = error
 			return
 		}
 		switch v := expr.(type) {
@@ -306,8 +319,9 @@ func (p *Parser) logicalOr() (expr Expr, err error) {
 
 	for p.match(lexer.Or) {
 		op := p.previous()
-		rhs, err := p.logicalAnd()
-		if err != nil {
+		rhs, error := p.logicalAnd()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BinaryExpr{
@@ -327,8 +341,9 @@ func (p *Parser) logicalAnd() (expr Expr, err error) {
 
 	for p.match(lexer.And) {
 		op := p.previous()
-		rhs, err := p.referenceEquality()
-		if err != nil {
+		rhs, error := p.referenceEquality()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BinaryExpr{
@@ -348,8 +363,9 @@ func (p *Parser) referenceEquality() (expr Expr, err error) {
 
 	for p.match(lexer.Equals, lexer.NotEquals) {
 		op := p.previous()
-		rhs, err := p.comparison()
-		if err != nil {
+		rhs, error := p.comparison()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BinaryExpr{
@@ -369,8 +385,9 @@ func (p *Parser) comparison() (expr Expr, err error) {
 
 	for p.match(lexer.GreaterEqual, lexer.RAngle, lexer.LesserEqual, lexer.LAngle) {
 		op := p.previous()
-		rhs, err := p.addition()
-		if err != nil {
+		rhs, error := p.addition()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BinaryExpr{
@@ -390,8 +407,9 @@ func (p *Parser) addition() (expr Expr, err error) {
 
 	for p.match(lexer.Add, lexer.Subtract) {
 		op := p.previous()
-		rhs, err := p.multiplication()
-		if err != nil {
+		rhs, error := p.multiplication()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BinaryExpr{
@@ -411,8 +429,9 @@ func (p *Parser) multiplication() (expr Expr, err error) {
 
 	for p.match(lexer.Multiply, lexer.Slash, lexer.Mod) {
 		op := p.previous()
-		rhs, err := p.unary()
-		if err != nil {
+		rhs, error := p.unary()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BinaryExpr{
@@ -427,8 +446,9 @@ func (p *Parser) multiplication() (expr Expr, err error) {
 func (p *Parser) unary() (expr Expr, err error) {
 	if p.match(lexer.Subtract, lexer.Not, lexer.Add) {
 		op := p.previous()
-		rhs, err := p.unary()
-		if err != nil {
+		rhs, error := p.unary()
+		if error != nil {
+			err = error
 			return
 		}
 		expr = UnaryExpr{
@@ -450,8 +470,9 @@ func (p *Parser) invoke() (expr Expr, err error) {
 		switch p.previous().TokenType {
 		case lexer.LParen:
 			separator := lexer.Comma
-			args, err := p.invocationParameters(&separator)
-			if err != nil {
+			args, error := p.invocationParameters(&separator)
+			if error != nil {
+				err = error
 				return
 			}
 			expr = InvocationExpr{
@@ -460,8 +481,9 @@ func (p *Parser) invoke() (expr Expr, err error) {
 			}
 			break
 		case lexer.Dot:
-			id, err := p.consume(lexer.Identifier, "Expected identifier inside context getter/setter")
-			if err != nil {
+			id, error := p.consume(lexer.Identifier, "Expected identifier inside context getter/setter")
+			if error != nil {
+				err = error
 				return
 			}
 			expr = ContextExpr{
@@ -476,13 +498,15 @@ func (p *Parser) invoke() (expr Expr, err error) {
 
 func (p *Parser) funDef() (expr Expr, err error) {
 	if p.match(lexer.LParen) {
-		isFunc, err := p.isFuncDef()
-		if err != nil {
+		isFunc, error := p.isFuncDef()
+		if error != nil {
+			err = error
 			return
 		}
 		if isFunc {
-			args, err := p.functionArguments()
-			if err != nil {
+			args, error := p.functionArguments()
+			if error != nil {
+				err = error
 				return
 			}
 			var typ *Type
@@ -497,8 +521,9 @@ func (p *Parser) funDef() (expr Expr, err error) {
 				return
 			}
 
-			stmt, err := p.statement()
-			if err != nil {
+			stmt, error := p.statement()
+			if error != nil {
+				err = error
 				return
 			}
 			expr = FuncDefExpr{
@@ -522,55 +547,63 @@ func (p *Parser) funDef() (expr Expr, err error) {
 func (p *Parser) primary() (expr Expr, err error) {
 	switch p.peek().TokenType {
 	case lexer.Boolean:
-		truth, err := p.consume(lexer.Boolean, "Expected boolean")
-		if err != nil {
+		truth, error := p.consume(lexer.Boolean, "Expected boolean")
+		if error != nil {
+			err = error
 			return
 		}
-		boolVal, err := strconv.ParseBool(truth.Text)
-		if err != nil {
+		boolVal, error := strconv.ParseBool(truth.Text)
+		if error != nil {
+			err = error
 			return
 		}
 		expr = BooleanLiteralExpr{Value: boolVal}
 		break
 	case lexer.String:
-		str, err := p.consume(lexer.String, "Expected string")
-		if err != nil {
+		str, error := p.consume(lexer.String, "Expected string")
+		if error != nil {
+			err = error
 			return
 		}
 		expr = StringLiteralExpr{Value: str.Text}
 		break
 	case lexer.Int:
-		integr, err := p.consume(lexer.Int, "Expected integer")
-		if err != nil {
+		integr, error := p.consume(lexer.Int, "Expected integer")
+		if error != nil {
+			err = error
 			return
 		}
-		intVal, err := strconv.ParseInt(integr.Text, 10, 64)
-		if err != nil {
+		intVal, error := strconv.ParseInt(integr.Text, 10, 64)
+		if error != nil {
+			err = error
 			return
 		}
 		expr = IntegerLiteralExpr{Value: intVal}
 		break
 	case lexer.Float:
-		flt, err := p.consume(lexer.Float, "Expected float")
-		if err != nil {
+		flt, error := p.consume(lexer.Float, "Expected float")
+		if error != nil {
+			err = error
 			return
 		}
-		fltVal, err := strconv.ParseFloat(flt.Text, 64)
-		if err != nil {
+		fltVal, error := strconv.ParseFloat(flt.Text, 64)
+		if error != nil {
+			err = error
 			return
 		}
 		expr = FloatLiteralExpr{Value: fltVal}
 		break
 	case lexer.Identifier:
-		str, err := p.consume(lexer.Identifier, "Expected identifier")
-		if err != nil {
+		str, error := p.consume(lexer.Identifier, "Expected identifier")
+		if error != nil {
+			err = error
 			return
 		}
 		expr = StringLiteralExpr{Value: str.Text}
 		break
 	}
 
-	if expr != nil {
+	if expr == nil {
 		err = ParseError{
 			token:   p.peek(),
 			message: "Invalid expression",
