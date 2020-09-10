@@ -136,7 +136,12 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 				ReturnType: nil,
 				Statement:  execStmt,
 			}
-			return ExpressionStmt{Expr: expr}, nil
+			return VarDefStmt{
+				Mutable:    mut,
+				Identifier: id.Text,
+				Type:       nil,
+				Value:      expr,
+			}, nil
 		}
 
 		var typ *Type
