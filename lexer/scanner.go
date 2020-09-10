@@ -39,6 +39,10 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 		return EOF, string(ch)
 	}
 
+	if ch == '\n' {
+		return NEWLINE, string(ch)
+	}
+
 	if isWhitespace(ch) {
 		s.consumeWhitespace()
 		return s.Read()
@@ -308,6 +312,10 @@ func (s *Scanner) readNumber() (tok TokenType, text string) {
 	for {
 		ch := s.read()
 		if ch == eof {
+			break
+		}
+		if ch == '\n' {
+			s.unread()
 			break
 		}
 		if ch == '.' {
