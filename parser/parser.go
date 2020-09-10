@@ -107,6 +107,12 @@ func (p *Parser) consume(tokenType TokenType, msg string) (token Token, err erro
 	return
 }
 
+func (p *Parser) cleanNewLines() {
+	for p.check(lexer.NEWLINE) {
+		p.advance()
+	}
+}
+
 // ----- Statements -----
 
 func (p *Parser) declaration() (stmt Stmt, err error) {
@@ -159,6 +165,8 @@ func (p *Parser) statement() (Stmt, error) {
 		return p.ifStatement()
 	case lexer.LBrace:
 		return p.blockStatement()
+	case lexer.Struct:
+		return p.structStatement()
 	default:
 		return p.exprStatement()
 	}
@@ -241,7 +249,7 @@ func (p *Parser) ifStatement() (stmt Stmt, err error) {
 }
 
 func (p *Parser) blockStatement() (stmt Stmt, err error) {
-	result := make([]Stmt, 1)
+	result := make([]Stmt, 0)
 	_, err = p.consume(lexer.LBrace, "Expected { at beginning of block")
 	if err != nil {
 		return
@@ -261,6 +269,29 @@ func (p *Parser) blockStatement() (stmt Stmt, err error) {
 	stmt = BlockStmt{Stmts: result}
 	return
 }
+
+func (p *Parser) structStatement() (stmt Stmt, err error) {
+	_, err = p.consume(lexer.Struct, "Expected struct start to begin with `struct` keyword")
+	if err != nil {
+		return nil, err
+	}
+	identifier, error := p.consume(lexer.Identifier, "Expected identifier after `struct` keyword")
+	if error != nil {
+		err = error
+		return nil, error
+	}
+
+	fields, fieldErr := p.structFields()
+	if fieldErr != nil {
+		err = error
+		return nil, error
+	}
+	return StructDefStmt{
+		Identifier:   identifier.Text,
+		StructFields: fields,
+	}, nil
+}
+
 func (p *Parser) exprStatement() (stmt Stmt, err error) {
 	expr, err := p.expression()
 	if err != nil {

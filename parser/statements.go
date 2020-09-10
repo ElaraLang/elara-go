@@ -18,8 +18,8 @@ type VarDefStmt struct {
 }
 
 type StructDefStmt struct {
-	Identifier string
-	Fields     []string
+	Identifier   string
+	StructFields []StructField
 }
 
 type IfElseStmt struct {
