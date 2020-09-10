@@ -5,11 +5,10 @@ import (
 	"elara/parser"
 	"fmt"
 	"strings"
-	"unicode"
 )
 
 func main() {
-	text := "struct a {\n" + "Int a = 5\n" + "}"
+	text := "struct a {\n" + "Int a = 5\n" + "Int c\n" + "}"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 
@@ -32,9 +31,6 @@ func main() {
 	println(fmt.Sprintf("%q\n", err))
 }
 
-func isWhitespace(ch rune) bool {
-	return unicode.IsSpace(ch)
-}
 func CreateToken(tokenType lexer.TokenType, text string) lexer.Token {
 	return lexer.Token{
 		TokenType: tokenType,

@@ -125,6 +125,20 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 			return
 		}
 
+		if p.match(lexer.Arrow) {
+			execStmt, error := p.statement()
+			if error != nil {
+				err = error
+				return
+			}
+			expr := FuncDefExpr{
+				Arguments:  make([]FunctionArgument, 0),
+				ReturnType: nil,
+				Statement:  execStmt,
+			}
+			return ExpressionStmt{Expr: expr}, nil
+		}
+
 		var typ *Type
 		if p.match(lexer.Colon) {
 			typStr, error := p.consume(lexer.Identifier, "Expected type after colon in variable declaration")
@@ -137,7 +151,6 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 		}
 
 		p.consume(lexer.Equal, "Expected Equal on variable declaration")
-
 		expr, error := p.expression()
 
 		if error != nil {
