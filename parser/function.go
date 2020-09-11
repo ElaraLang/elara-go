@@ -83,7 +83,12 @@ func (p *Parser) functionArgument() (arg FunctionArgument, err error) {
 		def = &expr
 	}
 
-	typ := Type(i1.Text)
+	typ, error := p.typeContract()
+
+	if error != nil {
+		err = error
+		return
+	}
 
 	arg = FunctionArgument{
 		Type:     &typ,
