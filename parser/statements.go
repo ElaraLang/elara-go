@@ -38,10 +38,15 @@ type ExtendStmt struct {
 	Body      Stmt
 }
 
-func (ExpressionStmt) stmtNode() {}
-func (BlockStmt) stmtNode()      {}
-func (VarDefStmt) stmtNode()     {}
-func (StructDefStmt) stmtNode()  {}
-func (IfElseStmt) stmtNode()     {}
-func (WhileStmt) stmtNode()      {}
-func (ExtendStmt) stmtNode()     {}
+type GenericStatement struct {
+	DefinedGenerics []GenericContract
+}
+
+func (ExpressionStmt) stmtNode()   {}
+func (BlockStmt) stmtNode()        {}
+func (VarDefStmt) stmtNode()       {}
+func (StructDefStmt) stmtNode()    {}
+func (IfElseStmt) stmtNode()       {}
+func (WhileStmt) stmtNode()        {}
+func (ExtendStmt) stmtNode()       {}
+func (GenericStatement) stmtNode() {}

@@ -25,8 +25,6 @@ type Parser struct {
 	current int
 }
 
-type Type string
-
 func NewParser(tokens *[]Token) *Parser {
 	return &Parser{
 		tokens: *tokens,
@@ -146,12 +144,11 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 
 		var typ *Type
 		if p.match(lexer.Colon) {
-			typStr, error := p.consume(lexer.Identifier, "Expected type after colon in variable declaration")
+			typI, error := p.typeContract()
 			if error != nil {
 				err = error
 				return
 			}
-			typI := Type(typStr.Text)
 			typ = &typI
 		}
 
@@ -561,7 +558,11 @@ func (p *Parser) funDef() (expr Expr, err error) {
 			var typ *Type
 
 			if p.match(lexer.Identifier) {
-				typ1 := Type(p.previous().Text)
+				typ1, error := p.typeContract()
+				if error != nil {
+					err = error
+					return
+				}
 				typ = &typ1
 			}
 
