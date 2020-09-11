@@ -42,7 +42,7 @@ func (p *Parser) genericContract() (typContract GenericContract, err error) {
 		return
 	}
 
-	contract, error := p.typeContract()
+	contract, error := p.typeContractDefinable()
 	if error != nil {
 		err = error
 		return
