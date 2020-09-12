@@ -182,6 +182,10 @@ func (p *Parser) statement() (Stmt, error) {
 		return p.blockStatement()
 	case lexer.Struct:
 		return p.structStatement()
+	case lexer.Type:
+		return p.typeStatement()
+	case lexer.LAngle:
+		return p.genericStatement()
 	default:
 		return p.exprStatement()
 	}

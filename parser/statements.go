@@ -37,16 +37,21 @@ type ExtendStmt struct {
 	Condition Expr
 	Body      Stmt
 }
-
-type GenericStatement struct {
-	DefinedGenerics []GenericContract
+type TypeStmt struct {
+	Identifier string
+	Contract   Type
+}
+type GenerifiedStmt struct {
+	Contracts []GenericContract
+	Statement Stmt
 }
 
-func (ExpressionStmt) stmtNode()   {}
-func (BlockStmt) stmtNode()        {}
-func (VarDefStmt) stmtNode()       {}
-func (StructDefStmt) stmtNode()    {}
-func (IfElseStmt) stmtNode()       {}
-func (WhileStmt) stmtNode()        {}
-func (ExtendStmt) stmtNode()       {}
-func (GenericStatement) stmtNode() {}
+func (ExpressionStmt) stmtNode() {}
+func (BlockStmt) stmtNode()      {}
+func (VarDefStmt) stmtNode()     {}
+func (StructDefStmt) stmtNode()  {}
+func (IfElseStmt) stmtNode()     {}
+func (WhileStmt) stmtNode()      {}
+func (ExtendStmt) stmtNode()     {}
+func (GenerifiedStmt) stmtNode() {}
+func (t TypeStmt) stmtNode()     {}

@@ -27,6 +27,7 @@ const (
 	Struct
 	Namespace
 	Import
+	Type
 	If
 	Else
 	Match
@@ -83,6 +84,7 @@ var TokenNames = map[TokenType]string{
 	RAngle:       "RAngle",
 	LSquare:      "LSquare",
 	RSquare:      "RSquare",
+	Type:         "Type",
 	Let:          "Let",
 	Extend:       "Extend",
 	Return:       "Return",

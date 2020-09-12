@@ -136,6 +136,8 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 	switch str {
 	case "let":
 		return Let, str
+	case "type":
+		return Type, str
 	case "mut":
 		return Mut, str
 	case "extend":
