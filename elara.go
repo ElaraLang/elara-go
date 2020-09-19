@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	text := "<Number: Int || Double> let test: Number = 15"
+	text := "a.b let a = 5"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 

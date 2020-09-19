@@ -54,6 +54,7 @@ func (p *Parser) Parse() (result []Stmt, error []ParseError) {
 					message: "Expected new line",
 				}
 				error = append(error, pErr)
+				p.syncError()
 			}
 		}
 	}
@@ -224,7 +225,7 @@ func (p *Parser) ifStatement() (stmt Stmt, err error) {
 		return
 	}
 
-	condition, err := p.expression()
+	condition, err := p.logicalOr()
 	if err != nil {
 		return
 	}
@@ -668,7 +669,7 @@ func (p *Parser) primary() (expr Expr, err error) {
 }
 
 func (p *Parser) syncError() {
-	for !p.isAtEnd() || p.peek().TokenType != lexer.NEWLINE || p.peek().TokenType != lexer.EOF {
+	for !p.isAtEnd() && !p.check(lexer.NEWLINE) && !p.check(lexer.EOF) {
 		p.advance()
 	}
 	for p.match(lexer.NEWLINE) {
