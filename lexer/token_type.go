@@ -137,4 +137,6 @@ var IllegalIdentifierChars = map[rune]bool{
 	'{': true,
 	'}': true,
 	'"': true,
+	'>': true,
+	'<': true,
 }

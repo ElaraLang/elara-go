@@ -19,7 +19,7 @@ func (p *Parser) definedTypes() (types []DefinedType, err error) {
 		if error != nil {
 			return nil, error
 		}
-		typ, error := p.primaryContract()
+		typ, error := p.primaryContract(true)
 		dTyp := DefinedType{
 			Identifier: id.Text,
 			DefType:    typ,

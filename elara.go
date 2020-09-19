@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	text := "struct a {\n" + "Int a = 5\n" + "Int c\n" + "}"
+	text := "<Number: Int || Double> let test: Number = 15"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 
