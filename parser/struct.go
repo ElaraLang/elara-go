@@ -46,8 +46,7 @@ func (p *Parser) structField() (field *StructField, err error) {
 	if t1.TokenType == lexer.Identifier {
 		switch t2.TokenType {
 		case lexer.Identifier:
-			typ = ElementaryTypeContract{Identifier: identifier}
-			identifier = t2.Text
+			typ = ElementaryTypeContract{Identifier: t2.Text}
 			if p.match(lexer.Equal) {
 				def, err = p.logicalOr()
 			}
