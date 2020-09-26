@@ -5,6 +5,7 @@ import "elara/lexer"
 type Type interface {
 	typeOf()
 }
+
 type DefinedTypeContract struct {
 	DefType []DefinedType
 }

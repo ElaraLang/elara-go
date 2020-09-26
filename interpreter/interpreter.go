@@ -20,24 +20,9 @@ func (s *Interpreter) Exec() {
 
 	for i := 0; i < len(s.lines); i++ {
 		line := s.lines[i]
-		s := line.(parser.VarDefStmt)
+		command := ToCommand(line)
 
-		var Type parser.Type
-		if s.Type == nil {
-			Type = parser.ElementaryTypeContract{
-				Identifier: "Any",
-			}
-		} else {
-			Type = *s.Type
-		}
-		variable := Variable{
-			Name:    s.Identifier,
-			Mutable: s.Mutable,
-			Type:    Type,
-			Value:   Value{s.Value},
-		}
-
-		context.DefineVariable(s.Identifier, variable)
+		command.exec(context)
 	}
 
 	println(context.string())

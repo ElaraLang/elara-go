@@ -9,7 +9,9 @@ import (
 )
 
 func main() {
-	text := "let a = 5"
+	text :=
+		"let a = 5\n" +
+			"a"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 

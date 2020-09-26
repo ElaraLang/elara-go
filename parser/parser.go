@@ -143,14 +143,14 @@ func (p *Parser) declaration() (stmt Stmt, err error) {
 			}, nil
 		}
 
-		var typ *Type
+		var typ Type
 		if p.match(lexer.Colon) {
 			typI, error := p.typeContract()
 			if error != nil {
 				err = error
 				return
 			}
-			typ = &typI
+			typ = typI
 		}
 
 		p.consume(lexer.Equal, "Expected Equal on variable declaration")
