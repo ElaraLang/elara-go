@@ -1,6 +1,7 @@
 package main
 
 import (
+	interpreter2 "elara/interpreter"
 	"elara/lexer"
 	"elara/parser"
 	"fmt"
@@ -8,7 +9,7 @@ import (
 )
 
 func main() {
-	text := "a.b let a = 5"
+	text := "let a = 5"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 
@@ -19,16 +20,17 @@ func main() {
 		if tok == lexer.EOF {
 			break
 		}
-		println(lexer.TokenNames[tok] + ": '" + str + "'")
 	}
 
-	println(fmt.Sprintf("%q\n", result))
 	psr := parser.NewParser(&result)
 	parseRes, err := psr.Parse()
-	println("ParseResult")
-	println(fmt.Sprintf("%q\n", parseRes))
+
 	println("Errors")
 	println(fmt.Sprintf("%q\n", err))
+
+	interpreter := interpreter2.NewInterpreter(parseRes)
+
+	interpreter.Exec()
 }
 
 func CreateToken(tokenType lexer.TokenType, text string) lexer.Token {

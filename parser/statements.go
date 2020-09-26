@@ -1,6 +1,8 @@
 package parser
 
-type Stmt interface{ stmtNode() }
+type Stmt interface {
+	stmtNode()
+}
 
 type ExpressionStmt struct {
 	Expr Expr
