@@ -615,9 +615,9 @@ func (p *Parser) primary() (expr Expr, err error) {
 		expr = BooleanLiteralExpr{Value: boolVal}
 		break
 	case lexer.String:
-		str, error := p.consume(lexer.String, "Expected string")
-		if error != nil {
-			err = error
+		str, err2 := p.consume(lexer.String, "Expected string")
+		if err2 != nil {
+			err = err2
 			return
 		}
 		expr = StringLiteralExpr{Value: str.Text}
@@ -654,7 +654,7 @@ func (p *Parser) primary() (expr Expr, err error) {
 			err = error
 			return
 		}
-		expr = StringLiteralExpr{Value: str.Text}
+		expr = VariableExpr{Identifier: str.Text}
 		break
 	}
 
