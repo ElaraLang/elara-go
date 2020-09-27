@@ -18,6 +18,15 @@ func (c Context) DefineVariable(name string, value Variable) {
 	c.variables[name] = vars
 }
 
+func (c Context) FindVariable(name string) *Variable {
+	vars := c.variables[name]
+
+	if vars == nil {
+		return nil
+	}
+	return vars[0]
+}
+
 func (c Context) string() string {
 	s := ""
 	for key, values := range c.variables {

@@ -67,11 +67,11 @@ const (
 	Underscore
 )
 
-func (token *TokenType) string() string {
-	return TokenNames[*token]
+func (token *TokenType) String() string {
+	return tokenNames[*token]
 }
 
-var TokenNames = map[TokenType]string{
+var tokenNames = map[TokenType]string{
 	Illegal: "Illegal",
 	EOF:     "EOF",
 	NEWLINE: "\\n",

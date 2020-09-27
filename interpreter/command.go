@@ -28,6 +28,27 @@ func (c DefineVarCommand) exec(ctx *Context) Value {
 	return variable.Value
 }
 
+type VariableCommand struct {
+	Variable string
+}
+
+func (c VariableCommand) exec(ctx *Context) Value {
+	variable := ctx.FindVariable(c.Variable)
+	if variable == nil {
+		panic("No such variable " + c.Variable)
+	}
+	return variable.Value
+}
+
+type InvocationCommand struct {
+	Invoking Command
+	args     []Command
+}
+
+func (c InvocationCommand) exec(ctx *Context) Value {
+	panic("implement me")
+}
+
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -52,8 +73,20 @@ func ToCommand(statement parser.Stmt) Command {
 func ExpressionToCommand(expr parser.Expr) Command {
 
 	switch t := expr.(type) {
-	case parser.StringLiteralExpr:
-		println(t.Value)
+	case parser.VariableExpr:
+		return VariableCommand{Variable: t.Identifier}
+	case parser.InvocationExpr:
+		fun := ExpressionToCommand(t.Invoker)
+		args := make([]Command, len(t.Args))
+		for _, arg := range t.Args {
+			args = append(args, ExpressionToCommand(arg))
+		}
+
+		return InvocationCommand{
+			Invoking: fun,
+			args:     args,
+		}
+
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

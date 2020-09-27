@@ -1,7 +1,7 @@
 package main
 
 import (
-	interpreter2 "elara/interpreter"
+	"elara/interpreter"
 	"elara/lexer"
 	"elara/parser"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 func main() {
 	text :=
 		"let a = 5\n" +
-			"a"
+			"print(a)"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 
@@ -30,7 +30,7 @@ func main() {
 	println("Errors")
 	println(fmt.Sprintf("%q\n", err))
 
-	interpreter := interpreter2.NewInterpreter(parseRes)
+	interpreter := interpreter.NewInterpreter(parseRes)
 
 	interpreter.Exec()
 }

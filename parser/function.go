@@ -11,17 +11,18 @@ type FunctionArgument struct {
 func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr, err error) {
 	params := make([]Expr, 0)
 	for !p.match(lexer.RParen) {
-		param, error := p.expression()
-		if error != nil {
-			err = error
-			return
+		param, err := p.expression()
+		if err != nil {
+			return expr, err
 		}
 		params = append(params, param)
+		if p.peek().TokenType == lexer.RParen {
+			break
+		}
 		if separator != nil {
-			_, err = p.consume(*separator, "Expected separator in function parameters")
-			if error != nil {
-				err = error
-				return
+			_, err = p.consume(*separator, "Expected separator "+separator.String()+" in function parameters")
+			if err != nil {
+				return expr, err
 			}
 		}
 	}
