@@ -6,7 +6,7 @@ import (
 )
 
 type Command interface {
-	exec(ctx *Context) Value
+	Exec(ctx *Context) Value
 }
 
 type DefineVarCommand struct {
@@ -16,7 +16,7 @@ type DefineVarCommand struct {
 	value   Value
 }
 
-func (c DefineVarCommand) exec(ctx *Context) Value {
+func (c DefineVarCommand) Exec(ctx *Context) Value {
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
@@ -32,7 +32,7 @@ type VariableCommand struct {
 	Variable string
 }
 
-func (c VariableCommand) exec(ctx *Context) Value {
+func (c VariableCommand) Exec(ctx *Context) Value {
 	variable := ctx.FindVariable(c.Variable)
 	if variable == nil {
 		panic("No such variable " + c.Variable)
@@ -45,10 +45,29 @@ type InvocationCommand struct {
 	args     []Command
 }
 
-func (c InvocationCommand) exec(ctx *Context) Value {
-	panic("implement me")
+func (c InvocationCommand) Exec(ctx *Context) Value {
+	val := c.Invoking.Exec(ctx)
+	fun, ok := val.value.(Function)
+	if !ok {
+		panic("Cannot invoke non-function")
+	}
+
+	return fun.exec(ctx, c.args)
 }
 
+type AbstractCommand struct {
+	content func(ctx *Context) Value
+}
+
+func (c AbstractCommand) Exec(ctx *Context) Value {
+	return c.content(ctx)
+}
+
+func NewAbstractCommand(content func(ctx *Context) Value) *AbstractCommand {
+	return &AbstractCommand{
+		content: content,
+	}
+}
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -77,9 +96,13 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		return VariableCommand{Variable: t.Identifier}
 	case parser.InvocationExpr:
 		fun := ExpressionToCommand(t.Invoker)
-		args := make([]Command, len(t.Args))
+		args := make([]Command, 0)
 		for _, arg := range t.Args {
-			args = append(args, ExpressionToCommand(arg))
+			command := ExpressionToCommand(arg)
+			if command == nil {
+				panic("Could not convert expression " + reflect.TypeOf(arg).Name() + " to command")
+			}
+			args = append(args, command)
 		}
 
 		return InvocationCommand{

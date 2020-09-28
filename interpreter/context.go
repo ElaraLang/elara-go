@@ -1,15 +1,46 @@
 package interpreter
 
 import (
+	"elara/parser"
 	"fmt"
 )
 
 type Context struct {
 	variables map[string][]*Variable
+
+	parameters []*Value
 }
 
 func NewContext() *Context {
-	return &Context{variables: map[string][]*Variable{}}
+	c := &Context{
+		variables:  map[string][]*Variable{},
+		parameters: []*Value{},
+	}
+
+	//Todo remove
+	printContract := parser.InvocableTypeContract{
+		Args:       []parser.Type{parser.ElementaryTypeContract{Identifier: "Any"}},
+		ReturnType: parser.ElementaryTypeContract{Identifier: "Unit"},
+	}
+	c.DefineVariable("print", Variable{
+		Name:    "print",
+		Mutable: false,
+		Type:    printContract,
+		Value: Value{
+			Type: printContract,
+			value: Function{
+				Signature: printContract,
+				body: []Command{
+					NewAbstractCommand(func(ctx *Context) Value {
+						value := ctx.FindParameter(0).value
+						fmt.Printf("%s\n", value)
+						return Value{}
+					}),
+				},
+			},
+		},
+	})
+	return c
 }
 
 func (c Context) DefineVariable(name string, value Variable) {
@@ -27,6 +58,20 @@ func (c Context) FindVariable(name string) *Variable {
 	return vars[0]
 }
 
+func (c *Context) DefineParameter(index int, value *Value) {
+	if index >= len(c.parameters) {
+		newParameters := make([]*Value, index+1)
+		newParameters[index] = value
+		c.parameters = newParameters
+		return
+	}
+	c.parameters[index] = value
+}
+
+func (c Context) FindParameter(index int) *Value {
+	return c.parameters[index]
+}
+
 func (c Context) string() string {
 	s := ""
 	for key, values := range c.variables {
@@ -34,7 +79,7 @@ func (c Context) string() string {
 		for _, val := range values {
 			s += fmt.Sprintf("%s \n", val.string())
 		}
-		s += "]"
+		s += "]\n"
 	}
 
 	return s

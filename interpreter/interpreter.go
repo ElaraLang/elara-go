@@ -22,9 +22,6 @@ func (s *Interpreter) Exec() {
 		line := s.lines[i]
 		command := ToCommand(line)
 
-		command.exec(context)
+		command.Exec(context)
 	}
-
-	println(context.string())
-
 }
