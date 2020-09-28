@@ -38,6 +38,9 @@ func (s *Scanner) Read() (tok TokenType, text string) {
 	if ch == eof {
 		return EOF, string(ch)
 	}
+	if ch == '\r' {
+		return s.Read()
+	}
 
 	if ch == '\n' {
 		return NEWLINE, string(ch)

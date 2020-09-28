@@ -1,4 +1,4 @@
-let a = 5
+let a  = 5
 print(a)
-print("Hello")
-print(6)
+let b = 15
+print(b)

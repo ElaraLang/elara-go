@@ -5,18 +5,20 @@ import (
 	"elara/lexer"
 	"elara/parser"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"path"
 	"strings"
 )
 
 func main() {
-	elaraFile, err := os.Open("elara.el")
+	goPath := os.Getenv("GOPATH")
+	filePath := path.Join(goPath, "elara.el")
+	input, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
 	}
-	var bytes []byte
-	_, _ = elaraFile.Read(bytes)
-	reader := strings.NewReader(string(bytes))
+	reader := strings.NewReader(string(input))
 	scanner := lexer.NewScanner(reader)
 
 	result := make([]lexer.Token, 0)
