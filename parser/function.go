@@ -17,6 +17,7 @@ func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr, err er
 		}
 		params = append(params, param)
 		if p.peek().TokenType == lexer.RParen {
+			p.advance()
 			break
 		}
 		if separator != nil {
