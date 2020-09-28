@@ -126,6 +126,15 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			value: str,
 		}
 		return LiteralCommand{value: value}
+
+	case parser.IntegerLiteralExpr:
+		str := t.Value
+		value := Value{
+			Type:  parser.ElementaryTypeContract{Identifier: "Int"},
+			value: str,
+		}
+		return LiteralCommand{value: value}
+
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())
