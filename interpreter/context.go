@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"elara/parser"
+	"elara/util"
 	"fmt"
 )
 
@@ -33,28 +34,8 @@ func NewContext() *Context {
 				body: []Command{
 					NewAbstractCommand(func(ctx *Context) Value {
 						value := ctx.FindParameter(0).value
-						switch val := value.(type) {
-						case parser.BooleanLiteralExpr:
-							{
-								fmt.Printf("%d\n", val.Value)
-								break
-							}
-						case parser.StringLiteralExpr:
-							{
-								fmt.Printf("%d\n", val.Value)
-								break
-							}
-						case parser.IntegerLiteralExpr:
-							{
-								fmt.Printf("%d\n", val.Value)
-								break
-							}
-						default:
-							{
-								fmt.Printf("%s\n", val)
-								break
-							}
-						}
+						fmt.Printf("%s\n", util.Stringify(value))
+
 						return Value{}
 					}),
 				},

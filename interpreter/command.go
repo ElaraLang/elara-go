@@ -13,7 +13,7 @@ type DefineVarCommand struct {
 	Name    string
 	Mutable bool
 	Type    parser.Type
-	value   Value
+	value   Command
 }
 
 func (c DefineVarCommand) Exec(ctx *Context) Value {
@@ -21,7 +21,7 @@ func (c DefineVarCommand) Exec(ctx *Context) Value {
 		Name:    c.Name,
 		Mutable: c.Mutable,
 		Type:    c.Type,
-		Value:   c.value,
+		Value:   c.value.Exec(ctx),
 	}
 
 	ctx.DefineVariable(c.Name, variable)
@@ -84,11 +84,12 @@ func ToCommand(statement parser.Stmt) Command {
 		if Type == nil {
 			Type = &parser.ElementaryTypeContract{Identifier: "Any"}
 		}
+		valueExpr := ExpressionToCommand(t.Value)
 		return DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
 			Type:    Type,
-			value:   Value{Type: Type, value: t.Value},
+			value:   valueExpr,
 		}
 	case parser.ExpressionStmt:
 		return ExpressionToCommand(t.Expr)

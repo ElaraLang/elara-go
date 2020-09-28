@@ -28,10 +28,12 @@ func (f *Function) String() string {
 
 func (f *Function) exec(ctx *Context, parameters []Command) Value {
 	var val Value
+
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
 		ctx.DefineParameter(i, &paramValue)
 	}
+
 	for _, line := range f.body {
 		val = line.Exec(ctx)
 	}
