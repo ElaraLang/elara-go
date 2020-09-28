@@ -326,8 +326,10 @@ func (s *Scanner) readNumber() (tok TokenType, text string) {
 		if ch == '.' {
 			numType = Float
 		} else if !unicode.IsNumber(ch) {
+			s.unread()
 			break
 		}
+
 		buf.WriteRune(ch)
 	}
 
