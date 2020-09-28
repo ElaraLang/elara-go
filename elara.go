@@ -5,15 +5,18 @@ import (
 	"elara/lexer"
 	"elara/parser"
 	"fmt"
+	"os"
 	"strings"
 )
 
 func main() {
-	text :=
-		"let a = 5\n" +
-			"print(a)\n" +
-			"print(\"Hello\")"
-	reader := strings.NewReader(text)
+	elaraFile, err := os.Open("elara.el")
+	if err != nil {
+		panic(err)
+	}
+	var bytes []byte
+	_, _ = elaraFile.Read(bytes)
+	reader := strings.NewReader(string(bytes))
 	scanner := lexer.NewScanner(reader)
 
 	result := make([]lexer.Token, 0)
@@ -26,11 +29,11 @@ func main() {
 	}
 
 	psr := parser.NewParser(&result)
-	parseRes, err := psr.Parse()
+	parseRes, errs := psr.Parse()
 
-	if len(err) != 0 {
+	if len(errs) != 0 {
 		println("Errors")
-		fmt.Printf("%q\n", err)
+		fmt.Printf("%q\n", errs)
 	}
 
 	interpreter := interpreter.NewInterpreter(parseRes)
