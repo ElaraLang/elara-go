@@ -11,7 +11,8 @@ import (
 func main() {
 	text :=
 		"let a = 5\n" +
-			"print(a)"
+			"print(a)\n" +
+			"print(\"Hello\")"
 	reader := strings.NewReader(text)
 	scanner := lexer.NewScanner(reader)
 
@@ -27,8 +28,10 @@ func main() {
 	psr := parser.NewParser(&result)
 	parseRes, err := psr.Parse()
 
-	println("Errors")
-	println(fmt.Sprintf("%q\n", err))
+	if len(err) != 0 {
+		println("Errors")
+		fmt.Printf("%q\n", err)
+	}
 
 	interpreter := interpreter.NewInterpreter(parseRes)
 

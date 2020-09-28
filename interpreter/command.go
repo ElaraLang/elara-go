@@ -68,6 +68,14 @@ func NewAbstractCommand(content func(ctx *Context) Value) *AbstractCommand {
 		content: content,
 	}
 }
+
+type LiteralCommand struct {
+	value Value
+}
+
+func (c LiteralCommand) Exec(ctx *Context) Value {
+	return c.value
+}
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -94,6 +102,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	switch t := expr.(type) {
 	case parser.VariableExpr:
 		return VariableCommand{Variable: t.Identifier}
+
 	case parser.InvocationExpr:
 		fun := ExpressionToCommand(t.Invoker)
 		args := make([]Command, 0)
@@ -110,6 +119,13 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			args:     args,
 		}
 
+	case parser.StringLiteralExpr:
+		str := t.Value
+		value := Value{
+			Type:  parser.ElementaryTypeContract{Identifier: "String"},
+			value: str,
+		}
+		return LiteralCommand{value: value}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())
