@@ -47,7 +47,7 @@ type InvocationCommand struct {
 
 func (c InvocationCommand) Exec(ctx *Context) Value {
 	val := c.Invoking.Exec(ctx)
-	fun, ok := val.value.(Function)
+	fun, ok := val.Value.(Function)
 	if !ok {
 		panic("Cannot invoke non-function")
 	}
@@ -73,7 +73,7 @@ type LiteralCommand struct {
 	value Value
 }
 
-func (c LiteralCommand) Exec(ctx *Context) Value {
+func (c LiteralCommand) Exec(_ *Context) Value {
 	return c.value
 }
 func ToCommand(statement parser.Stmt) Command {
@@ -124,7 +124,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		str := t.Value
 		value := Value{
 			Type:  parser.ElementaryTypeContract{Identifier: "String"},
-			value: str,
+			Value: str,
 		}
 		return LiteralCommand{value: value}
 
@@ -132,7 +132,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		str := t.Value
 		value := Value{
 			Type:  parser.ElementaryTypeContract{Identifier: "Int"},
-			value: str,
+			Value: str,
 		}
 		return LiteralCommand{value: value}
 

@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"reflect"
 )
 
 func Stringify(s interface{}) string {
@@ -12,7 +13,8 @@ func Stringify(s interface{}) string {
 		return fmt.Sprintf("%d", t)
 	case int64:
 		return fmt.Sprintf("%d", t)
+
 	}
 
-	return fmt.Sprintf("%s", s)
+	return fmt.Sprintf("%s: %s", reflect.TypeOf(s), s)
 }

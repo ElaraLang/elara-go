@@ -29,14 +29,14 @@ func NewContext() *Context {
 		Type:    printContract,
 		Value: Value{
 			Type: printContract,
-			value: Function{
+			Value: Function{
 				Signature: printContract,
 				body: []Command{
 					NewAbstractCommand(func(ctx *Context) Value {
-						value := ctx.FindParameter(0).value
+						value := ctx.FindParameter(0).Value
 						fmt.Printf("%s\n", util.Stringify(value))
 
-						return Value{}
+						return *UnitValue()
 					}),
 				},
 			},

@@ -7,7 +7,16 @@ import (
 
 type Value struct {
 	Type  parser.Type
-	value interface{}
+	Value interface{}
+}
+
+var unitValue = Value{
+	Type:  parser.ElementaryTypeContract{Identifier: "Unit"},
+	Value: "Unit",
+}
+
+func UnitValue() *Value {
+	return &unitValue
 }
 
 type Variable struct {
@@ -47,5 +56,5 @@ type Signature struct {
 }
 
 func (v Variable) string() string {
-	return fmt.Sprintf("Variable { name: %s, mutable: %T, type: %s, value: %s", v.Name, v.Mutable, v.Type, v.Value)
+	return fmt.Sprintf("Variable { name: %s, mutable: %T, type: %s, Value: %s", v.Name, v.Mutable, v.Type, v.Value)
 }
