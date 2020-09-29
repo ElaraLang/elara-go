@@ -179,6 +179,27 @@ func ExpressionToCommand(expr parser.Expr) Command {
 				},
 				rhs: rhsCmd,
 			}
+		case lexer.Subtract:
+			return BinaryOperatorCommand{
+				lhs: lhsCmd,
+				op: func(ctx *Context, lhs Value, rhs Value) Value {
+					left := lhs.Value
+					lhsInt, ok := left.(int64)
+					if !ok {
+						panic("LHS must be an int64")
+					}
+					rhsInt, ok := rhs.Value.(int64)
+					if !ok {
+						panic("RHS must be an int64")
+					}
+
+					return Value{
+						Type:  parser.ElementaryTypeContract{Identifier: "Int"},
+						Value: lhsInt - rhsInt,
+					}
+				},
+				rhs: rhsCmd,
+			}
 		}
 	}
 
