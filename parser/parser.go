@@ -124,7 +124,6 @@ func (p *Parser) cleanNewLines() {
 func (p *Parser) declaration() (stmt Stmt) {
 	if p.match(lexer.Let) {
 		mut := p.match(lexer.Mut)
-
 		id := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
 		if p.match(lexer.Arrow) {
 			execStmt := p.statement()
@@ -134,6 +133,7 @@ func (p *Parser) declaration() (stmt Stmt) {
 				ReturnType: nil,
 				Statement:  execStmt,
 			}
+
 			return VarDefStmt{
 				Mutable:    mut,
 				Identifier: id.Text,
@@ -229,13 +229,14 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 func (p *Parser) blockStatement() (stmt Stmt) {
 	result := make([]Stmt, 0)
 	p.consume(lexer.LBrace, "Expected { at beginning of block")
-
+	p.cleanNewLines()
 	for !p.check(lexer.RBrace) {
 		decl := p.declaration()
 		result = append(result, decl)
+		p.consume(lexer.NEWLINE, "Expected newline after declaration in block")
+		p.cleanNewLines()
 	}
 	p.consume(lexer.RBrace, "Expected } at beginning of block")
-
 	stmt = BlockStmt{Stmts: result}
 	return
 }
@@ -430,14 +431,14 @@ func (p *Parser) invoke() (expr Expr) {
 }
 
 func (p *Parser) funDef() (expr Expr) {
-	if p.match(lexer.LParen) {
+	if p.check(lexer.LParen) {
 		isFunc := p.isFuncDef()
 		if isFunc {
 			args := p.functionArguments()
 
 			var typ *Type
 
-			if p.match(lexer.Identifier) {
+			if p.check(lexer.Identifier) {
 				typ1 := p.typeContract()
 
 				typ = &typ1

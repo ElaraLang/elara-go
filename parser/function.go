@@ -3,7 +3,7 @@ package parser
 import "elara/lexer"
 
 type FunctionArgument struct {
-	Type     *Type
+	Type     Type
 	Variable VariableExpr
 	Default  *Expr
 }
@@ -53,9 +53,9 @@ func (p *Parser) functionArgument() (arg FunctionArgument) {
 		expr := p.expression()
 		def = &expr
 	}
-	typ := p.typeContract()
+	typ := ElementaryTypeContract{Identifier: i1.Text}
 	arg = FunctionArgument{
-		Type:     &typ,
+		Type:     typ,
 		Variable: VariableExpr{Identifier: id.Text},
 		Default:  def,
 	}
@@ -63,16 +63,19 @@ func (p *Parser) functionArgument() (arg FunctionArgument) {
 }
 
 func (p *Parser) isFuncDef() (result bool) {
-	closing := p.findParenClosingPoint()
+	closing := p.findParenClosingPoint(p.current)
 	return p.tokens[closing+1].TokenType == lexer.Arrow ||
 		(p.tokens[closing+1].TokenType == lexer.Identifier && p.tokens[closing+2].TokenType == lexer.Arrow)
 }
 
-func (p *Parser) findParenClosingPoint() (index int) {
-	cur := p.current
-	for p.tokens[cur].TokenType != lexer.RBrace {
-		if p.match(lexer.LBrace) {
-			cur = p.findParenClosingPoint()
+func (p *Parser) findParenClosingPoint(start int) (index int) {
+	if p.tokens[start].TokenType != lexer.LParen {
+		return -1
+	}
+	cur := start + 1
+	for p.tokens[cur].TokenType != lexer.RParen {
+		if p.tokens[cur].TokenType == lexer.LParen {
+			cur = p.findParenClosingPoint(cur)
 		}
 		cur++
 		if cur > len(p.tokens) {

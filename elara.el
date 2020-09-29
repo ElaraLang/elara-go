@@ -5,3 +5,6 @@ print(b)
 print(1 - 2)
 let test = "LOOOL"
 print(test)
+let fun-test = (Int a) => {
+     print(a)
+}
