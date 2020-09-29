@@ -132,3 +132,32 @@ func (p *Parser) syncError() {
 	}
 	p.cleanNewLines()
 }
+
+func (p *Parser) parseProperties(propTypes ...lexer.TokenType) []bool {
+	result := make([]bool, len(propTypes))
+	for contains(propTypes, p.peek().TokenType) {
+		tokTyp := p.advance().TokenType
+		for i := 0; i < len(propTypes); i++ {
+			if propTypes[i] == tokTyp {
+				if result[i] == true {
+					panic(ParseError{
+						token:   p.previous(),
+						message: "Multiple variable properties of same type defined",
+					})
+				}
+				result[i] = true
+				break
+			}
+		}
+	}
+	return result
+}
+
+func contains(s []lexer.TokenType, e lexer.TokenType) bool {
+	for _, a := range s {
+		if a == e {
+			return true
+		}
+	}
+	return false
+}

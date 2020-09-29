@@ -3,9 +3,10 @@ package parser
 import "elara/lexer"
 
 type FunctionArgument struct {
+	Lazy     bool
 	Type     Type
 	Variable VariableExpr
-	Default  *Expr
+	Default  Expr
 }
 
 func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr) {
@@ -36,30 +37,30 @@ func (p *Parser) functionArguments() (args []FunctionArgument) {
 	return
 }
 
-func (p *Parser) functionArgument() (arg FunctionArgument) {
+func (p *Parser) functionArgument() FunctionArgument {
+	lazy := p.parseProperties(lexer.Lazy)[0]
 	i1 := p.consume(lexer.Identifier, "Invalid argument in function def")
 	if p.match(lexer.Equal) {
-		expr := p.expression()
-		arg = FunctionArgument{
+		return FunctionArgument{
+			Lazy:     lazy,
 			Type:     nil,
 			Variable: VariableExpr{Identifier: i1.Text},
-			Default:  &expr,
+			Default:  p.expression(),
 		}
-		return
 	}
 	id := p.consume(lexer.Identifier, "Invalid argument in function def")
-	var def *Expr
+	var def Expr
 	if p.match(lexer.Equal) {
-		expr := p.expression()
-		def = &expr
+
+		def = p.expression()
 	}
 	typ := ElementaryTypeContract{Identifier: i1.Text}
-	arg = FunctionArgument{
+	return FunctionArgument{
+		Lazy:     lazy,
 		Type:     typ,
 		Variable: VariableExpr{Identifier: id.Text},
 		Default:  def,
 	}
-	return
 }
 
 func (p *Parser) isFuncDef() (result bool) {

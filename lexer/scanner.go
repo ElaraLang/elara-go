@@ -143,6 +143,10 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 		return Type, str
 	case "mut":
 		return Mut, str
+	case "restricted":
+		return Restricted, str
+	case "lazy":
+		return Lazy, str
 	case "extend":
 		return Extend, str
 	case "return":

@@ -16,6 +16,8 @@ type BlockStmt struct {
 
 type VarDefStmt struct {
 	Mutable    bool
+	Lazy       bool
+	Restricted bool
 	Identifier string
 	Type       Type
 	Value      Expr
@@ -89,7 +91,12 @@ func (p *Parser) statement() Stmt {
 
 func (p *Parser) varDefStatement() Stmt {
 	p.consume(lexer.Let, "Expected variable declaration to start with let")
-	mut := p.match(lexer.Mut)
+
+	properties := p.parseProperties(lexer.Mut, lexer.Lazy, lexer.Restricted)
+	mut := properties[0]
+	lazy := properties[1]
+	restricted := properties[2]
+
 	id := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
 
 	var typ Type
@@ -100,6 +107,8 @@ func (p *Parser) varDefStatement() Stmt {
 	if p.check(lexer.Arrow) {
 		return VarDefStmt{
 			Mutable:    mut,
+			Lazy:       lazy,
+			Restricted: restricted,
 			Identifier: id.Text,
 			Type:       typ,
 			Value:      p.funDef(),
@@ -111,6 +120,8 @@ func (p *Parser) varDefStatement() Stmt {
 
 	return VarDefStmt{
 		Mutable:    mut,
+		Lazy:       lazy,
+		Restricted: restricted,
 		Identifier: id.Text,
 		Type:       typ,
 		Value:      expr,

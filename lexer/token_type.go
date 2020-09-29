@@ -24,6 +24,8 @@ const (
 	Return
 	While
 	Mut
+	Lazy
+	Restricted
 	Struct
 	Namespace
 	Import
@@ -90,6 +92,8 @@ var tokenNames = map[TokenType]string{
 	Return:       "Return",
 	While:        "While",
 	Mut:          "Mut",
+	Lazy:         "Lazy",
+	Restricted:   "Restricted",
 	Struct:       "Struct",
 	Namespace:    "Namespace",
 	Import:       "Import",
