@@ -113,17 +113,22 @@ func (p *Parser) consume(tokenType TokenType, msg string) (token Token) {
 }
 
 func (p *Parser) cleanNewLines() {
-	for p.check(lexer.NEWLINE) {
-		p.advance()
+	for p.match(lexer.NEWLINE) {
 	}
 }
-
-// ----- Statements -----
+func (p *Parser) insert(index int, value ...Token) {
+	if len(p.tokens) == index {
+		p.tokens = append(p.tokens, value...)
+	}
+	p.tokens = append(p.tokens[:index+len(value)], p.tokens[index:]...)
+	for i := 0; i < len(value); i++ {
+		p.tokens[index+i] = value[i]
+	}
+}
 
 func (p *Parser) syncError() {
 	for !p.isAtEnd() && !p.check(lexer.NEWLINE) && !p.check(lexer.EOF) {
 		p.advance()
 	}
-	for p.match(lexer.NEWLINE) {
-	}
+	p.cleanNewLines()
 }

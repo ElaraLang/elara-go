@@ -29,7 +29,7 @@ type StructDefStmt struct {
 type IfElseStmt struct {
 	Condition  Expr
 	MainBranch Stmt
-	ElseBranch *Stmt
+	ElseBranch Stmt
 }
 
 type WhileStmt struct {
@@ -58,7 +58,7 @@ func (IfElseStmt) stmtNode()     {}
 func (WhileStmt) stmtNode()      {}
 func (ExtendStmt) stmtNode()     {}
 func (GenerifiedStmt) stmtNode() {}
-func (t TypeStmt) stmtNode()     {}
+func (TypeStmt) stmtNode()       {}
 
 func (p *Parser) declaration() (stmt Stmt) {
 	if p.check(lexer.Let) {
@@ -87,75 +87,55 @@ func (p *Parser) statement() Stmt {
 	}
 }
 
-func (p *Parser) varDefStatement() (stmt Stmt) {
+func (p *Parser) varDefStatement() Stmt {
 	p.consume(lexer.Let, "Expected variable declaration to start with let")
 	mut := p.match(lexer.Mut)
 	id := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
-	if p.match(lexer.Arrow) {
-		execStmt := p.statement()
 
-		expr := FuncDefExpr{
-			Arguments:  make([]FunctionArgument, 0),
-			ReturnType: nil,
-			Statement:  execStmt,
-		}
-
-		return VarDefStmt{
-			Mutable:    mut,
-			Identifier: id.Text,
-			Type:       nil,
-			Value:      expr,
-		}
+	if p.check(lexer.Arrow) {
+		arrow := p.tokens[p.current]
+		p.tokens[p.current] = lexer.CreateToken(lexer.Equal, "=")
+		p.insert(p.current+1, arrow, Token{TokenType: lexer.RParen, Text: ")"}, Token{TokenType: lexer.LParen, Text: "("})
 	}
 
 	var typ Type
 	if p.match(lexer.Colon) {
-		typI := p.typeContract()
-		typ = typI
+		typ = p.typeContract()
 	}
-
 	p.consume(lexer.Equal, "Expected Equal on variable declaration")
 	expr := p.expression()
 
-	stmt = VarDefStmt{
+	return VarDefStmt{
 		Mutable:    mut,
 		Identifier: id.Text,
 		Type:       typ,
 		Value:      expr,
 	}
-	return
 }
 
-func (p *Parser) whileStatement() (stmt Stmt) {
-	p.consume(lexer.While, "Expected whileStatement at beginning of whileStatement loop")
+func (p *Parser) whileStatement() Stmt {
+	p.consume(lexer.While, "Expected while at beginning of while loop")
 	expr := p.expression()
-
-	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
-
+	p.consume(lexer.Arrow, "Expected arrow after condition for while loop")
 	body := p.statement()
-
-	stmt = WhileStmt{
+	return WhileStmt{
 		Condition: expr,
 		Body:      body,
 	}
-	return
 }
 
 func (p *Parser) ifStatement() (stmt Stmt) {
-	p.consume(lexer.If, "Expected whileStatement at beginning of whileStatement loop")
+	p.consume(lexer.If, "Expected if at beginning of if statement")
 	condition := p.logicalOr()
 	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
 	mainBranch := p.statement()
-	var elseBranch *Stmt = nil
+	var elseBranch Stmt
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {
-			ebr := p.ifStatement()
-			elseBranch = &ebr
+			elseBranch = p.ifStatement()
 		} else {
 			p.consume(lexer.Arrow, "Expected arrow after condition for else statement")
-
-			ebr := p.statement()
-			elseBranch = &ebr
+			elseBranch = p.statement()
 		}
 	}
 	stmt = IfElseStmt{
@@ -168,33 +148,35 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 
 func (p *Parser) blockStatement() (stmt Stmt) {
 	result := make([]Stmt, 0)
+	errors := make([]ParseError, 0)
 	p.consume(lexer.LBrace, "Expected { at beginning of block")
 	p.cleanNewLines()
 	for !p.check(lexer.RBrace) {
-		decl := p.declaration()
-		result = append(result, decl)
-		p.consume(lexer.NEWLINE, "Expected newline after declaration in block")
-		p.cleanNewLines()
+		p.blockedDeclaration(&result, &errors)
 	}
 	p.consume(lexer.RBrace, "Expected } at beginning of block")
+	if len(errors) > 0 {
+		panic(errors)
+	}
 	stmt = BlockStmt{Stmts: result}
 	return
 }
 
-func (p *Parser) structStatement() (stmt Stmt) {
+func (p *Parser) blockedDeclaration(results *[]Stmt, errors *[]ParseError) {
+	defer p.handleError(errors)
+	*results = append(*results, p.declaration())
+	p.consume(lexer.NEWLINE, "Expected newline after declaration in block")
+	p.cleanNewLines()
+}
+
+func (p *Parser) structStatement() Stmt {
 	p.consume(lexer.Struct, "Expected struct start to begin with `struct` keyword")
-
-	identifier := p.consume(lexer.Identifier, "Expected identifier after `struct` keyword")
-
-	fields := p.structFields()
 	return StructDefStmt{
-		Identifier:   identifier.Text,
-		StructFields: fields,
+		Identifier:   p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text,
+		StructFields: p.structFields(),
 	}
 }
 
-func (p *Parser) exprStatement() (stmt Stmt) {
-	expr := p.expression()
-	stmt = ExpressionStmt{Expr: expr}
-	return
+func (p *Parser) exprStatement() Stmt {
+	return ExpressionStmt{Expr: p.expression()}
 }

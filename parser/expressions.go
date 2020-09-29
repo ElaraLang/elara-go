@@ -52,7 +52,7 @@ type IfElseExpr struct {
 
 type FuncDefExpr struct {
 	Arguments  []FunctionArgument
-	ReturnType *Type
+	ReturnType Type
 	Statement  Stmt
 }
 
@@ -255,35 +255,31 @@ func (p *Parser) invoke() (expr Expr) {
 	return
 }
 
-func (p *Parser) funDef() (expr Expr) {
+func (p *Parser) funDef() Expr {
 	if p.check(lexer.LParen) {
-		isFunc := p.isFuncDef()
-		if isFunc {
+		if p.isFuncDef() {
 			args := p.functionArguments()
 
-			var typ *Type
+			var typ Type
 
 			if p.check(lexer.Identifier) {
 				typ1 := p.typeContract()
 
-				typ = &typ1
+				typ = typ1
 			}
 
 			p.consume(lexer.Arrow, "Expected arrow at function definition")
 
 			stmt := p.statement()
 
-			expr = FuncDefExpr{
+			return FuncDefExpr{
 				Arguments:  args,
 				ReturnType: typ,
 				Statement:  stmt,
 			}
-			return
-		} else {
-			expr = p.expression()
-			expr = GroupExpr{Group: expr}
-			return
 		}
+
+		return GroupExpr{Group: p.expression()}
 	}
 	return p.primary()
 }
@@ -293,34 +289,32 @@ func (p *Parser) primary() (expr Expr) {
 	switch p.peek().TokenType {
 	case lexer.String:
 		str := p.consume(lexer.String, "Expected string")
-
 		expr = StringLiteralExpr{Value: str.Text}
 		break
 	case lexer.Boolean:
-		truth := p.consume(lexer.Boolean, "Expected boolean")
-
-		boolVal, err := strconv.ParseBool(truth.Text)
-		error = err
-		expr = BooleanLiteralExpr{Value: boolVal}
+		str := p.consume(lexer.Boolean, "Expected boolean")
+		var boolean bool
+		boolean, error = strconv.ParseBool(str.Text)
+		expr = BooleanLiteralExpr{Value: boolean}
 		break
 	case lexer.Int:
-		integr := p.consume(lexer.Int, "Expected integer")
-		intVal, err := strconv.ParseInt(integr.Text, 10, 64)
-		error = err
-		expr = IntegerLiteralExpr{Value: intVal}
+		str := p.consume(lexer.Int, "Expected integer")
+		var integer int64
+		integer, error = strconv.ParseInt(str.Text, 10, 64)
+		expr = IntegerLiteralExpr{Value: integer}
 		break
 	case lexer.Float:
-		flt := p.consume(lexer.Float, "Expected float")
-
-		fltVal, err := strconv.ParseFloat(flt.Text, 64)
-		error = err
-		expr = FloatLiteralExpr{Value: fltVal}
+		str := p.consume(lexer.Float, "Expected float")
+		var float float64
+		float, error = strconv.ParseFloat(str.Text, 64)
+		expr = FloatLiteralExpr{Value: float}
 		break
 	case lexer.Identifier:
 		str := p.consume(lexer.Identifier, "Expected identifier")
 		expr = VariableExpr{Identifier: str.Text}
 		break
 	}
+
 	if error != nil {
 		panic(ParseError{
 			token:   p.previous(),
