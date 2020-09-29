@@ -136,8 +136,8 @@ func (p *Parser) logicalOr() (expr Expr) {
 	return
 }
 
-func (p *Parser) logicalAnd() (expr Expr) {
-	expr = p.referenceEquality()
+func (p *Parser) logicalAnd() Expr {
+	expr := p.referenceEquality()
 
 	for p.match(lexer.And) {
 		op := p.previous()
@@ -149,7 +149,7 @@ func (p *Parser) logicalAnd() (expr Expr) {
 			Rhs: rhs,
 		}
 	}
-	return
+	return expr
 }
 
 func (p *Parser) referenceEquality() (expr Expr) {
@@ -256,32 +256,44 @@ func (p *Parser) invoke() (expr Expr) {
 }
 
 func (p *Parser) funDef() Expr {
-	if p.check(lexer.LParen) {
-		if p.isFuncDef() {
-			args := p.functionArguments()
+	tok := p.peek()
+	switch tok.TokenType {
+	case lexer.LParen:
+		args := p.functionArguments()
+		var typ Type
 
-			var typ Type
-
-			if p.check(lexer.Identifier) {
-				typ1 := p.typeContract()
-
-				typ = typ1
-			}
-
-			p.consume(lexer.Arrow, "Expected arrow at function definition")
-
-			stmt := p.statement()
-
-			return FuncDefExpr{
-				Arguments:  args,
-				ReturnType: typ,
-				Statement:  stmt,
-			}
+		if p.check(lexer.Identifier) {
+			typ = p.typeContract()
 		}
+		p.consume(lexer.Arrow, "Expected arrow at function definition")
 
-		return GroupExpr{Group: p.expression()}
+		return FuncDefExpr{
+			Arguments:  args,
+			ReturnType: typ,
+			Statement:  p.statement(),
+		}
+	case lexer.LBrace:
+		if p.previous().TokenType == lexer.Arrow {
+			panic(ParseError{
+				token:   tok,
+				message: "Single line function expected, found block function",
+			})
+		}
+		return FuncDefExpr{
+			Arguments:  make([]FunctionArgument, 0),
+			ReturnType: nil,
+			Statement:  p.blockStatement(),
+		}
+	case lexer.Arrow:
+		p.advance()
+		return FuncDefExpr{
+			Arguments:  make([]FunctionArgument, 0),
+			ReturnType: nil,
+			Statement:  p.exprStatement(),
+		}
+	default:
+		return p.primary()
 	}
-	return p.primary()
 }
 
 func (p *Parser) primary() (expr Expr) {

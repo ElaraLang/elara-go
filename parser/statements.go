@@ -92,16 +92,20 @@ func (p *Parser) varDefStatement() Stmt {
 	mut := p.match(lexer.Mut)
 	id := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
 
-	if p.check(lexer.Arrow) {
-		arrow := p.tokens[p.current]
-		p.tokens[p.current] = lexer.CreateToken(lexer.Equal, "=")
-		p.insert(p.current+1, arrow, Token{TokenType: lexer.RParen, Text: ")"}, Token{TokenType: lexer.LParen, Text: "("})
-	}
-
 	var typ Type
 	if p.match(lexer.Colon) {
 		typ = p.typeContract()
 	}
+
+	if p.check(lexer.Arrow) {
+		return VarDefStmt{
+			Mutable:    mut,
+			Identifier: id.Text,
+			Type:       typ,
+			Value:      p.funDef(),
+		}
+	}
+
 	p.consume(lexer.Equal, "Expected Equal on variable declaration")
 	expr := p.expression()
 
@@ -165,7 +169,10 @@ func (p *Parser) blockStatement() (stmt Stmt) {
 func (p *Parser) blockedDeclaration(results *[]Stmt, errors *[]ParseError) {
 	defer p.handleError(errors)
 	*results = append(*results, p.declaration())
-	p.consume(lexer.NEWLINE, "Expected newline after declaration in block")
+	nxt := p.peek()
+	if nxt.TokenType != lexer.NEWLINE && nxt.TokenType != lexer.RBrace {
+		panic("Expected newline after declaration in block")
+	}
 	p.cleanNewLines()
 }
 
