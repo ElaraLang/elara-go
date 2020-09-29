@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"elara/lexer"
 	"elara/parser"
 	"reflect"
 )
@@ -76,6 +77,19 @@ type LiteralCommand struct {
 func (c LiteralCommand) Exec(_ *Context) Value {
 	return c.value
 }
+
+type BinaryOperatorCommand struct {
+	lhs Command
+	op  func(ctx *Context, lhs Value, rhs Value) Value
+	rhs Command
+}
+
+func (c BinaryOperatorCommand) Exec(ctx *Context) Value {
+	lhs := c.lhs.Exec(ctx)
+	rhs := c.rhs.Exec(ctx)
+
+	return c.op(ctx, lhs, rhs)
+}
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -136,6 +150,36 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		}
 		return LiteralCommand{value: value}
 
+	case parser.BinaryExpr:
+		lhs := t.Lhs
+		lhsCmd := ExpressionToCommand(lhs)
+		op := t.Op
+		rhs := t.Rhs
+		rhsCmd := ExpressionToCommand(rhs)
+
+		switch op {
+		case lexer.Add:
+			return BinaryOperatorCommand{
+				lhs: lhsCmd,
+				op: func(ctx *Context, lhs Value, rhs Value) Value {
+					left := lhs.Value
+					lhsInt, ok := left.(int64)
+					if !ok {
+						panic("LHS must be an int64")
+					}
+					rhsInt, ok := rhs.Value.(int64)
+					if !ok {
+						panic("RHS must be an int64")
+					}
+
+					return Value{
+						Type:  parser.ElementaryTypeContract{Identifier: "Int"},
+						Value: lhsInt + rhsInt,
+					}
+				},
+				rhs: rhsCmd,
+			}
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())
