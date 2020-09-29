@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+
 	goPath := os.Getenv("GOPATH")
 	filePath := path.Join(goPath, "elara.el")
 	input, err := ioutil.ReadFile(filePath)

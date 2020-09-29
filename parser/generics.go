@@ -9,48 +9,24 @@ type GenericContract struct {
 	Contract   Type
 }
 
-func (p *Parser) generic() (contracts []GenericContract, err error) {
-	_, err = p.consume(lexer.LAngle, "Expected generic declaration to start with `<`")
-	if err != nil {
-		return
-	}
+func (p *Parser) generic() (contracts []GenericContract) {
+	p.consume(lexer.LAngle, "Expected generic declaration to start with `<`")
 	contracts = make([]GenericContract, 0)
 	for {
-		contract, error := p.genericContract()
-		if error != nil {
-			return nil, error
-		}
+		contract := p.genericContract()
 		contracts = append(contracts, contract)
 		if !p.match(lexer.Comma) {
 			break
 		}
 	}
-	_, err = p.consume(lexer.RAngle, "Expected generic declaration to end with `>`")
-	if err != nil {
-		return
-	}
+	p.consume(lexer.RAngle, "Expected generic declaration to end with `>`")
 	return
 }
 
-func (p *Parser) genericContract() (typContract GenericContract, err error) {
-	typID, error := p.consume(lexer.Identifier, "Expected identifier for generic type")
-	if error != nil {
-		err = error
-		return
-	}
-
-	_, error = p.consume(lexer.Colon, "Expected colon after generic type id")
-
-	if error != nil {
-		err = error
-		return
-	}
-
-	contract, error := p.typeContractDefinable()
-	if error != nil {
-		err = error
-		return
-	}
+func (p *Parser) genericContract() (typContract GenericContract) {
+	typID := p.consume(lexer.Identifier, "Expected identifier for generic type")
+	p.consume(lexer.Colon, "Expected colon after generic type id")
+	contract := p.typeContractDefinable()
 	typContract = GenericContract{
 		Identifier: typID.Text,
 		Contract:   contract,
@@ -58,30 +34,11 @@ func (p *Parser) genericContract() (typContract GenericContract, err error) {
 	return
 }
 
-func (p *Parser) typeStatement() (typStmt Stmt, err error) {
-	_, err = p.consume(lexer.Type, "Expected 'type' at the start of type declaration")
-	if err != nil {
-		return
-	}
-
-	id, error := p.consume(lexer.Identifier, "Expected identifier for type")
-
-	if error != nil {
-		err = error
-		return
-	}
-
-	_, err = p.consume(lexer.Arrow, "Expected arrow after type identifier")
-
-	if err != nil {
-		return
-	}
-
-	contract, error := p.typeContractDefinable()
-	if error != nil {
-		err = error
-		return
-	}
+func (p *Parser) typeStatement() (typStmt Stmt) {
+	p.consume(lexer.Type, "Expected 'type' at the start of type declaration")
+	id := p.consume(lexer.Identifier, "Expected identifier for type")
+	p.consume(lexer.Arrow, "Expected arrow after type identifier")
+	contract := p.typeContractDefinable()
 	typStmt = TypeStmt{
 		Identifier: id.Text,
 		Contract:   contract,
@@ -89,16 +46,14 @@ func (p *Parser) typeStatement() (typStmt Stmt, err error) {
 	return
 }
 
-func (p *Parser) genericStatement() (genericStmt Stmt, err error) {
-	generic, error := p.generic()
-	if error != nil {
-		return nil, error
-	}
+func (p *Parser) genericStatement() (genericStmt Stmt) {
+	generic := p.generic()
+
 	p.cleanNewLines()
 
-	stmt, error := p.declaration()
+	stmt := p.declaration()
 	return GenerifiedStmt{
 		Contracts: generic,
 		Statement: stmt,
-	}, nil
+	}
 }

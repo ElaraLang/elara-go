@@ -7,19 +7,12 @@ type DefinedType struct {
 	DefType    Type
 }
 
-func (p *Parser) definedTypes() (types []DefinedType, err error) {
+func (p *Parser) definedTypes() (types []DefinedType) {
 	types = make([]DefinedType, 0)
-	_, err = p.consume(lexer.LBrace, "Expected '{' where defined type starts")
-	if err != nil {
-		return nil, err
-	}
-
+	p.consume(lexer.LBrace, "Expected '{' where defined type starts")
 	for !p.check(lexer.RBrace) {
-		id, error := p.consume(lexer.Identifier, "Expected identifier for type in defined type contract")
-		if error != nil {
-			return nil, error
-		}
-		typ, error := p.primaryContract(true)
+		id := p.consume(lexer.Identifier, "Expected identifier for type in defined type contract")
+		typ := p.primaryContract(true)
 		dTyp := DefinedType{
 			Identifier: id.Text,
 			DefType:    typ,
@@ -29,10 +22,6 @@ func (p *Parser) definedTypes() (types []DefinedType, err error) {
 			break
 		}
 	}
-
-	_, err = p.consume(lexer.RBrace, "Expected '}' where defined type ends")
-	if err != nil {
-		return nil, err
-	}
-	return types, nil
+	p.consume(lexer.RBrace, "Expected '}' where defined type ends")
+	return types
 }

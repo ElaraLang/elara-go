@@ -3,3 +3,5 @@ print(a)
 let b = 15
 print(b)
 print(1 - 2)
+let test = "LOOOL"
+print(test)

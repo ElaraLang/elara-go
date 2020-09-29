@@ -23,26 +23,19 @@ type BinaryTypeContract struct {
 	Rhs    Type
 }
 
-func (p *Parser) typeContract() (contract Type, err error) {
+func (p *Parser) typeContract() (contract Type) {
 	return p.contractualOr(false)
 }
 
-func (p *Parser) typeContractDefinable() (contract Type, err error) {
+func (p *Parser) typeContractDefinable() (contract Type) {
 	return p.contractualOr(true)
 }
 
-func (p *Parser) contractualOr(allowDef bool) (contract Type, err error) {
-	contract, err = p.contractualAnd(allowDef)
-	if err != nil {
-		return
-	}
+func (p *Parser) contractualOr(allowDef bool) (contract Type) {
+	contract = p.contractualAnd(allowDef)
 	for p.match(lexer.Or) {
 		op := p.previous()
-		rhs, error := p.contractualAnd(allowDef)
-		if error != nil {
-			err = error
-			return
-		}
+		rhs := p.contractualAnd(allowDef)
 		contract = BinaryTypeContract{
 			Lhs:    contract,
 			TypeOp: op.TokenType,
@@ -52,18 +45,13 @@ func (p *Parser) contractualOr(allowDef bool) (contract Type, err error) {
 	return
 }
 
-func (p *Parser) contractualAnd(allowDef bool) (contract Type, err error) {
-	contract, err = p.primaryContract(allowDef)
-	if err != nil {
-		return
-	}
+func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
+	contract = p.primaryContract(allowDef)
+
 	for p.match(lexer.And) {
 		op := p.previous()
-		rhs, error := p.primaryContract(allowDef)
-		if error != nil {
-			err = error
-			return
-		}
+		rhs := p.primaryContract(allowDef)
+
 		contract = BinaryTypeContract{
 			Lhs:    contract,
 			TypeOp: op.TokenType,
@@ -73,77 +61,48 @@ func (p *Parser) contractualAnd(allowDef bool) (contract Type, err error) {
 	return
 }
 
-func (p *Parser) primaryContract(allowDef bool) (contract Type, err error) {
+func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 
 	if p.peek().TokenType == lexer.Identifier {
-		return ElementaryTypeContract{Identifier: p.advance().Text}, nil
+		return ElementaryTypeContract{Identifier: p.advance().Text}
 	} else if p.match(lexer.LParen) {
-		isfunc, error := p.isFuncDef()
-		if error != nil {
-			return nil, error
-		}
+		isfunc := p.isFuncDef()
 		if isfunc {
 			args := make([]Type, 0)
 			for !p.check(lexer.RParen) {
-				argTyp, error := p.typeContract()
-				if error != nil {
-					err = error
-					return
-				}
+				argTyp := p.typeContract()
 				args = append(args, argTyp)
 				if !p.match(lexer.Comma) {
 					break
 				}
 			}
-			_, err = p.consume(lexer.RParen, "Function type args not ended properly with ')'")
-			if err != nil {
-				return
-			}
-			_, err = p.consume(lexer.Arrow, "Expected arrow after function type args")
-			if err != nil {
-				return
-			}
+			p.consume(lexer.RParen, "Function type args not ended properly with ')'")
+			p.consume(lexer.Arrow, "Expected arrow after function type args")
 
-			ret, error := p.typeContract()
-			if error != nil {
-				err = error
-				return
-			}
+			ret := p.typeContract()
 			return InvocableTypeContract{
 				Args:       args,
 				ReturnType: ret,
-			}, nil
+			}
 		} else {
-			contract, err = p.contractualOr(allowDef)
-			if err != nil {
-				return nil, err
-			}
-			_, err = p.consume(lexer.RBrace, "contract group not closed. Expected '}'")
-			if err != nil {
-				return nil, err
-			}
+			contract = p.contractualOr(allowDef)
+
+			p.consume(lexer.RBrace, "contract group not closed. Expected '}'")
 			return
 		}
 	}
 	return p.definedContract(allowDef)
 }
 
-func (p *Parser) definedContract(allowDef bool) (contract Type, err error) {
+func (p *Parser) definedContract(allowDef bool) (contract Type) {
 	if allowDef && p.check(lexer.LBrace) {
-
-		defTyp, error := p.definedTypes()
-
-		if error != nil {
-			return nil, error
-		}
-
-		return DefinedTypeContract{DefType: defTyp}, nil
+		defTyp := p.definedTypes()
+		return DefinedTypeContract{DefType: defTyp}
 	}
-	err = ParseError{
+	panic(ParseError{
 		token:   p.previous(),
 		message: "Invalid type contract",
-	}
-	return nil, err
+	})
 }
 
 func (t ElementaryTypeContract) typeOf() {}
