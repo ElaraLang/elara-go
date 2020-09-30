@@ -90,6 +90,13 @@ func (c BinaryOperatorCommand) Exec(ctx *Context) Value {
 
 	return c.op(ctx, lhs, rhs)
 }
+
+type FunctionDefinitionCommand struct {
+}
+
+type FunctionParameter struct {
+}
+
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -201,6 +208,8 @@ func ExpressionToCommand(expr parser.Expr) Command {
 				rhs: rhsCmd,
 			}
 		}
+	case parser.FuncDefExpr:
+		println(t.Statement)
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())
