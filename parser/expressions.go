@@ -27,7 +27,7 @@ type VariableExpr struct {
 }
 
 type AssignmentExpr struct {
-	Context    *Expr
+	Context    Expr
 	Identifier string
 	Value      Expr
 }
@@ -40,6 +40,16 @@ type InvocationExpr struct {
 type ContextExpr struct {
 	Context  Expr
 	Variable VariableExpr
+}
+
+type TypeCastExpr struct {
+	Expr Expr
+	Type Type
+}
+
+type TypeCheckExpr struct {
+	Expr Expr
+	Type Type
 }
 
 type IfElseExpr struct {
@@ -85,17 +95,19 @@ func (IfElseExpr) exprNode()         {}
 func (InvocationExpr) exprNode()     {}
 func (AssignmentExpr) exprNode()     {}
 func (VariableExpr) exprNode()       {}
+func (TypeCastExpr) exprNode()       {}
+func (TypeCheckExpr) exprNode()      {}
 
 func (p *Parser) expression() Expr {
 	return p.assignment()
 }
 
 func (p *Parser) assignment() (expr Expr) {
-	expr = p.logicalOr()
+	expr = p.typeCast()
 
 	if p.check(lexer.Equal) {
 		eqlTok := p.advance()
-		rhs := p.logicalOr()
+		rhs := p.typeCast()
 
 		switch v := expr.(type) {
 		case VariableExpr:
@@ -106,7 +118,7 @@ func (p *Parser) assignment() (expr Expr) {
 			break
 		case ContextExpr:
 			expr = AssignmentExpr{
-				Context:    &v.Context,
+				Context:    v.Context,
 				Identifier: v.Variable.Identifier,
 				Value:      rhs,
 			}
@@ -119,6 +131,28 @@ func (p *Parser) assignment() (expr Expr) {
 		}
 	}
 	return
+}
+
+func (p *Parser) typeCast() Expr {
+	expr := p.typeCheck()
+	for p.match(lexer.As) {
+		expr = TypeCastExpr{
+			Expr: expr,
+			Type: p.typeContractDefinable(),
+		}
+	}
+	return expr
+}
+
+func (p *Parser) typeCheck() Expr {
+	expr := p.logicalOr()
+	if p.match(lexer.Is) {
+		expr = TypeCheckExpr{
+			Expr: expr,
+			Type: p.typeContractDefinable(),
+		}
+	}
+	return expr
 }
 
 func (p *Parser) logicalOr() (expr Expr) {
