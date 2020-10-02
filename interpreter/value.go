@@ -1,17 +1,18 @@
 package interpreter
 
 import (
+	"elara/interpreter/types"
 	"elara/parser"
 	"fmt"
 )
 
 type Value struct {
-	Type  parser.Type
+	Type  types.Type
 	Value interface{}
 }
 
 var unitValue = Value{
-	Type:  parser.ElementaryTypeContract{Identifier: "Unit"},
+	Type:  types.UnitType,
 	Value: "Unit",
 }
 
@@ -22,17 +23,17 @@ func UnitValue() *Value {
 type Variable struct {
 	Name    string
 	Mutable bool
-	Type    parser.Type
+	Type    types.Type
 	Value   Value
 }
 
 type Function struct {
-	Signature parser.InvocableTypeContract
+	Signature types.FunctionType
 	body      []Command
 }
 
 func (f *Function) String() string {
-	return fmt.Sprintf("Function %s => %s", f.Signature.Args, f.Signature.ReturnType)
+	return fmt.Sprintf("Function %s => %s", f.Signature.Params, f.Signature.Output)
 }
 
 func (f *Function) exec(ctx *Context, parameters []Command) Value {

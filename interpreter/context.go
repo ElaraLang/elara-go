@@ -1,7 +1,7 @@
 package interpreter
 
 import (
-	"elara/parser"
+	"elara/interpreter/types"
 	"elara/util"
 	"fmt"
 )
@@ -19,9 +19,9 @@ func NewContext() *Context {
 	}
 
 	//Todo remove
-	printContract := parser.InvocableTypeContract{
-		Args:       []parser.Type{parser.ElementaryTypeContract{Identifier: "Any"}},
-		ReturnType: parser.ElementaryTypeContract{Identifier: "Unit"},
+	printContract := types.FunctionType{
+		Params: []types.Type{types.AnyType},
+		Output: types.UnitType,
 	}
 	c.DefineVariable("print", Variable{
 		Name:    "print",

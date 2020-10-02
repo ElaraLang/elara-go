@@ -9,10 +9,11 @@ import (
 	"os"
 	"path"
 	"strings"
+	"time"
 )
 
 func main() {
-
+	start := time.Now()
 	goPath := os.Getenv("GOPATH")
 	filePath := path.Join(goPath, "elara.el")
 	input, err := ioutil.ReadFile(filePath)
@@ -42,6 +43,9 @@ func main() {
 	interpreter := interpreter.NewInterpreter(parseRes)
 
 	interpreter.Exec()
+	duration := time.Since(start)
+
+	fmt.Printf("Executed in %s", duration)
 }
 
 func CreateToken(tokenType lexer.TokenType, text string) lexer.Token {

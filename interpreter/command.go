@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"elara/interpreter/types"
 	"elara/lexer"
 	"elara/parser"
 	"reflect"
@@ -13,7 +14,7 @@ type Command interface {
 type DefineVarCommand struct {
 	Name    string
 	Mutable bool
-	Type    parser.Type
+	Type    types.Type
 	value   Command
 }
 
@@ -101,9 +102,9 @@ func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
-		Type := t.Type
+		Type := types.FromASTType(t.Type)
 		if Type == nil {
-			Type = &parser.ElementaryTypeContract{Identifier: "Any"}
+			Type = types.AnyType
 		}
 		valueExpr := ExpressionToCommand(t.Value)
 		return DefineVarCommand{
@@ -144,7 +145,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	case parser.StringLiteralExpr:
 		str := t.Value
 		value := Value{
-			Type:  parser.ElementaryTypeContract{Identifier: "String"},
+			Type:  types.StringType,
 			Value: str,
 		}
 		return LiteralCommand{value: value}
@@ -152,11 +153,17 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	case parser.IntegerLiteralExpr:
 		str := t.Value
 		value := Value{
-			Type:  parser.ElementaryTypeContract{Identifier: "Int"},
+			Type:  types.IntType,
 			Value: str,
 		}
 		return LiteralCommand{value: value}
-
+	case parser.FloatLiteralExpr:
+		str := t.Value
+		value := Value{
+			Type:  types.FloatType,
+			Value: str,
+		}
+		return LiteralCommand{value: value}
 	case parser.BinaryExpr:
 		lhs := t.Lhs
 		lhsCmd := ExpressionToCommand(lhs)
@@ -180,7 +187,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 					}
 
 					return Value{
-						Type:  parser.ElementaryTypeContract{Identifier: "Int"},
+						Type:  types.IntType,
 						Value: lhsInt + rhsInt,
 					}
 				},
@@ -201,8 +208,50 @@ func ExpressionToCommand(expr parser.Expr) Command {
 					}
 
 					return Value{
-						Type:  parser.ElementaryTypeContract{Identifier: "Int"},
+						Type:  types.IntType,
 						Value: lhsInt - rhsInt,
+					}
+				},
+				rhs: rhsCmd,
+			}
+		case lexer.Multiply:
+			return BinaryOperatorCommand{
+				lhs: lhsCmd,
+				op: func(ctx *Context, lhs Value, rhs Value) Value {
+					left := lhs.Value
+					lhsInt, ok := left.(int64)
+					if !ok {
+						panic("LHS must be an int64")
+					}
+					rhsInt, ok := rhs.Value.(int64)
+					if !ok {
+						panic("RHS must be an int64")
+					}
+
+					return Value{
+						Type:  types.IntType,
+						Value: lhsInt * rhsInt,
+					}
+				},
+				rhs: rhsCmd,
+			}
+		case lexer.Slash:
+			return BinaryOperatorCommand{
+				lhs: lhsCmd,
+				op: func(ctx *Context, lhs Value, rhs Value) Value {
+					left := lhs.Value
+					lhsInt, ok := left.(int64)
+					if !ok {
+						panic("LHS must be an int64")
+					}
+					rhsInt, ok := rhs.Value.(int64)
+					if !ok {
+						panic("RHS must be an int64")
+					}
+
+					return Value{
+						Type:  types.IntType,
+						Value: lhsInt / rhsInt,
 					}
 				},
 				rhs: rhsCmd,
