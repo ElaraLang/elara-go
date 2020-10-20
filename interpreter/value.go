@@ -29,7 +29,7 @@ type Variable struct {
 
 type Function struct {
 	Signature types.FunctionType
-	body      []Command
+	body      Command
 }
 
 func (f *Function) String() string {
@@ -37,18 +37,13 @@ func (f *Function) String() string {
 }
 
 func (f *Function) exec(ctx *Context, parameters []Command) Value {
-	var val Value
 
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
-		ctx.DefineParameter(i, &paramValue)
+		ctx.DefineParameter(f.Signature.Params[i].Name, &paramValue)
 	}
 
-	for _, line := range f.body {
-		val = line.Exec(ctx)
-	}
-
-	return val
+	return f.body.Exec(ctx)
 }
 
 type Signature struct {

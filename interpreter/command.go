@@ -37,7 +37,11 @@ type VariableCommand struct {
 func (c VariableCommand) Exec(ctx *Context) Value {
 	variable := ctx.FindVariable(c.Variable)
 	if variable == nil {
-		panic("No such variable " + c.Variable)
+		param := ctx.FindParameter(c.Variable)
+		if param == nil {
+			panic("No such variable or parameter " + c.Variable)
+		}
+		return *param
 	}
 	return variable.Value
 }
@@ -92,10 +96,16 @@ func (c BinaryOperatorCommand) Exec(ctx *Context) Value {
 	return c.op(ctx, lhs, rhs)
 }
 
-type FunctionDefinitionCommand struct {
+type BlockCommand struct {
+	lines []Command
 }
 
-type FunctionParameter struct {
+func (c *BlockCommand) Exec(ctx *Context) Value {
+	var last Value
+	for _, line := range c.lines {
+		last = line.Exec(ctx)
+	}
+	return last
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -115,6 +125,13 @@ func ToCommand(statement parser.Stmt) Command {
 		}
 	case parser.ExpressionStmt:
 		return ExpressionToCommand(t.Expr)
+
+	case parser.BlockStmt:
+		commands := make([]Command, len(t.Stmts))
+		for i, stmt := range t.Stmts {
+			commands[i] = ToCommand(stmt)
+		}
+		return &BlockCommand{lines: commands}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
@@ -258,7 +275,28 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			}
 		}
 	case parser.FuncDefExpr:
-		println(t.Statement)
+		params := make([]types.Parameter, len(t.Arguments))
+		for i, parameter := range t.Arguments {
+			paramType := types.FromASTType(parameter.Type)
+			params[i] = types.Parameter{
+				Type: paramType,
+				Name: parameter.Name,
+			}
+		}
+
+		functionType := types.FunctionType{
+			Params: params,
+			Output: types.FromASTType(t.ReturnType),
+		}
+
+		fun := Function{
+			Signature: functionType,
+			body:      ToCommand(t.Statement),
+		}
+		return &LiteralCommand{value: Value{
+			Type:  functionType,
+			Value: fun,
+		}}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

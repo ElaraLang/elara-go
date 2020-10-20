@@ -18,8 +18,17 @@ func (receiver *SimpleType) String() string {
 }
 
 type FunctionType struct {
-	Params []Type
+	Params []Parameter
 	Output Type
+}
+
+type Parameter struct {
+	Type Type
+	Name string
+}
+
+func (t *Parameter) String() string {
+	return fmt.Sprintf("Parameter %s of type %s", t.Name, t.Type.String())
 }
 
 func (t FunctionType) String() string {

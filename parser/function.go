@@ -3,10 +3,10 @@ package parser
 import "elara/lexer"
 
 type FunctionArgument struct {
-	Lazy     bool
-	Type     Type
-	Variable VariableExpr
-	Default  Expr
+	Lazy    bool
+	Type    Type
+	Name    string
+	Default Expr
 }
 
 func (p *Parser) invocationParameters(separator *TokenType) (expr []Expr) {
@@ -42,10 +42,10 @@ func (p *Parser) functionArgument() FunctionArgument {
 	i1 := p.consume(lexer.Identifier, "Invalid argument in function def")
 	if p.match(lexer.Equal) {
 		return FunctionArgument{
-			Lazy:     lazy,
-			Type:     nil,
-			Variable: VariableExpr{Identifier: i1.Text},
-			Default:  p.expression(),
+			Lazy:    lazy,
+			Type:    nil,
+			Name:    i1.Text,
+			Default: p.expression(),
 		}
 	}
 	id := p.consume(lexer.Identifier, "Invalid argument in function def")
@@ -56,10 +56,10 @@ func (p *Parser) functionArgument() FunctionArgument {
 	}
 	typ := ElementaryTypeContract{Identifier: i1.Text}
 	return FunctionArgument{
-		Lazy:     lazy,
-		Type:     typ,
-		Variable: VariableExpr{Identifier: id.Text},
-		Default:  def,
+		Lazy:    lazy,
+		Type:    typ,
+		Name:    id.Text,
+		Default: def,
 	}
 }
 

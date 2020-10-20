@@ -9,18 +9,21 @@ import (
 type Context struct {
 	variables map[string][]*Variable
 
-	parameters []*Value
+	parameters map[string]*Value
 }
 
 func NewContext() *Context {
 	c := &Context{
 		variables:  map[string][]*Variable{},
-		parameters: []*Value{},
+		parameters: map[string]*Value{},
 	}
 
 	//Todo remove
 	printContract := types.FunctionType{
-		Params: []types.Type{types.AnyType},
+		Params: []types.Parameter{{
+			Type: types.AnyType,
+			Name: "value",
+		}},
 		Output: types.UnitType,
 	}
 	c.DefineVariable("print", Variable{
@@ -31,14 +34,12 @@ func NewContext() *Context {
 			Type: printContract,
 			Value: Function{
 				Signature: printContract,
-				body: []Command{
-					NewAbstractCommand(func(ctx *Context) Value {
-						value := ctx.FindParameter(0).Value
-						fmt.Printf("%s\n", util.Stringify(value))
+				body: NewAbstractCommand(func(ctx *Context) Value {
+					value := ctx.FindParameter("value").Value
+					fmt.Printf("%s\n", util.Stringify(value))
 
-						return *UnitValue()
-					}),
-				},
+					return *UnitValue()
+				}),
 			},
 		},
 	})
@@ -60,18 +61,23 @@ func (c Context) FindVariable(name string) *Variable {
 	return vars[0]
 }
 
-func (c *Context) DefineParameter(index int, value *Value) {
-	if index >= len(c.parameters) {
-		newParameters := make([]*Value, index+1)
-		newParameters[index] = value
-		c.parameters = newParameters
-		return
-	}
-	c.parameters[index] = value
+func (c *Context) DefineParameter(name string, value *Value) {
+	c.parameters[name] = value
 }
 
-func (c Context) FindParameter(index int) *Value {
-	return c.parameters[index]
+func (c Context) FindParameterIndexed(index int) *Value {
+	i := 0
+	for _, value := range c.parameters {
+		if i == index {
+			return value
+		}
+		i++
+	}
+	return nil
+}
+
+func (c Context) FindParameter(name string) *Value {
+	return c.parameters[name]
 }
 
 func (c Context) string() string {
