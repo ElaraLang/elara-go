@@ -1,4 +1,4 @@
-let print-value = (Int x) => {
+let print-value = (String x) => {
     print(x + 1)
 }
 print-value("Hello")
