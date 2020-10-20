@@ -1,4 +1,4 @@
-let print-value = (Any x) => {
-    print(x)
+let print-value = (Int x) => {
+    print(x + 1)
 }
-print-value(3)
+print-value("Hello")

@@ -40,7 +40,13 @@ func (f *Function) exec(ctx *Context, parameters []Command) Value {
 
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
-		ctx.DefineParameter(f.Signature.Params[i].Name, &paramValue)
+		expectedParameter := f.Signature.Params[i]
+
+		if paramValue.Type != expectedParameter.Type {
+			panic(fmt.Sprintf("Expected %s for parameters %s and got %s", expectedParameter.Type.String(), expectedParameter.Name, paramValue.Type.String()))
+		}
+
+		ctx.DefineParameter(expectedParameter.Name, &paramValue)
 	}
 
 	return f.body.Exec(ctx)
