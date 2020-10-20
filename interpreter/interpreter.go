@@ -25,7 +25,12 @@ func (s *Interpreter) Exec(scriptMode bool) {
 
 		res := command.Exec(context)
 		if scriptMode {
-			fmt.Println(res.String())
+			formatted := res.String()
+			if formatted == nil {
+				fmt.Println("<no value>")
+			} else {
+				fmt.Println(*formatted)
+			}
 		}
 	}
 }

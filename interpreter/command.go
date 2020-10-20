@@ -7,7 +7,7 @@ import (
 )
 
 type Command interface {
-	Exec(ctx *Context) Value
+	Exec(ctx *Context) *Value
 }
 
 type DefineVarCommand struct {
@@ -17,32 +17,32 @@ type DefineVarCommand struct {
 	value   Command
 }
 
-func (c DefineVarCommand) Exec(ctx *Context) Value {
+func (c DefineVarCommand) Exec(ctx *Context) *Value {
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
 		Type:    c.Type,
-		Value:   c.value.Exec(ctx),
+		Value:   *c.value.Exec(ctx),
 	}
 
 	ctx.DefineVariable(c.Name, variable)
-	return variable.Value
+	return nil
 }
 
 type VariableCommand struct {
 	Variable string
 }
 
-func (c VariableCommand) Exec(ctx *Context) Value {
+func (c VariableCommand) Exec(ctx *Context) *Value {
 	variable := ctx.FindVariable(c.Variable)
 	if variable == nil {
 		param := ctx.FindParameter(c.Variable)
 		if param == nil {
 			panic("No such variable or parameter " + c.Variable)
 		}
-		return *param
+		return param
 	}
-	return variable.Value
+	return &variable.Value
 }
 
 type InvocationCommand struct {
@@ -50,7 +50,7 @@ type InvocationCommand struct {
 	args     []Command
 }
 
-func (c InvocationCommand) Exec(ctx *Context) Value {
+func (c InvocationCommand) Exec(ctx *Context) *Value {
 	context, isContext := c.Invoking.(ContextCommand)
 
 	val := c.Invoking.Exec(ctx)
@@ -70,19 +70,19 @@ func (c InvocationCommand) Exec(ctx *Context) Value {
 	}
 
 	exec := context.receiver.Exec(ctx)
-	return function.Exec(ctx, &exec, c.args)
+	return function.Exec(ctx, exec, c.args)
 
 }
 
 type AbstractCommand struct {
-	content func(ctx *Context) Value
+	content func(ctx *Context) *Value
 }
 
-func (c AbstractCommand) Exec(ctx *Context) Value {
+func (c AbstractCommand) Exec(ctx *Context) *Value {
 	return c.content(ctx)
 }
 
-func NewAbstractCommand(content func(ctx *Context) Value) *AbstractCommand {
+func NewAbstractCommand(content func(ctx *Context) *Value) *AbstractCommand {
 	return &AbstractCommand{
 		content: content,
 	}
@@ -92,17 +92,17 @@ type LiteralCommand struct {
 	value Value
 }
 
-func (c LiteralCommand) Exec(_ *Context) Value {
-	return c.value
+func (c LiteralCommand) Exec(_ *Context) *Value {
+	return &c.value
 }
 
 type BinaryOperatorCommand struct {
 	lhs Command
-	op  func(ctx *Context, lhs Value, rhs Value) Value
+	op  func(ctx *Context, lhs *Value, rhs *Value) *Value
 	rhs Command
 }
 
-func (c BinaryOperatorCommand) Exec(ctx *Context) Value {
+func (c BinaryOperatorCommand) Exec(ctx *Context) *Value {
 	lhs := c.lhs.Exec(ctx)
 	rhs := c.rhs.Exec(ctx)
 
@@ -113,8 +113,8 @@ type BlockCommand struct {
 	lines []Command
 }
 
-func (c *BlockCommand) Exec(ctx *Context) Value {
-	var last Value
+func (c *BlockCommand) Exec(ctx *Context) *Value {
+	var last *Value
 	for _, line := range c.lines {
 		last = line.Exec(ctx)
 	}
@@ -126,14 +126,14 @@ type ContextCommand struct {
 	variable string
 }
 
-func (c ContextCommand) Exec(ctx *Context) Value {
+func (c ContextCommand) Exec(ctx *Context) *Value {
 	receiver := c.receiver.Exec(ctx)
 	function, ok := receiver.Type.functions[c.variable]
 	if !ok {
 		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
 	}
 
-	return Value{
+	return &Value{
 		Type:  FunctionType(&c.variable, function),
 		Value: function,
 	}
@@ -231,7 +231,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		case lexer.Add:
 			return BinaryOperatorCommand{
 				lhs: lhsCmd,
-				op: func(ctx *Context, lhs Value, rhs Value) Value {
+				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
 					lhsInt, ok := left.(int64)
 					if !ok {
@@ -242,7 +242,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 						panic("RHS must be an int64")
 					}
 
-					return Value{
+					return &Value{
 						Type:  IntType,
 						Value: lhsInt + rhsInt,
 					}
@@ -252,7 +252,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		case lexer.Subtract:
 			return BinaryOperatorCommand{
 				lhs: lhsCmd,
-				op: func(ctx *Context, lhs Value, rhs Value) Value {
+				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
 					lhsInt, ok := left.(int64)
 					if !ok {
@@ -263,7 +263,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 						panic("RHS must be an int64")
 					}
 
-					return Value{
+					return &Value{
 						Type:  IntType,
 						Value: lhsInt - rhsInt,
 					}
@@ -273,7 +273,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		case lexer.Multiply:
 			return BinaryOperatorCommand{
 				lhs: lhsCmd,
-				op: func(ctx *Context, lhs Value, rhs Value) Value {
+				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
 					lhsInt, ok := left.(int64)
 					if !ok {
@@ -284,7 +284,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 						panic("RHS must be an int64")
 					}
 
-					return Value{
+					return &Value{
 						Type:  IntType,
 						Value: lhsInt * rhsInt,
 					}
@@ -294,7 +294,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		case lexer.Slash:
 			return BinaryOperatorCommand{
 				lhs: lhsCmd,
-				op: func(ctx *Context, lhs Value, rhs Value) Value {
+				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
 					lhsInt, ok := left.(int64)
 					if !ok {
@@ -305,7 +305,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 						panic("RHS must be an int64")
 					}
 
-					return Value{
+					return &Value{
 						Type:  IntType,
 						Value: lhsInt / rhsInt,
 					}

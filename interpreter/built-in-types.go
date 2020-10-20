@@ -20,10 +20,10 @@ func Init() {
 				},
 				ReturnType: *StringType,
 			},
-			Body: NewAbstractCommand(func(ctx *Context) Value {
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
 				parameter := ctx.FindParameter("value")
 				concatenated := ctx.receiver.Value.(string) + parameter.Value.(string)
-				return Value{
+				return &Value{
 					Type:  StringType,
 					Value: concatenated,
 				}

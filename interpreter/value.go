@@ -10,17 +10,21 @@ type Value struct {
 	Value interface{}
 }
 
-func (v *Value) String() string {
-	return fmt.Sprintf("%s (%s)", util.Stringify(v.Value), v.Type.Name)
+func (v *Value) String() *string {
+	if v == nil {
+		return nil
+	}
+	formatted := fmt.Sprintf("%s (%s)", util.Stringify(v.Value), v.Type.Name)
+	return &formatted
 }
 
-var unitValue = Value{
+var unitValue = &Value{
 	Type:  UnitType,
 	Value: "Unit",
 }
 
 func UnitValue() *Value {
-	return &unitValue
+	return unitValue
 }
 
 type Variable struct {

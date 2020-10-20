@@ -31,11 +31,11 @@ func NewContext() *Context {
 			},
 			ReturnType: *UnitType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) Value {
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			value := ctx.FindParameter("value").Value
 			fmt.Printf("%s\n", util.Stringify(value))
 
-			return *UnitValue()
+			return UnitValue()
 		}),
 	}
 	funName := "print"

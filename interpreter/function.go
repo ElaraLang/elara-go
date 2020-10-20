@@ -13,7 +13,7 @@ func (f *Function) String() string {
 	return fmt.Sprintf("Function %s => %s", f.Signature.Parameters, f.Signature.ReturnType)
 }
 
-func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) Value {
+func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) *Value {
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
 		expectedParameter := f.Signature.Parameters[i]
@@ -22,7 +22,7 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) Val
 			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name, expectedParameter.Name, paramValue.Type.Name))
 		}
 
-		ctx.DefineParameter(expectedParameter.Name, &paramValue)
+		ctx.DefineParameter(expectedParameter.Name, paramValue)
 	}
 	ctx.receiver = receiver
 
