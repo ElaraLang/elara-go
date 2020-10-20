@@ -30,6 +30,10 @@ func CreatePosition(file *string, line int, column int) Position {
 	}
 }
 
+func (t *Token) String() string {
+	return fmt.Sprintf("%s '%s' at %s", t.TokenType.String(), t.Text, t.Position.String())
+}
+
 func (p *Position) String() string {
 	if p.file != nil {
 		return fmt.Sprintf("%s, %d:%d", *p.file, p.line, p.column)
