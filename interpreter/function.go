@@ -13,7 +13,7 @@ func (f *Function) String() string {
 	return fmt.Sprintf("Function %s => %s", f.Signature.Parameters, f.Signature.ReturnType)
 }
 
-func (f *Function) Exec(ctx *Context, parameters []Command) Value {
+func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) Value {
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
 		expectedParameter := f.Signature.Parameters[i]
@@ -24,6 +24,7 @@ func (f *Function) Exec(ctx *Context, parameters []Command) Value {
 
 		ctx.DefineParameter(expectedParameter.Name, &paramValue)
 	}
+	ctx.receiver = receiver
 
 	return f.Body.Exec(ctx)
 }

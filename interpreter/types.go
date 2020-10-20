@@ -3,14 +3,13 @@ package interpreter
 import (
 	"elara/parser"
 	"fmt"
-	"github.com/adam-hanna/arrayOperations"
 	"reflect"
 	"strings"
 )
 
 type Type struct {
 	Name      string
-	functions []Function
+	functions map[string]Function
 }
 
 func (t *Type) Accepts(other Type) bool {
@@ -29,10 +28,10 @@ func (t *Type) Accepts(other Type) bool {
 func EmptyType(name string) *Type {
 	return &Type{
 		Name:      name,
-		functions: []Function{},
+		functions: map[string]Function{},
 	}
 }
-func SimpleType(name string, functions []Function) *Type {
+func SimpleType(name string, functions map[string]Function) *Type {
 	return &Type{
 		Name:      name,
 		functions: functions,
@@ -47,19 +46,17 @@ func AliasType(other Type) *Type {
 }
 
 func CompoundType(a Type, b Type) *Type {
-	functionCompound, ok := arrayOperations.Union(a.functions, b.functions)
-	if !ok {
-		panic("Cannot find the union of types " + a.Name + " and " + b.Name)
+	functionCompound := map[string]Function{}
+	for name, function := range a.functions {
+		functionCompound[name] = function
 	}
-
-	functions, ok := functionCompound.Interface().([]Function)
-	if !ok {
-		panic("Cannot convert to slice of functions")
+	for name, function := range b.functions {
+		functionCompound[name] = function
 	}
 
 	return &Type{
 		Name:      fmt.Sprintf("%sAnd%s", a.Name, b.Name),
-		functions: functions,
+		functions: functionCompound,
 	}
 }
 
@@ -73,14 +70,15 @@ func FunctionType(name *string, function Function) *Type {
 		for i := range function.Signature.Parameters {
 			paramNames[i] = function.Signature.Parameters[i].Name
 		}
+		newName := fmt.Sprintf("%sTo%sFunction", strings.Join(paramNames, ""), function.Signature.ReturnType.Name)
 		return &Type{
-			Name:      fmt.Sprintf("%sTo%sFunction", strings.Join(paramNames, ""), function.Signature.ReturnType.Name),
-			functions: []Function{function},
+			Name:      newName,
+			functions: map[string]Function{newName: function},
 		}
 	}
 	return &Type{
 		Name:      *name,
-		functions: []Function{function},
+		functions: map[string]Function{*name: function},
 	}
 }
 
@@ -90,7 +88,7 @@ func FromASTType(ast parser.Type) *Type {
 	}
 	switch t := ast.(type) {
 	case parser.ElementaryTypeContract:
-		return SimpleType(t.Identifier, []Function{})
+		return SimpleType(t.Identifier, map[string]Function{})
 	}
 
 	panic("Could not handle " + reflect.TypeOf(ast).Name())

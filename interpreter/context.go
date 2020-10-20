@@ -9,12 +9,15 @@ type Context struct {
 	variables map[string][]*Variable
 
 	parameters map[string]*Value
+
+	receiver *Value
 }
 
 func NewContext() *Context {
 	c := &Context{
 		variables:  map[string][]*Variable{},
 		parameters: map[string]*Value{},
+		receiver:   nil,
 	}
 
 	//Todo remove

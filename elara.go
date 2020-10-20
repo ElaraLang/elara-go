@@ -42,6 +42,7 @@ func main() {
 	}
 
 	evaluator := interpreter.NewInterpreter(parseRes)
+	interpreter.Init()
 
 	evaluator.Exec()
 	duration := time.Since(start)

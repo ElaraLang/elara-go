@@ -51,13 +51,27 @@ type InvocationCommand struct {
 }
 
 func (c InvocationCommand) Exec(ctx *Context) Value {
+	context, isContext := c.Invoking.(ContextCommand)
+
 	val := c.Invoking.Exec(ctx)
 	fun, ok := val.Value.(Function)
 	if !ok {
 		panic("Cannot invoke non-function")
 	}
+	if !isContext {
+		return fun.Exec(ctx, nil, c.args)
+	}
 
-	return fun.Exec(ctx, c.args)
+	//ContextCommand seems to think it's a special case... because it is.
+	receiver := context.receiver.Exec(ctx)
+	function, ok := receiver.Type.functions[context.variable]
+	if !ok {
+		panic("No such variable " + context.variable + " on type " + receiver.Type.Name)
+	}
+
+	exec := context.receiver.Exec(ctx)
+	return function.Exec(ctx, &exec, c.args)
+
 }
 
 type AbstractCommand struct {
@@ -105,6 +119,24 @@ func (c *BlockCommand) Exec(ctx *Context) Value {
 		last = line.Exec(ctx)
 	}
 	return last
+}
+
+type ContextCommand struct {
+	receiver Command
+	variable string
+}
+
+func (c ContextCommand) Exec(ctx *Context) Value {
+	receiver := c.receiver.Exec(ctx)
+	function, ok := receiver.Type.functions[c.variable]
+	if !ok {
+		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
+	}
+
+	return Value{
+		Type:  FunctionType(&c.variable, function),
+		Value: function,
+	}
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -299,6 +331,14 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			Type:  functionType,
 			Value: fun,
 		}}
+
+	case parser.ContextExpr:
+		contextCmd := ExpressionToCommand(t.Context)
+		varName := t.Variable.Identifier
+		return ContextCommand{
+			contextCmd,
+			varName,
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())
