@@ -4,13 +4,13 @@ import (
 	"strings"
 )
 
-func lex(code string) []Token {
+func lex(file *string, code string) []Token {
 	reader := strings.NewReader(code)
 	scanner := NewScanner(reader)
 
 	tokens := make([]Token, 0)
 	for {
-		tok, str := scanner.Read()
+		tok, str, line, col := scanner.Read()
 		if tok == EOF {
 			break
 		}
@@ -18,6 +18,7 @@ func lex(code string) []Token {
 		tokens = append(tokens, Token{
 			TokenType: tok,
 			Text:      str,
+			Position:  CreatePosition(file, line, col),
 		})
 	}
 	return tokens

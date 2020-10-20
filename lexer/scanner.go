@@ -8,7 +8,9 @@ import (
 )
 
 type Scanner struct {
-	r *bufio.Reader
+	r    *bufio.Reader
+	line int
+	col  int
 }
 
 func NewScanner(r io.Reader) *Scanner {
@@ -24,7 +26,9 @@ func (s *Scanner) read() rune {
 }
 
 //places the previously read rune back on the reader
-func (s *Scanner) unread() { _ = s.r.UnreadRune() }
+func (s *Scanner) unread() {
+	_ = s.r.UnreadRune()
+}
 
 func (s *Scanner) peek() rune {
 	peeked := s.read()
@@ -32,86 +36,131 @@ func (s *Scanner) peek() rune {
 	return peeked
 }
 
-func (s *Scanner) Read() (tok TokenType, text string) {
+func (s *Scanner) Read() (tok TokenType, text string, line int, col int) {
 	ch := s.read()
 
 	if ch == eof {
-		return EOF, string(ch)
+		return EOF, string(ch), s.line, s.col
 	}
+
 	if ch == '\r' {
 		return s.Read()
 	}
 
 	if ch == '\n' {
-		return NEWLINE, string(ch)
+		defer func() {
+			s.col = 0
+			s.line++
+		}()
+		return NEWLINE, string(ch), s.line, s.col
 	}
 
 	if isWhitespace(ch) {
-		s.consumeWhitespace()
+		s.col++ //consumeWhitespace will add any *further* whitespace counters
+		s.col += s.consumeWhitespace()
 		return s.Read()
 	}
 
 	if ch == ',' {
-		return Comma, string(ch)
+		defer func() {
+			s.col++
+		}()
+		return Comma, string(ch), s.line, s.col
 	}
 	if ch == ':' {
-		return Colon, string(ch)
+		defer func() {
+			s.col++
+		}()
+		return Colon, string(ch), s.line, s.col
 	}
+
 	if ch == '_' {
 		next := s.peek()
 		if isWhitespace(next) || next == eof {
-			return Underscore, string(ch)
+			defer func() {
+				s.col++
+			}()
+			return Underscore, string(ch), s.line, s.col
 		}
 		s.unread()
 	}
 
 	if isAngleBracket(ch) {
 		s.unread()
-		return s.readAngleBracket()
+		bracket, t := s.readAngleBracket()
+		defer func() {
+			s.col += len(t)
+		}()
+		return bracket, t, s.line, s.col
 	}
 
 	if isStartOfSymbol(ch) {
 		s.unread()
-		return s.readSymbol()
+		symbol, t := s.readSymbol()
+		defer func() {
+			s.col += len(t)
+		}()
+		return symbol, t, s.line, s.col
 	}
 
 	if isOperatorSymbol(ch) {
 		s.unread()
-		op, txt := s.readOperator()
+		op, t := s.readOperator()
+		defer func() {
+			s.col += len(t)
+		}()
 		if op != Illegal && op != EOF {
-			return op, txt
+			return op, t, s.line, s.col
 		}
 	}
 
 	if isBracket(ch) {
 		s.unread()
-		return s.readBracket()
+		bracket, t := s.readBracket()
+		defer func() {
+			s.col += len(t)
+		}()
+		return bracket, t, s.line, s.col
 	}
 
 	if isNumerical(ch) {
 		s.unread()
-		return s.readNumber()
+		number, t := s.readNumber()
+		defer func() {
+			s.col += len(t)
+		}()
+		return number, t, s.line, s.col
 	}
 
 	if ch == '"' {
-		return s.readString()
+		str, t := s.readString()
+		defer func() {
+			s.col += len(t)
+		}()
+		return str, t, s.line, s.col
 	}
 
 	if isValidIdentifier(ch) {
 		s.unread()
-		return s.readIdentifier()
+		identifier, t := s.readIdentifier()
+		defer func() {
+			s.col += len(t)
+		}()
+		return identifier, t, s.line, s.col
 	}
 
-	return Illegal, string(ch)
+	return Illegal, string(ch), s.line, s.col
 }
 
 //Consume all whitespace until we reach an eof or a non-whitespace character
-func (s *Scanner) consumeWhitespace() uint {
-	count := uint(0)
+func (s *Scanner) consumeWhitespace() int {
+	count := 0
 	for {
-		if ch := s.read(); ch == eof {
+		ch := s.read()
+		if ch == eof {
 			break
-		} else if !isWhitespace(ch) {
+		}
+		if !isWhitespace(ch) {
 			s.unread()
 			break
 		}

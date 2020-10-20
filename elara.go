@@ -15,7 +15,8 @@ import (
 func main() {
 	start := time.Now()
 	goPath := os.Getenv("GOPATH")
-	filePath := path.Join(goPath, "elara.el")
+	fileName := "elara.el"
+	filePath := path.Join(goPath, fileName)
 	input, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		panic(err)
@@ -25,8 +26,8 @@ func main() {
 
 	result := make([]lexer.Token, 0)
 	for {
-		tok, str := scanner.Read()
-		result = append(result, CreateToken(tok, str))
+		tok, str, line, col := scanner.Read()
+		result = append(result, CreateToken(tok, str, lexer.CreatePosition(&fileName, line, col)))
 		if tok == lexer.EOF {
 			break
 		}
@@ -40,17 +41,18 @@ func main() {
 		fmt.Printf("%q\n", errs)
 	}
 
-	interpreter := interpreter.NewInterpreter(parseRes)
+	evaluator := interpreter.NewInterpreter(parseRes)
 
-	interpreter.Exec()
+	evaluator.Exec()
 	duration := time.Since(start)
 
 	fmt.Printf("Executed in %s", duration)
 }
 
-func CreateToken(tokenType lexer.TokenType, text string) lexer.Token {
+func CreateToken(tokenType lexer.TokenType, text string, position lexer.Position) lexer.Token {
 	return lexer.Token{
 		TokenType: tokenType,
 		Text:      text,
+		Position:  position,
 	}
 }

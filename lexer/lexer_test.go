@@ -7,13 +7,13 @@ import (
 
 func TestIntAssignmentLexing(t *testing.T) {
 	code := "let a = 30"
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Let, "let"),
-		CreateToken(Identifier, "a"),
-		CreateToken(Equal, "="),
-		CreateToken(Int, "30"),
+		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
+		CreateToken(Identifier, "a", CreatePosition(nil, 0, 4)),
+		CreateToken(Equal, "=", CreatePosition(nil, 0, 6)),
+		CreateToken(Int, "30", CreatePosition(nil, 0, 8)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -23,13 +23,13 @@ func TestIntAssignmentLexing(t *testing.T) {
 
 func TestFloatAssignmentLexing(t *testing.T) {
 	code := "let a = 3.5"
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Let, "let"),
-		CreateToken(Identifier, "a"),
-		CreateToken(Equal, "="),
-		CreateToken(Float, "3.5"),
+		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
+		CreateToken(Identifier, "a", CreatePosition(nil, 0, 4)),
+		CreateToken(Equal, "=", CreatePosition(nil, 0, 6)),
+		CreateToken(Float, "3.5", CreatePosition(nil, 0, 8)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -39,13 +39,13 @@ func TestFloatAssignmentLexing(t *testing.T) {
 
 func TestStringAssignmentLexing(t *testing.T) {
 	code := `let a = "Hello"`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Let, "let"),
-		CreateToken(Identifier, "a"),
-		CreateToken(Equal, "="),
-		CreateToken(String, "Hello"),
+		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
+		CreateToken(Identifier, "a", CreatePosition(nil, 0, 4)),
+		CreateToken(Equal, "=", CreatePosition(nil, 0, 6)),
+		CreateToken(String, "Hello", CreatePosition(nil, 0, 8)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -55,13 +55,13 @@ func TestStringAssignmentLexing(t *testing.T) {
 
 func TestBooleanAssignmentLexing(t *testing.T) {
 	code := `let a = true`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Let, "let"),
-		CreateToken(Identifier, "a"),
-		CreateToken(Equal, "="),
-		CreateToken(Boolean, "true"),
+		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
+		CreateToken(Identifier, "a", CreatePosition(nil, 0, 4)),
+		CreateToken(Equal, "=", CreatePosition(nil, 0, 6)),
+		CreateToken(Boolean, "true", CreatePosition(nil, 0, 8)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -71,17 +71,17 @@ func TestBooleanAssignmentLexing(t *testing.T) {
 
 func TestSimpleFunctionLexing(t *testing.T) {
 	code := `let a = () => {}`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Let, "let"),
-		CreateToken(Identifier, "a"),
-		CreateToken(Equal, "="),
-		CreateToken(LParen, "("),
-		CreateToken(RParen, ")"),
-		CreateToken(Arrow, "=>"),
-		CreateToken(LBrace, "{"),
-		CreateToken(RBrace, "}"),
+		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
+		CreateToken(Identifier, "a", CreatePosition(nil, 0, 4)),
+		CreateToken(Equal, "=", CreatePosition(nil, 0, 6)),
+		CreateToken(LParen, "(", CreatePosition(nil, 0, 8)),
+		CreateToken(RParen, ")", CreatePosition(nil, 0, 9)),
+		CreateToken(Arrow, "=>", CreatePosition(nil, 0, 11)),
+		CreateToken(LBrace, "{", CreatePosition(nil, 0, 14)),
+		CreateToken(RBrace, "}", CreatePosition(nil, 0, 15)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -90,19 +90,21 @@ func TestSimpleFunctionLexing(t *testing.T) {
 }
 
 func TestHelloWorldLexing(t *testing.T) {
-	code := `let hello-world => print "Hello World" 
+	code := `let hello-world => print "Hello World"
              hello-world()`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Let, "let"),
-		CreateToken(Identifier, "hello-world"),
-		CreateToken(Arrow, "=>"),
-		CreateToken(Identifier, "print"),
-		CreateToken(String, "Hello World"),
-		CreateToken(Identifier, "hello-world"),
-		CreateToken(LParen, "("),
-		CreateToken(RParen, ")"),
+		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
+		CreateToken(Identifier, "hello-world", CreatePosition(nil, 0, 4)),
+		CreateToken(Arrow, "=>", CreatePosition(nil, 0, 16)),
+		CreateToken(Identifier, "print", CreatePosition(nil, 0, 19)),
+		CreateToken(String, "Hello World", CreatePosition(nil, 0, 25)),
+		CreateToken(NEWLINE, "\n", CreatePosition(nil, 0, 36)),
+		//Note: These add 13 because there are 13 spaces in the raw string before the call
+		CreateToken(Identifier, "hello-world", CreatePosition(nil, 1, 13+0)),
+		CreateToken(LParen, "(", CreatePosition(nil, 1, 13+11)),
+		CreateToken(RParen, ")", CreatePosition(nil, 1, 13+12)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -112,17 +114,17 @@ func TestHelloWorldLexing(t *testing.T) {
 
 func TestBracketLexing(t *testing.T) {
 	code := `()[]{}<>`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(LParen, "("),
-		CreateToken(RParen, ")"),
-		CreateToken(LSquare, "["),
-		CreateToken(RSquare, "]"),
-		CreateToken(LBrace, "{"),
-		CreateToken(RBrace, "}"),
-		CreateToken(LAngle, "<"),
-		CreateToken(RAngle, ">"),
+		CreateToken(LParen, "(", CreatePosition(nil, 0, 0)),
+		CreateToken(RParen, ")", CreatePosition(nil, 0, 1)),
+		CreateToken(LSquare, "[", CreatePosition(nil, 0, 2)),
+		CreateToken(RSquare, "]", CreatePosition(nil, 0, 3)),
+		CreateToken(LBrace, "{", CreatePosition(nil, 0, 4)),
+		CreateToken(RBrace, "}", CreatePosition(nil, 0, 5)),
+		CreateToken(LAngle, "<", CreatePosition(nil, 0, 6)),
+		CreateToken(RAngle, ">", CreatePosition(nil, 0, 7)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -132,24 +134,24 @@ func TestBracketLexing(t *testing.T) {
 
 func TestOperatorLexing(t *testing.T) {
 	code := `+ - * / % && || ^ == != > >= < <= !`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Add, "+"),
-		CreateToken(Subtract, "-"),
-		CreateToken(Multiply, "*"),
-		CreateToken(Slash, "/"),
-		CreateToken(Mod, "%"),
-		CreateToken(And, "&&"),
-		CreateToken(Or, "||"),
-		CreateToken(Xor, "^"),
-		CreateToken(Equals, "=="),
-		CreateToken(NotEquals, "!="),
-		CreateToken(RAngle, ">"),
-		CreateToken(GreaterEqual, ">="),
-		CreateToken(LAngle, "<"),
-		CreateToken(LesserEqual, "<="),
-		CreateToken(Not, "!"),
+		CreateToken(Add, "+", CreatePosition(nil, 0, 0)),
+		CreateToken(Subtract, "-", CreatePosition(nil, 0, 2)),
+		CreateToken(Multiply, "*", CreatePosition(nil, 0, 4)),
+		CreateToken(Slash, "/", CreatePosition(nil, 0, 6)),
+		CreateToken(Mod, "%", CreatePosition(nil, 0, 8)),
+		CreateToken(And, "&&", CreatePosition(nil, 0, 10)),
+		CreateToken(Or, "||", CreatePosition(nil, 0, 13)),
+		CreateToken(Xor, "^", CreatePosition(nil, 0, 16)),
+		CreateToken(Equals, "==", CreatePosition(nil, 0, 18)),
+		CreateToken(NotEquals, "!=", CreatePosition(nil, 0, 21)),
+		CreateToken(RAngle, ">", CreatePosition(nil, 0, 24)),
+		CreateToken(GreaterEqual, ">=", CreatePosition(nil, 0, 26)),
+		CreateToken(LAngle, "<", CreatePosition(nil, 0, 29)),
+		CreateToken(LesserEqual, "<=", CreatePosition(nil, 0, 31)),
+		CreateToken(Not, "!", CreatePosition(nil, 0, 34)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
@@ -159,10 +161,10 @@ func TestOperatorLexing(t *testing.T) {
 
 func TestUnderscoreLexing(t *testing.T) {
 	code := `_`
-	tokens := lex(code)
+	tokens := lex(nil, code)
 
 	expectedTokens := []Token{
-		CreateToken(Underscore, "_"),
+		CreateToken(Underscore, "_", CreatePosition(nil, 0, 0)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {

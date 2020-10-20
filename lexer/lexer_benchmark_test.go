@@ -5,10 +5,7 @@ import (
 	"testing"
 )
 
-var result []Token
-
 func BenchmarkEverySymbol(b *testing.B) {
-	var lexed []Token
 	code := strings.Repeat(`
 		let a = 30
 		let a = 3.5
@@ -24,7 +21,6 @@ func BenchmarkEverySymbol(b *testing.B) {
 		let	mut	struct if else match while
 		`, 1_000)
 	for n := 0; n < b.N; n++ {
-		lexed = lex(code)
+		lex(nil, code)
 	}
-	result = lexed
 }
