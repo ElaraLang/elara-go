@@ -1,4 +1,1 @@
-let print-value = (String x) => {
-    print(x + 1)
-}
-print-value("Hello")
+print(3 + 4 / 2)

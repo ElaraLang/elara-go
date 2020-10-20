@@ -2,7 +2,7 @@ package parser
 
 import "C"
 import (
-	lexer "elara/lexer"
+	"elara/lexer"
 	"fmt"
 )
 
@@ -110,6 +110,16 @@ func (p *Parser) consume(tokenType TokenType, msg string) (token Token) {
 		return
 	}
 	panic(ParseError{token: p.peek(), message: msg})
+}
+
+func (p *Parser) consumeValidIdentifier(msg string) (token Token) {
+	next := p.peek()
+	nextType := next.TokenType
+	if nextType != lexer.Identifier && nextType != lexer.Add && nextType != lexer.Subtract && nextType != lexer.Slash && nextType != lexer.Multiply {
+		panic(ParseError{token: p.peek(), message: msg})
+	}
+	p.advance()
+	return next
 }
 
 func (p *Parser) cleanNewLines() {

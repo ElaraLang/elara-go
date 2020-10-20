@@ -42,7 +42,7 @@ func (f *Function) exec(ctx *Context, parameters []Command) Value {
 		paramValue := parameter.Exec(ctx)
 		expectedParameter := f.Signature.Params[i]
 
-		if paramValue.Type != expectedParameter.Type {
+		if !expectedParameter.Type.Accepts(paramValue.Type) {
 			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.String(), expectedParameter.Name, paramValue.Type.String()))
 		}
 

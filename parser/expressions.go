@@ -277,7 +277,7 @@ func (p *Parser) invoke() (expr Expr) {
 			}
 			break
 		case lexer.Dot:
-			id := p.consume(lexer.Identifier, "Expected identifier inside context getter/setter")
+			id := p.consumeValidIdentifier("Expected identifier inside context getter/setter")
 
 			expr = ContextExpr{
 				Context:  expr,

@@ -8,7 +8,9 @@ var IntType Type = &SimpleType{name: "Int"}
 var FloatType Type = &SimpleType{name: "Float"}
 var StringType Type = &SimpleType{name: "String"}
 var UnitType Type = &SimpleType{name: "Unit"}
-var AnyType Type = &SimpleType{name: "Any"}
+var AnyType Type = &SimpleAnonymousType{name: "Any", accepts: func(other Type) bool {
+	return true
+}}
 
 var types = map[string]Type{
 	"Int":     IntType,
