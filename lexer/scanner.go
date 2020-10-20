@@ -222,6 +222,10 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 		return Boolean, str
 	case "false":
 		return Boolean, str
+	case "yeah":
+		return Boolean, str
+	case "nah":
+		return Boolean, str
 	}
 
 	return Identifier, str

@@ -340,6 +340,14 @@ func (p *Parser) primary() (expr Expr) {
 	case lexer.Boolean:
 		str := p.consume(lexer.Boolean, "Expected boolean")
 		var boolean bool
+		if str.Text == "yeah" {
+			expr = BooleanLiteralExpr{true}
+			break
+		}
+		if str.Text == "nah" {
+			expr = BooleanLiteralExpr{false}
+			break
+		}
 		boolean, error = strconv.ParseBool(str.Text)
 		expr = BooleanLiteralExpr{Value: boolean}
 		break
