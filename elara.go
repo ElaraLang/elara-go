@@ -15,8 +15,11 @@ func main() {
 	args := os.Args
 	//This isn't really a repl, but it will be. for now, it's close enough in that it will print the output of every expression
 	var repl = false
-	if args[0] == "--repl" {
-		repl = true
+	for _, arg := range args {
+		if arg == "--repl" {
+			repl = true
+			break
+		}
 	}
 
 	fileName, input := loadElaraFile()
@@ -40,7 +43,7 @@ func main() {
 	evaluator.Exec(repl)
 	duration := time.Since(start)
 
-	fmt.Printf("Executed in %s", duration)
+	fmt.Printf("Executed in %s.\n", duration)
 }
 
 func loadElaraFile() (string, []byte) {

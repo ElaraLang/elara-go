@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"elara/util"
 	"fmt"
 )
 
@@ -10,7 +11,7 @@ type Value struct {
 }
 
 func (v *Value) String() string {
-	return fmt.Sprintf("%s (%s)", v.Value, v.Type)
+	return fmt.Sprintf("%s (%s)", util.Stringify(v.Value), v.Type.Name)
 }
 
 var unitValue = Value{

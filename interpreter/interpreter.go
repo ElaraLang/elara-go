@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"elara/parser"
+	"fmt"
 )
 
 type Interpreter struct {
@@ -24,7 +25,7 @@ func (s *Interpreter) Exec(scriptMode bool) {
 
 		res := command.Exec(context)
 		if scriptMode {
-			println(res.String())
+			fmt.Println(res.String())
 		}
 	}
 }
