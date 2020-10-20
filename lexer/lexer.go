@@ -4,7 +4,7 @@ import (
 	"strings"
 )
 
-func lex(file *string, code string) []Token {
+func Lex(file *string, code string) []Token {
 	reader := strings.NewReader(code)
 	scanner := NewScanner(reader)
 

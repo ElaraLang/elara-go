@@ -14,7 +14,7 @@ func NewInterpreter(code []parser.Stmt) *Interpreter {
 	}
 }
 
-func (s *Interpreter) Exec() {
+func (s *Interpreter) Exec(scriptMode bool) {
 	_ = NewStack()
 	context := NewContext()
 
@@ -22,6 +22,9 @@ func (s *Interpreter) Exec() {
 		line := s.lines[i]
 		command := ToCommand(line)
 
-		command.Exec(context)
+		res := command.Exec(context)
+		if scriptMode {
+			println(res.String())
+		}
 	}
 }

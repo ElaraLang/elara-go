@@ -7,7 +7,7 @@ import (
 
 func TestIntAssignmentLexing(t *testing.T) {
 	code := "let a = 30"
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
@@ -23,7 +23,7 @@ func TestIntAssignmentLexing(t *testing.T) {
 
 func TestFloatAssignmentLexing(t *testing.T) {
 	code := "let a = 3.5"
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
@@ -39,7 +39,7 @@ func TestFloatAssignmentLexing(t *testing.T) {
 
 func TestStringAssignmentLexing(t *testing.T) {
 	code := `let a = "Hello"`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
@@ -55,7 +55,7 @@ func TestStringAssignmentLexing(t *testing.T) {
 
 func TestBooleanAssignmentLexing(t *testing.T) {
 	code := `let a = true`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
@@ -71,7 +71,7 @@ func TestBooleanAssignmentLexing(t *testing.T) {
 
 func TestSimpleFunctionLexing(t *testing.T) {
 	code := `let a = () => {}`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
@@ -92,7 +92,7 @@ func TestSimpleFunctionLexing(t *testing.T) {
 func TestHelloWorldLexing(t *testing.T) {
 	code := `let hello-world => print "Hello World"
              hello-world()`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
@@ -114,7 +114,7 @@ func TestHelloWorldLexing(t *testing.T) {
 
 func TestBracketLexing(t *testing.T) {
 	code := `()[]{}<>`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(LParen, "(", CreatePosition(nil, 0, 0)),
@@ -134,7 +134,7 @@ func TestBracketLexing(t *testing.T) {
 
 func TestOperatorLexing(t *testing.T) {
 	code := `+ - * / % && || ^ == != > >= < <= !`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Add, "+", CreatePosition(nil, 0, 0)),
@@ -161,7 +161,7 @@ func TestOperatorLexing(t *testing.T) {
 
 func TestUnderscoreLexing(t *testing.T) {
 	code := `_`
-	tokens := lex(nil, code)
+	tokens := Lex(nil, code)
 
 	expectedTokens := []Token{
 		CreateToken(Underscore, "_", CreatePosition(nil, 0, 0)),

@@ -21,6 +21,6 @@ func BenchmarkEverySymbol(b *testing.B) {
 		let	mut	struct if else match while
 		`, 1_000)
 	for n := 0; n < b.N; n++ {
-		lex(nil, code)
+		Lex(nil, code)
 	}
 }

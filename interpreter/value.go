@@ -9,6 +9,10 @@ type Value struct {
 	Value interface{}
 }
 
+func (v *Value) String() string {
+	return fmt.Sprintf("%s (%s)", v.Value, v.Type)
+}
+
 var unitValue = Value{
 	Type:  UnitType,
 	Value: "Unit",
