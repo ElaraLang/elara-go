@@ -5,6 +5,7 @@ var UnitType = EmptyType("Unit")
 
 var IntType = EmptyType("Int")
 var FloatType = EmptyType("Float")
+var BooleanType = EmptyType("Boolean")
 var StringType = EmptyType("String")
 
 func Init() {

@@ -199,19 +199,27 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		return LiteralCommand{value: value}
 
 	case parser.IntegerLiteralExpr:
-		str := t.Value
+		integer := t.Value
 		value := Value{
 			Type:  IntType,
-			Value: str,
+			Value: integer,
 		}
 		return LiteralCommand{value: value}
 	case parser.FloatLiteralExpr:
-		str := t.Value
+		float := t.Value
 		value := Value{
 			Type:  FloatType,
-			Value: str,
+			Value: float,
 		}
 		return LiteralCommand{value: value}
+	case parser.BooleanLiteralExpr:
+		boolean := t.Value
+		value := Value{
+			Type:  BooleanType,
+			Value: boolean,
+		}
+		return LiteralCommand{value}
+
 	case parser.BinaryExpr:
 		lhs := t.Lhs
 		lhsCmd := ExpressionToCommand(lhs)
