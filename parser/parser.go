@@ -80,6 +80,9 @@ func (p *Parser) previous() Token {
 }
 
 func (p *Parser) isAtEnd() bool {
+	if p.current == len(p.tokens) {
+		return true
+	}
 	return p.peek().TokenType == lexer.EOF
 }
 
