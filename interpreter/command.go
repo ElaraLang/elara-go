@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"elara/interpreter/types"
 	"elara/lexer"
 	"elara/parser"
 	"reflect"
@@ -14,7 +13,7 @@ type Command interface {
 type DefineVarCommand struct {
 	Name    string
 	Mutable bool
-	Type    types.Type
+	Type    Type
 	value   Command
 }
 
@@ -58,7 +57,7 @@ func (c InvocationCommand) Exec(ctx *Context) Value {
 		panic("Cannot invoke non-function")
 	}
 
-	return fun.exec(ctx, c.args)
+	return fun.Exec(ctx, c.args)
 }
 
 type AbstractCommand struct {
@@ -112,15 +111,15 @@ func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
-		Type := types.FromASTType(t.Type)
+		Type := FromASTType(t.Type)
 		if Type == nil {
-			Type = types.AnyType
+			Type = AnyType
 		}
 		valueExpr := ExpressionToCommand(t.Value)
 		return DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
-			Type:    Type,
+			Type:    *Type,
 			value:   valueExpr,
 		}
 	case parser.ExpressionStmt:
@@ -162,7 +161,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	case parser.StringLiteralExpr:
 		str := t.Value
 		value := Value{
-			Type:  types.StringType,
+			Type:  StringType,
 			Value: str,
 		}
 		return LiteralCommand{value: value}
@@ -170,14 +169,14 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	case parser.IntegerLiteralExpr:
 		str := t.Value
 		value := Value{
-			Type:  types.IntType,
+			Type:  IntType,
 			Value: str,
 		}
 		return LiteralCommand{value: value}
 	case parser.FloatLiteralExpr:
 		str := t.Value
 		value := Value{
-			Type:  types.FloatType,
+			Type:  FloatType,
 			Value: str,
 		}
 		return LiteralCommand{value: value}
@@ -204,7 +203,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 					}
 
 					return Value{
-						Type:  types.IntType,
+						Type:  IntType,
 						Value: lhsInt + rhsInt,
 					}
 				},
@@ -225,7 +224,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 					}
 
 					return Value{
-						Type:  types.IntType,
+						Type:  IntType,
 						Value: lhsInt - rhsInt,
 					}
 				},
@@ -246,7 +245,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 					}
 
 					return Value{
-						Type:  types.IntType,
+						Type:  IntType,
 						Value: lhsInt * rhsInt,
 					}
 				},
@@ -267,7 +266,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 					}
 
 					return Value{
-						Type:  types.IntType,
+						Type:  IntType,
 						Value: lhsInt / rhsInt,
 					}
 				},
@@ -275,24 +274,27 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			}
 		}
 	case parser.FuncDefExpr:
-		params := make([]types.Parameter, len(t.Arguments))
+		params := make([]Parameter, len(t.Arguments))
 		for i, parameter := range t.Arguments {
-			paramType := types.FromASTType(parameter.Type)
-			params[i] = types.Parameter{
-				Type: paramType,
+			paramType := FromASTType(parameter.Type)
+			params[i] = Parameter{
+				Type: *paramType,
 				Name: parameter.Name,
 			}
 		}
 
-		functionType := types.FunctionType{
-			Params: params,
-			Output: types.FromASTType(t.ReturnType),
-		}
+		returnType := FromASTType(t.ReturnType)
 
 		fun := Function{
-			Signature: functionType,
-			body:      ToCommand(t.Statement),
+			Signature: Signature{
+				Parameters: params,
+				ReturnType: *returnType,
+			},
+			Body: ToCommand(t.Statement),
 		}
+
+		functionType := FunctionType(nil, fun)
+
 		return &LiteralCommand{value: Value{
 			Type:  functionType,
 			Value: fun,

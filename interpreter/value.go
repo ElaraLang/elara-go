@@ -1,18 +1,16 @@
 package interpreter
 
 import (
-	"elara/interpreter/types"
-	"elara/parser"
 	"fmt"
 )
 
 type Value struct {
-	Type  types.Type
+	Type  *Type
 	Value interface{}
 }
 
 var unitValue = Value{
-	Type:  types.UnitType,
+	Type:  UnitType,
 	Value: "Unit",
 }
 
@@ -23,38 +21,8 @@ func UnitValue() *Value {
 type Variable struct {
 	Name    string
 	Mutable bool
-	Type    types.Type
+	Type    Type
 	Value   Value
-}
-
-type Function struct {
-	Signature types.FunctionType
-	body      Command
-}
-
-func (f *Function) String() string {
-	return fmt.Sprintf("Function %s => %s", f.Signature.Params, f.Signature.Output)
-}
-
-func (f *Function) exec(ctx *Context, parameters []Command) Value {
-
-	for i, parameter := range parameters {
-		paramValue := parameter.Exec(ctx)
-		expectedParameter := f.Signature.Params[i]
-
-		if !expectedParameter.Type.Accepts(paramValue.Type) {
-			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.String(), expectedParameter.Name, paramValue.Type.String()))
-		}
-
-		ctx.DefineParameter(expectedParameter.Name, &paramValue)
-	}
-
-	return f.body.Exec(ctx)
-}
-
-type Signature struct {
-	parameters []parser.Type
-	ReturnType parser.Type
 }
 
 func (v Variable) string() string {

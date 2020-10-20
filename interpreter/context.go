@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"elara/interpreter/types"
 	"elara/util"
 	"fmt"
 )
@@ -19,28 +18,33 @@ func NewContext() *Context {
 	}
 
 	//Todo remove
-	printContract := types.FunctionType{
-		Params: []types.Parameter{{
-			Type: types.AnyType,
-			Name: "value",
-		}},
-		Output: types.UnitType,
-	}
-	c.DefineVariable("print", Variable{
-		Name:    "print",
-		Mutable: false,
-		Type:    printContract,
-		Value: Value{
-			Type: printContract,
-			Value: Function{
-				Signature: printContract,
-				body: NewAbstractCommand(func(ctx *Context) Value {
-					value := ctx.FindParameter("value").Value
-					fmt.Printf("%s\n", util.Stringify(value))
-
-					return *UnitValue()
-				}),
+	function := Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "value",
+					Type: *AnyType,
+				},
 			},
+			ReturnType: *UnitType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) Value {
+			value := ctx.FindParameter("value").Value
+			fmt.Printf("%s\n", util.Stringify(value))
+
+			return *UnitValue()
+		}),
+	}
+	funName := "print"
+	printContract := FunctionType(&funName, function)
+
+	c.DefineVariable(funName, Variable{
+		Name:    funName,
+		Mutable: false,
+		Type:    *printContract,
+		Value: Value{
+			Type:  printContract,
+			Value: function,
 		},
 	})
 	return c
