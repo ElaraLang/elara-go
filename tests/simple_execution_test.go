@@ -17,7 +17,6 @@ func TestSimpleVariableDeclaration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(results, expectedResults) {
-		t.Fail()
 		t.Errorf("Incorrect lexing output, got %v but expected %v", formatValues(results), formatValues(expectedResults))
 	}
 }
