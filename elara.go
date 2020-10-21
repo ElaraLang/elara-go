@@ -1,9 +1,7 @@
 package main
 
 import (
-	"elara/interpreter"
-	"elara/lexer"
-	"elara/parser"
+	"elara/base"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -26,21 +24,8 @@ func main() {
 
 	start := time.Now()
 
-	result := lexer.Lex(&fileName, string(input))
+	base.Execute(&fileName, string(input), repl)
 
-	psr := parser.NewParser(&result)
-	parseRes, errs := psr.Parse()
-
-	if len(errs) != 0 {
-		_, _ = os.Stderr.WriteString("Parse Errors: \n")
-		_, _ = os.Stderr.WriteString(fmt.Sprintf("%q\n", errs))
-		return
-	}
-
-	evaluator := interpreter.NewInterpreter(parseRes)
-	interpreter.Init()
-
-	evaluator.Exec(repl)
 	duration := time.Since(start)
 
 	fmt.Printf("Executed in %s.\n", duration)

@@ -15,15 +15,18 @@ func NewInterpreter(code []parser.Stmt) *Interpreter {
 	}
 }
 
-func (s *Interpreter) Exec(scriptMode bool) {
+func (s *Interpreter) Exec(scriptMode bool) []*Value {
 	_ = NewStack()
 	context := NewContext()
+
+	values := make([]*Value, len(s.lines))
 
 	for i := 0; i < len(s.lines); i++ {
 		line := s.lines[i]
 		command := ToCommand(line)
 
 		res := command.Exec(context)
+		values[i] = res
 		if scriptMode {
 			formatted := res.String()
 			if formatted == nil {
@@ -33,4 +36,5 @@ func (s *Interpreter) Exec(scriptMode bool) {
 			}
 		}
 	}
+	return values
 }
