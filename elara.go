@@ -32,8 +32,8 @@ func main() {
 	parseRes, errs := psr.Parse()
 
 	if len(errs) != 0 {
-		_, _ = os.Stderr.WriteString("Parse Errors")
-		fmt.Printf("%q\n", errs)
+		_, _ = os.Stderr.WriteString("Parse Errors: \n")
+		_, _ = os.Stderr.WriteString(fmt.Sprintf("%q\n", errs))
 		return
 	}
 
