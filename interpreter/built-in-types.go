@@ -30,4 +30,26 @@ func Init() {
 			}),
 		},
 	}
+
+	BooleanType.functions = map[string]Function{
+		"and": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *BooleanType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				and := ctx.receiver.Value.(bool) && parameter.Value.(bool)
+				return &Value{
+					Type:  BooleanType,
+					Value: and,
+				}
+			}),
+		},
+	}
 }

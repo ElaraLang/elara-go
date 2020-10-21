@@ -1,2 +1,1 @@
-let hi => print("Hello")
-hi()
+true.and(false)
