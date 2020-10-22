@@ -18,11 +18,15 @@ type DefineVarCommand struct {
 }
 
 func (c DefineVarCommand) Exec(ctx *Context) *Value {
+	value := c.value.Exec(ctx)
+	if !c.Type.Accepts(*value.Type) {
+		panic("Cannot use value of type " + value.Type.Name + " in place of " + c.Type.Name + " for variable " + c.Name)
+	}
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
 		Type:    c.Type,
-		Value:   *c.value.Exec(ctx),
+		Value:   *value,
 	}
 
 	ctx.DefineVariable(c.Name, variable)

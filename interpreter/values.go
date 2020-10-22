@@ -6,3 +6,10 @@ func IntValue(int int64) *Value {
 		Value: int,
 	}
 }
+
+func FloatValue(num float64) *Value {
+	return &Value{
+		Type:  FloatType,
+		Value: num,
+	}
+}

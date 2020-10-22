@@ -17,7 +17,41 @@ func TestSimpleVariableDeclaration(t *testing.T) {
 	}
 
 	if !reflect.DeepEqual(results, expectedResults) {
-		t.Errorf("Incorrect lexing output, got %v but expected %v", formatValues(results), formatValues(expectedResults))
+		t.Errorf("Incorrect parsing output, got %v but expected %v", formatValues(results), formatValues(expectedResults))
+	}
+}
+
+func TestSimpleVariableDeclarationWithType(t *testing.T) {
+	code := `let a: Int = 3
+	a`
+	results := base.Execute(nil, code, false)
+	expectedResults := []*interpreter.Value{
+		nil,
+		interpreter.IntValue(3),
+	}
+
+	if !reflect.DeepEqual(results, expectedResults) {
+		t.Errorf("Incorrect parsing output, got %v but expected %v", formatValues(results), formatValues(expectedResults))
+	}
+}
+
+func TestSimpleVariableDeclarationWithTypeAndInvalidValue(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Intepreter allows assignment of incorrect types / values")
+		}
+	}()
+
+	code := `let a: Int = 3.5
+	a`
+	results := base.Execute(nil, code, false)
+
+	expectedResults := []*interpreter.Value{
+		nil,
+		interpreter.FloatValue(3),
+	}
+	if !reflect.DeepEqual(results, expectedResults) {
+		t.Errorf("Incorrect parsing output, got %v but expected %v", formatValues(results), formatValues(expectedResults))
 	}
 }
 

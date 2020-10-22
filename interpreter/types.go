@@ -88,7 +88,12 @@ func FromASTType(ast parser.Type) *Type {
 	}
 	switch t := ast.(type) {
 	case parser.ElementaryTypeContract:
-		return SimpleType(t.Identifier, map[string]Function{})
+		identifier := t.Identifier
+		builtIn := BuiltInTypeByName(identifier)
+		if builtIn != nil {
+			return builtIn
+		}
+		return SimpleType(identifier, map[string]Function{})
 	}
 
 	panic("Could not handle " + reflect.TypeOf(ast).Name())

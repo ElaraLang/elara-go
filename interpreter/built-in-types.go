@@ -8,6 +8,19 @@ var FloatType = EmptyType("Float")
 var BooleanType = EmptyType("Boolean")
 var StringType = EmptyType("String")
 
+var types = map[string]*Type{
+	"Any":  AnyType,
+	"Unit": UnitType,
+
+	"Int":     IntType,
+	"Float":   FloatType,
+	"Boolean": BooleanType,
+	"String":  StringType,
+}
+
+func BuiltInTypeByName(name string) *Type {
+	return types[name]
+}
 func Init() {
 	StringType.functions = map[string]Function{
 		"plus": {
@@ -48,6 +61,28 @@ func Init() {
 				return &Value{
 					Type:  BooleanType,
 					Value: and,
+				}
+			}),
+		},
+	}
+
+	IntType.functions = map[string]Function{
+		"add": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *IntType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				result := ctx.receiver.Value.(int) + parameter.Value.(int)
+				return &Value{
+					Type:  IntType,
+					Value: result,
 				}
 			}),
 		},
