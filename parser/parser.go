@@ -42,6 +42,10 @@ func (p *Parser) Parse() (result []Stmt, error []ParseError) {
 
 func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 	defer p.handleError(error)
+	if p.peek().TokenType == lexer.NEWLINE {
+		p.advance()
+		return
+	}
 	stmt := p.declaration()
 	*result = append(*result, stmt)
 	if !(p.match(lexer.NEWLINE) || p.isAtEnd()) {
