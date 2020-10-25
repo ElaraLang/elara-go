@@ -13,14 +13,15 @@ type Type struct {
 }
 
 func (t *Type) Accepts(other Type) bool {
+	if &other == t {
+		return true
+	}
 	for i := range t.functions {
 		fun1 := t.functions[i]
-		for i2 := range other.functions {
-			if reflect.DeepEqual(fun1, other.functions[i2]) {
-				break
-			}
+		fun2 := other.functions[i]
+		if !reflect.DeepEqual(fun1, fun2) {
+			return false
 		}
-		return false
 	}
 	return true
 }
