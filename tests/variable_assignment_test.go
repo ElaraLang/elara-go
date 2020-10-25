@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func TestSimpleVariableDeclaration(t *testing.T) {
+func TestSimpleVariableAssignment(t *testing.T) {
 	code := `let a = 3
 	a`
 	results := base.Execute(nil, code, false)
@@ -21,7 +21,7 @@ func TestSimpleVariableDeclaration(t *testing.T) {
 	}
 }
 
-func TestSimpleVariableDeclarationWithType(t *testing.T) {
+func TestSimpleVariableAssignmentWithType(t *testing.T) {
 	code := `let a: Int = 3
 	a`
 	results := base.Execute(nil, code, false)
@@ -35,7 +35,7 @@ func TestSimpleVariableDeclarationWithType(t *testing.T) {
 	}
 }
 
-func TestSimpleVariableDeclarationWithTypeAndInvalidValue(t *testing.T) {
+func TestSimpleVariableAssignmentWithTypeAndInvalidValue(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
 			t.Errorf("Intepreter allows assignment of incorrect types / values")
