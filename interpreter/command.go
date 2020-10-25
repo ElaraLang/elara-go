@@ -168,6 +168,27 @@ func (c *ContextCommand) Exec(ctx *Context) *Value {
 	}
 }
 
+type IfElseCommand struct {
+	condition  Command
+	ifBranch   Command
+	elseBranch Command
+}
+
+func (c *IfElseCommand) Exec(ctx *Context) *Value {
+	condition := c.condition.Exec(ctx)
+	asBoolean, ok := condition.Value.(bool)
+	if !ok {
+		panic("If statement requires boolean value")
+	}
+	if asBoolean {
+		return c.ifBranch.Exec(ctx)
+	} else if c.elseBranch != nil {
+		return c.elseBranch.Exec(ctx)
+	} else {
+		return nil
+	}
+}
+
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -192,6 +213,20 @@ func ToCommand(statement parser.Stmt) Command {
 			commands[i] = ToCommand(stmt)
 		}
 		return &BlockCommand{lines: commands}
+
+	case parser.IfElseStmt:
+		condition := ExpressionToCommand(t.Condition)
+		ifBranch := ToCommand(t.MainBranch)
+		var elseBranch Command
+		if t.ElseBranch != nil {
+			elseBranch = ToCommand(t.ElseBranch)
+		}
+
+		return &IfElseCommand{
+			condition:  condition,
+			ifBranch:   ifBranch,
+			elseBranch: elseBranch,
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
