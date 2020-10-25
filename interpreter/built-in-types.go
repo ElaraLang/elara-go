@@ -64,6 +64,18 @@ func Init() {
 				}
 			}),
 		},
+		"not": {
+			Signature: Signature{
+				Parameters: []Parameter{},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				return &Value{
+					Type:  BooleanType,
+					Value: !ctx.receiver.Value.(bool),
+				}
+			}),
+		},
 	}
 
 	IntType.functions = map[string]Function{
