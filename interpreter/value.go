@@ -31,7 +31,7 @@ type Variable struct {
 	Name    string
 	Mutable bool
 	Type    Type
-	Value   Value
+	Value   *Value
 }
 
 func (v Variable) string() string {

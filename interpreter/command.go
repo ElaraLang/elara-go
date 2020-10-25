@@ -26,10 +26,35 @@ func (c DefineVarCommand) Exec(ctx *Context) *Value {
 		Name:    c.Name,
 		Mutable: c.Mutable,
 		Type:    c.Type,
-		Value:   *value,
+		Value:   value,
 	}
 
 	ctx.DefineVariable(c.Name, variable)
+	return nil
+}
+
+type AssignmentCommand struct {
+	Name  string
+	value Command
+}
+
+func (c *AssignmentCommand) Exec(ctx *Context) *Value {
+	variable := ctx.FindVariable(c.Name)
+	if variable == nil {
+		panic("No such variable " + c.Name)
+	}
+
+	if !variable.Mutable {
+		panic("Cannot reassign immutable variable " + c.Name)
+	}
+
+	value := c.value.Exec(ctx)
+
+	if !variable.Type.Accepts(*value.Type) {
+		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name + " to value " + *value.String() + " of type " + value.Type.Name)
+	}
+
+	variable.Value = value
 	return nil
 }
 
@@ -46,7 +71,7 @@ func (c VariableCommand) Exec(ctx *Context) *Value {
 		}
 		return param
 	}
-	return &variable.Value
+	return variable.Value
 }
 
 type InvocationCommand struct {
@@ -350,6 +375,15 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		return ContextCommand{
 			contextCmd,
 			varName,
+		}
+
+	case parser.AssignmentExpr:
+		valueCmd := ExpressionToCommand(t.Value)
+		//TODO contexts
+		name := t.Identifier
+		return &AssignmentCommand{
+			Name:  name,
+			value: valueCmd,
 		}
 	}
 

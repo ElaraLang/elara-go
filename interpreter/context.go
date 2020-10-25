@@ -45,7 +45,7 @@ func NewContext() *Context {
 		Name:    funName,
 		Mutable: false,
 		Type:    *printContract,
-		Value: Value{
+		Value: &Value{
 			Type:  printContract,
 			Value: function,
 		},

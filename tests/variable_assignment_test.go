@@ -44,15 +44,7 @@ func TestSimpleVariableAssignmentWithTypeAndInvalidValue(t *testing.T) {
 
 	code := `let a: Int = 3.5
 	a`
-	results := base.Execute(nil, code, false)
-
-	expectedResults := []*interpreter.Value{
-		nil,
-		interpreter.FloatValue(3),
-	}
-	if !reflect.DeepEqual(results, expectedResults) {
-		t.Errorf("Incorrect parsing output, got %v but expected %v", formatValues(results), formatValues(expectedResults))
-	}
+	base.Execute(nil, code, false)
 }
 
 func formatValues(values []*interpreter.Value) string {
