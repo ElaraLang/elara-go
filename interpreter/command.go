@@ -176,11 +176,12 @@ type IfElseCommand struct {
 
 func (c *IfElseCommand) Exec(ctx *Context) *Value {
 	condition := c.condition.Exec(ctx)
-	asBoolean, ok := condition.Value.(bool)
+	value, ok := condition.Value.(bool)
 	if !ok {
 		panic("If statement requires boolean value")
 	}
-	if asBoolean {
+
+	if value {
 		return c.ifBranch.Exec(ctx)
 	} else if c.elseBranch != nil {
 		return c.elseBranch.Exec(ctx)
