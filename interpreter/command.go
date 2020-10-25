@@ -62,7 +62,7 @@ type VariableCommand struct {
 	Variable string
 }
 
-func (c VariableCommand) Exec(ctx *Context) *Value {
+func (c *VariableCommand) Exec(ctx *Context) *Value {
 	variable := ctx.FindVariable(c.Variable)
 	if variable == nil {
 		param := ctx.FindParameter(c.Variable)
@@ -79,8 +79,8 @@ type InvocationCommand struct {
 	args     []Command
 }
 
-func (c InvocationCommand) Exec(ctx *Context) *Value {
-	context, isContext := c.Invoking.(ContextCommand)
+func (c *InvocationCommand) Exec(ctx *Context) *Value {
+	context, isContext := c.Invoking.(*ContextCommand)
 
 	val := c.Invoking.Exec(ctx)
 	fun, ok := val.Value.(Function)
@@ -107,7 +107,7 @@ type AbstractCommand struct {
 	content func(ctx *Context) *Value
 }
 
-func (c AbstractCommand) Exec(ctx *Context) *Value {
+func (c *AbstractCommand) Exec(ctx *Context) *Value {
 	return c.content(ctx)
 }
 
@@ -121,7 +121,7 @@ type LiteralCommand struct {
 	value Value
 }
 
-func (c LiteralCommand) Exec(_ *Context) *Value {
+func (c *LiteralCommand) Exec(_ *Context) *Value {
 	return &c.value
 }
 
@@ -131,7 +131,7 @@ type BinaryOperatorCommand struct {
 	rhs Command
 }
 
-func (c BinaryOperatorCommand) Exec(ctx *Context) *Value {
+func (c *BinaryOperatorCommand) Exec(ctx *Context) *Value {
 	lhs := c.lhs.Exec(ctx)
 	rhs := c.rhs.Exec(ctx)
 
@@ -155,7 +155,7 @@ type ContextCommand struct {
 	variable string
 }
 
-func (c ContextCommand) Exec(ctx *Context) *Value {
+func (c *ContextCommand) Exec(ctx *Context) *Value {
 	receiver := c.receiver.Exec(ctx)
 	function, ok := receiver.Type.functions[c.variable]
 	if !ok {
@@ -201,7 +201,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 
 	switch t := expr.(type) {
 	case parser.VariableExpr:
-		return VariableCommand{Variable: t.Identifier}
+		return &VariableCommand{Variable: t.Identifier}
 
 	case parser.InvocationExpr:
 		fun := ExpressionToCommand(t.Invoker)
@@ -214,7 +214,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			args = append(args, command)
 		}
 
-		return InvocationCommand{
+		return &InvocationCommand{
 			Invoking: fun,
 			args:     args,
 		}
@@ -225,7 +225,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			Type:  StringType,
 			Value: str,
 		}
-		return LiteralCommand{value: value}
+		return &LiteralCommand{value: value}
 
 	case parser.IntegerLiteralExpr:
 		integer := t.Value
@@ -233,21 +233,21 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			Type:  IntType,
 			Value: integer,
 		}
-		return LiteralCommand{value: value}
+		return &LiteralCommand{value: value}
 	case parser.FloatLiteralExpr:
 		float := t.Value
 		value := Value{
 			Type:  FloatType,
 			Value: float,
 		}
-		return LiteralCommand{value: value}
+		return &LiteralCommand{value: value}
 	case parser.BooleanLiteralExpr:
 		boolean := t.Value
 		value := Value{
 			Type:  BooleanType,
 			Value: boolean,
 		}
-		return LiteralCommand{value: value}
+		return &LiteralCommand{value: value}
 
 	case parser.BinaryExpr:
 		lhs := t.Lhs
@@ -258,7 +258,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 
 		switch op {
 		case lexer.Add:
-			return BinaryOperatorCommand{
+			return &BinaryOperatorCommand{
 				lhs: lhsCmd,
 				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
@@ -279,7 +279,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 				rhs: rhsCmd,
 			}
 		case lexer.Subtract:
-			return BinaryOperatorCommand{
+			return &BinaryOperatorCommand{
 				lhs: lhsCmd,
 				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
@@ -300,7 +300,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 				rhs: rhsCmd,
 			}
 		case lexer.Multiply:
-			return BinaryOperatorCommand{
+			return &BinaryOperatorCommand{
 				lhs: lhsCmd,
 				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
@@ -321,7 +321,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 				rhs: rhsCmd,
 			}
 		case lexer.Slash:
-			return BinaryOperatorCommand{
+			return &BinaryOperatorCommand{
 				lhs: lhsCmd,
 				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
 					left := lhs.Value
@@ -372,7 +372,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	case parser.ContextExpr:
 		contextCmd := ExpressionToCommand(t.Context)
 		varName := t.Variable.Identifier
-		return ContextCommand{
+		return &ContextCommand{
 			contextCmd,
 			varName,
 		}
