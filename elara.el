@@ -1,1 +1,2 @@
-true.and(false)
+let a => print("Hello")
+a()

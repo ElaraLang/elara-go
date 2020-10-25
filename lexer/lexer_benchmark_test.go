@@ -1,12 +1,11 @@
 package lexer
 
 import (
-	"strings"
 	"testing"
 )
 
 func BenchmarkEverySymbol(b *testing.B) {
-	code := strings.Repeat(`
+	code := `
 		let a = 30
 		let a = 3.5
 		let a = "Hello"
@@ -19,7 +18,7 @@ func BenchmarkEverySymbol(b *testing.B) {
 		+ - * / % && || ^ == != > >= < <= !
 		, : _
 		let	mut	struct if else match while
-		`, 1_000)
+		`
 	for n := 0; n < b.N; n++ {
 		Lex(nil, code)
 	}

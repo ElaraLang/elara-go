@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"io"
+	"strings"
 	"unicode"
 )
 
@@ -170,8 +171,8 @@ func (s *Scanner) consumeWhitespace() int {
 }
 
 func (s *Scanner) readIdentifier() (tok TokenType, text string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+	var builder strings.Builder
+	builder.WriteRune(s.read())
 
 	for {
 		if ch := s.read(); ch == eof {
@@ -180,11 +181,11 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 			s.unread()
 			break
 		} else {
-			buf.WriteRune(ch)
+			builder.WriteRune(ch)
 		}
 	}
 
-	str := buf.String()
+	str := builder.String()
 	switch str {
 	case "let":
 		return Let, str

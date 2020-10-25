@@ -8,7 +8,7 @@ func Lex(file *string, code string) []Token {
 	reader := strings.NewReader(code)
 	scanner := NewScanner(reader)
 
-	tokens := make([]Token, 0)
+	tokens := make([]Token, len(code)/4)
 	for {
 		tok, str, line, col := scanner.Read()
 		if tok == EOF {
