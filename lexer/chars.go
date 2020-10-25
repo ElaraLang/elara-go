@@ -18,8 +18,10 @@ func isAngleBracket(ch rune) bool {
 	return ch == '<' || ch == '>'
 }
 
+//This function is a bit of a hotspot, mostly due to how often it's called. Not much to be done here though - map access is pretty fast :/
 func isValidIdentifier(ch rune) bool {
-	return !IllegalIdentifierChars[ch] && !isWhitespace(ch)
+	_, in := IllegalIdentifierChars[ch]
+	return !in && !isWhitespace(ch)
 }
 
 func isNumerical(ch rune) bool {

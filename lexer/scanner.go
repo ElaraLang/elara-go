@@ -1,7 +1,6 @@
 package lexer
 
 import (
-	"bytes"
 	"unicode"
 )
 
@@ -317,105 +316,119 @@ func (s *TokenReader) readAngleBracket() (tok TokenType, text []rune) {
 
 	return Illegal, []rune{ch1}
 }
-func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
 
+func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
+	start := s.cursor
+	end := start
 	for {
-		if ch := s.read(); ch == eof {
+		r := s.runes[end]
+		if r == eof {
 			break
-		} else if !isOperatorSymbol(ch) {
+		}
+		if !isOperatorSymbol(r) {
 			s.unread()
 			break
-		} else {
-			buf.WriteRune(ch)
+		}
+		end++
+		if end >= len(s.runes) {
+			break
 		}
 	}
-	str := buf.String()
-	switch str {
-	case "+":
-		return Add, []rune(str)
-	case "-":
-		return Subtract, []rune(str)
-	case "*":
-		return Multiply, []rune(str)
-	case "/":
-		return Slash, []rune(str)
-	case "%":
-		return Mod, []rune(str)
-	case "&&":
-		return And, []rune(str)
-	case "||":
-		return Or, []rune(str)
-	case "^":
-		return Xor, []rune(str)
-	case "==":
-		return Equals, []rune(str)
-	case "!=":
-		return NotEquals, []rune(str)
-	case ">=":
-		return GreaterEqual, []rune(str)
-	case "<=":
-		return LesserEqual, []rune(str)
-	case "!":
-		return Not, []rune(str)
+	s.cursor = end
 
-		//Dirty hack, these 2 should probably be in readBracket but oh well...
-	case ">":
-		return LAngle, []rune(str)
-	case "<":
-		return RAngle, []rune(str)
+	str := s.runes[start:end]
+	switch str[0] {
+	case '+':
+		return Add, str
+	case '-':
+		return Subtract, str
+	case '*':
+		return Multiply, str
+	case '/':
+		return Slash, str
+	case '%':
+		return Mod, str
+	case '^':
+		return Xor, str
+
+	case '>':
+		{
+			l := len(str)
+			if l == 1 {
+				return LAngle, str
+			}
+			n := str[1]
+			if l > 2 || n != '=' {
+				panic("Unknown operator " + string(str))
+			}
+			return GreaterEqual, str
+		}
+	case '<':
+		{
+			l := len(str)
+			if l == 1 {
+				return RAngle, str
+			}
+			n := str[1]
+			if l > 2 || n != '=' {
+				panic("Unknown operator " + string(str))
+			}
+			return LesserEqual, str
+		}
+	case '!':
+		{
+			l := len(str)
+			if l == 1 {
+				return Not, str
+			}
+			n := str[1]
+			if l > 2 || n != '=' {
+				panic("Unknown operator " + string(str))
+			}
+			return NotEquals, str
+		}
 	}
-
-	return Illegal, []rune(str)
+	if len(str) != 2 {
+		panic("Unknown operator " + string(str))
+	}
+	if runeSliceEq(str, []rune("&&")) {
+		return And, str
+	}
+	if runeSliceEq(str, []rune("||")) {
+		return Or, str
+	}
+	if runeSliceEq(str, []rune("==")) {
+		return Equals, str
+	}
+	return Illegal, str
 }
 
+//This function is called with the assumption that the beginning " has ALREADY been read.
 func (s *TokenReader) readString() (tok TokenType, text []rune) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+	start := s.cursor
+	end := start + 1
 
 	for {
-		if ch := s.read(); ch == eof {
+		r := s.runes[end]
+		if r == eof {
 			break
-		} else if ch == '"' {
+		}
+		end++
+		if r == '"' {
 			break
-		} else {
-			buf.WriteRune(ch)
+		}
+		if end >= len(s.runes) {
+			break
 		}
 	}
-	return String, []rune(buf.String())
+
+	s.cursor = end
+	return String, s.runes[start : end-1]
 }
 
 func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
-
-	numType := Int
-	for {
-		ch := s.read()
-		if ch == eof {
-			break
-		}
-		if ch == '\n' {
-			s.unread()
-			break
-		}
-		if ch == '.' {
-			numType = Float
-		} else if !unicode.IsNumber(ch) {
-			s.unread()
-			break
-		}
-
-		buf.WriteRune(ch)
-	}
-
-	return numType, []rune(buf.String())
-}
-
-func (s *TokenReader) readNumberNew() (tok TokenType, text []rune) {
-	i := s.cursor
-	end := i + 1
+	start := s.cursor
+	end := start + 1
 	numType := Int
 
 	for {
@@ -440,7 +453,7 @@ func (s *TokenReader) readNumberNew() (tok TokenType, text []rune) {
 	}
 	s.cursor = end
 
-	return numType, s.runes[i:end]
+	return numType, s.runes[start:end]
 }
 
 func runeSliceEq(a []rune, b []rune) bool {

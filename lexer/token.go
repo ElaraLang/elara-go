@@ -15,7 +15,7 @@ func (t *Token) Equals(other *Token) bool {
 	if t.Position != other.Position {
 		return false
 	}
-	if runeSliceEq(t.Text, other.Text) {
+	if !runeSliceEq(t.Text, other.Text) {
 		return false
 	}
 	return true
