@@ -109,7 +109,7 @@ func (p *Parser) varDefStatement() Stmt {
 			Mutable:    mut,
 			Lazy:       lazy,
 			Restricted: restricted,
-			Identifier: id.Text,
+			Identifier: string(id.Text),
 			Type:       typ,
 			Value:      p.funDef(),
 		}
@@ -122,7 +122,7 @@ func (p *Parser) varDefStatement() Stmt {
 		Mutable:    mut,
 		Lazy:       lazy,
 		Restricted: restricted,
-		Identifier: id.Text,
+		Identifier: string(id.Text),
 		Type:       typ,
 		Value:      expr,
 	}
@@ -190,7 +190,7 @@ func (p *Parser) blockedDeclaration(results *[]Stmt, errors *[]ParseError) {
 func (p *Parser) structStatement() Stmt {
 	p.consume(lexer.Struct, "Expected struct start to begin with `struct` keyword")
 	return StructDefStmt{
-		Identifier:   p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text,
+		Identifier:   string(p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text),
 		StructFields: p.structFields(),
 	}
 }

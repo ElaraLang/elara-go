@@ -64,10 +64,10 @@ func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
 func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 
 	if p.peek().TokenType == lexer.Identifier {
-		return ElementaryTypeContract{Identifier: p.advance().Text}
+		return ElementaryTypeContract{Identifier: string(p.advance().Text)}
 	} else if p.match(lexer.LParen) {
-		isfunc := p.isFuncDef()
-		if isfunc {
+		isFunc := p.isFuncDef()
+		if isFunc {
 			args := make([]Type, 0)
 			for !p.check(lexer.RParen) {
 				argTyp := p.typeContract()

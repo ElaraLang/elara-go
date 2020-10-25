@@ -38,13 +38,13 @@ func (p *Parser) structField() (field *StructField) {
 	if t1.TokenType == lexer.Identifier {
 		switch t2.TokenType {
 		case lexer.Identifier:
-			typ = ElementaryTypeContract{Identifier: t2.Text}
+			typ = ElementaryTypeContract{Identifier: string(t2.Text)}
 			if p.match(lexer.Equal) {
 				def = p.logicalOr()
 			}
 			break
 		case lexer.Equal:
-			identifier = t2.Text
+			identifier = string(t2.Text)
 			def = p.logicalOr()
 			break
 		default:
@@ -52,7 +52,6 @@ func (p *Parser) structField() (field *StructField) {
 				token:   t1,
 				message: "Invalid struct field",
 			})
-			break
 		}
 	} else {
 		panic(ParseError{

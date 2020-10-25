@@ -178,7 +178,7 @@ func (s *TokenReader) consumeWhitespace() int {
 
 func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 	i := s.cursor
-	end := i + 1
+	end := i
 	for {
 		r := s.runes[end]
 		if r == eof || !isValidIdentifier(r) {
@@ -241,10 +241,10 @@ func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 		return Is, str
 	}
 	if runeSliceEq(str, []rune("true")) {
-		return Boolean, str
+		return BooleanTrue, str
 	}
 	if runeSliceEq(str, []rune("false")) {
-		return Boolean, str
+		return BooleanFalse, str
 	}
 
 	return Identifier, str

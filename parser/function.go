@@ -44,7 +44,7 @@ func (p *Parser) functionArgument() FunctionArgument {
 		return FunctionArgument{
 			Lazy:    lazy,
 			Type:    nil,
-			Name:    i1.Text,
+			Name:    string(i1.Text),
 			Default: p.expression(),
 		}
 	}
@@ -54,11 +54,11 @@ func (p *Parser) functionArgument() FunctionArgument {
 
 		def = p.expression()
 	}
-	typ := ElementaryTypeContract{Identifier: i1.Text}
+	typ := ElementaryTypeContract{Identifier: string(i1.Text)}
 	return FunctionArgument{
 		Lazy:    lazy,
 		Type:    typ,
-		Name:    id.Text,
+		Name:    string(id.Text),
 		Default: def,
 	}
 }

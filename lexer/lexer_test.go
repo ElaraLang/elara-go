@@ -61,7 +61,7 @@ func TestBooleanAssignmentLexing(t *testing.T) {
 		CreateToken(Let, "let", CreatePosition(nil, 0, 0)),
 		CreateToken(Identifier, "a", CreatePosition(nil, 0, 4)),
 		CreateToken(Equal, "=", CreatePosition(nil, 0, 6)),
-		CreateToken(Boolean, "true", CreatePosition(nil, 0, 8)),
+		CreateToken(BooleanTrue, "true", CreatePosition(nil, 0, 8)),
 	}
 
 	if !reflect.DeepEqual(tokens, expectedTokens) {
