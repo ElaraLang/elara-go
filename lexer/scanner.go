@@ -1,43 +1,49 @@
 package lexer
 
 import (
-	"bufio"
 	"bytes"
-	"io"
-	"strings"
 	"unicode"
 )
 
-type Scanner struct {
-	r    *bufio.Reader
-	line int
-	col  int
+type TokenReader struct {
+	runes  []rune
+	cursor int
+	line   int
+	col    int
 }
 
-func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{r: bufio.NewReader(r)}
+func NewTokenReader(runes []rune) *TokenReader {
+	return &TokenReader{
+		runes:  runes,
+		cursor: 0,
+		line:   0,
+		col:    0,
+	}
 }
 
-func (s *Scanner) read() rune {
-	ch, _, err := s.r.ReadRune()
-	if err != nil {
+//Reads the current rune and moves the cursor to the next rune
+func (s *TokenReader) read() rune {
+	if s.cursor >= len(s.runes) {
 		return eof
 	}
-	return ch
+	r := s.runes[s.cursor]
+	s.cursor++
+	return r
 }
 
-//places the previously read rune back on the reader
-func (s *Scanner) unread() {
-	_ = s.r.UnreadRune()
+//Goes back to reading the previous rune
+func (s *TokenReader) unread() {
+	s.cursor--
 }
 
-func (s *Scanner) peek() rune {
-	peeked := s.read()
-	s.unread()
-	return peeked
+func (s *TokenReader) peek() rune {
+	if s.cursor >= len(s.runes)-1 {
+		return eof
+	}
+	return s.runes[s.cursor]
 }
 
-func (s *Scanner) Read() (tok TokenType, text string, line int, col int) {
+func (s *TokenReader) Read() (tok TokenType, text string, line int, col int) {
 	ch := s.read()
 
 	if ch == eof {
@@ -154,7 +160,7 @@ func (s *Scanner) Read() (tok TokenType, text string, line int, col int) {
 }
 
 //Consume all whitespace until we reach an eof or a non-whitespace character
-func (s *Scanner) consumeWhitespace() int {
+func (s *TokenReader) consumeWhitespace() int {
 	count := 0
 	for {
 		ch := s.read()
@@ -170,22 +176,22 @@ func (s *Scanner) consumeWhitespace() int {
 	return count
 }
 
-func (s *Scanner) readIdentifier() (tok TokenType, text string) {
-	var builder strings.Builder
-	builder.WriteRune(s.read())
-
+func (s *TokenReader) readIdentifier() (tok TokenType, text string) {
+	i := s.cursor
+	end := i + 1
 	for {
-		if ch := s.read(); ch == eof {
+		r := s.runes[end]
+		if r == eof || !isValidIdentifier(r) {
 			break
-		} else if !isValidIdentifier(ch) {
-			s.unread()
+		}
+		end++
+		if end >= len(s.runes) {
 			break
-		} else {
-			builder.WriteRune(ch)
 		}
 	}
+	s.cursor = end
 
-	str := builder.String()
+	str := string(s.runes[i:end])
 	switch str {
 	case "let":
 		return Let, str
@@ -228,7 +234,7 @@ func (s *Scanner) readIdentifier() (tok TokenType, text string) {
 	return Identifier, str
 }
 
-func (s *Scanner) readBracket() (tok TokenType, text string) {
+func (s *TokenReader) readBracket() (tok TokenType, text string) {
 	str := s.read()
 	switch str {
 	case '(':
@@ -251,7 +257,7 @@ func (s *Scanner) readBracket() (tok TokenType, text string) {
 	return Illegal, string(str)
 }
 
-func (s *Scanner) readSymbol() (tok TokenType, text string) {
+func (s *TokenReader) readSymbol() (tok TokenType, text string) {
 	ch := s.read()
 
 	switch ch {
@@ -272,7 +278,7 @@ func (s *Scanner) readSymbol() (tok TokenType, text string) {
 
 	return Illegal, string(ch)
 }
-func (s *Scanner) readAngleBracket() (tok TokenType, text string) {
+func (s *TokenReader) readAngleBracket() (tok TokenType, text string) {
 	ch1 := s.read()
 	ch := s.peek()
 	if ch1 == '<' {
@@ -294,7 +300,7 @@ func (s *Scanner) readAngleBracket() (tok TokenType, text string) {
 
 	return Illegal, string(ch1)
 }
-func (s *Scanner) readOperator() (tok TokenType, text string) {
+func (s *TokenReader) readOperator() (tok TokenType, text string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
@@ -347,7 +353,7 @@ func (s *Scanner) readOperator() (tok TokenType, text string) {
 	return Illegal, str
 }
 
-func (s *Scanner) readString() (tok TokenType, text string) {
+func (s *TokenReader) readString() (tok TokenType, text string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 
@@ -363,7 +369,7 @@ func (s *Scanner) readString() (tok TokenType, text string) {
 	return String, buf.String()
 }
 
-func (s *Scanner) readNumber() (tok TokenType, text string) {
+func (s *TokenReader) readNumber() (tok TokenType, text string) {
 	var buf bytes.Buffer
 	buf.WriteRune(s.read())
 

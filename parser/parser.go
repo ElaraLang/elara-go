@@ -6,7 +6,7 @@ import (
 	"fmt"
 )
 
-type Scanner = lexer.Scanner
+type Scanner = lexer.TokenReader
 type Token = lexer.Token
 type TokenType = lexer.TokenType
 
