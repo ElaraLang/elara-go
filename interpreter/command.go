@@ -222,7 +222,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			Type:  BooleanType,
 			Value: boolean,
 		}
-		return LiteralCommand{value}
+		return LiteralCommand{value: value}
 
 	case parser.BinaryExpr:
 		lhs := t.Lhs
