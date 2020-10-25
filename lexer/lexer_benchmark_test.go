@@ -26,3 +26,19 @@ func BenchmarkEverySymbol(b *testing.B) {
 		_ = *Lex(nil, code)
 	}
 }
+
+func BenchmarkScannerReading1(b *testing.B) {
+	code := "314.159265359"
+	for n := 0; n < b.N; n++ {
+		reader := NewTokenReader([]rune(code))
+		_, _ = reader.readNumber()
+	}
+}
+
+func BenchmarkScannerReading2(b *testing.B) {
+	code := "314.159265359"
+	for n := 0; n < b.N; n++ {
+		reader := NewTokenReader([]rune(code))
+		_, _ = reader.readNumberNew()
+	}
+}

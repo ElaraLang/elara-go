@@ -6,7 +6,7 @@ func Lex(file *string, code string) *[]Token {
 
 	tokens := make([]Token, len(code)/3)
 	i := 0
-	emptyToken := Token{}
+	emptyToken := &Token{}
 	for {
 		tok, str, line, col := scanner.Read()
 		if tok == EOF {
@@ -17,7 +17,7 @@ func Lex(file *string, code string) *[]Token {
 			Text:      str,
 			Position:  CreatePosition(file, line, col),
 		}
-		if i <= len(tokens)-1 && tokens[i] == emptyToken {
+		if i <= len(tokens)-1 && tokens[i].Equals(emptyToken) {
 			tokens[i] = token
 			i++
 		} else {
@@ -25,7 +25,7 @@ func Lex(file *string, code string) *[]Token {
 		}
 	}
 	for i := range tokens {
-		if tokens[i] == emptyToken {
+		if tokens[i].Equals(emptyToken) {
 			tokens = tokens[:i]
 			break
 		}

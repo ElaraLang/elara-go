@@ -4,8 +4,21 @@ import "fmt"
 
 type Token struct {
 	TokenType TokenType
-	Text      string
+	Text      []rune
 	Position  Position
+}
+
+func (t *Token) Equals(other *Token) bool {
+	if t.TokenType != other.TokenType {
+		return false
+	}
+	if t.Position != other.Position {
+		return false
+	}
+	if runeSliceEq(t.Text, other.Text) {
+		return false
+	}
+	return true
 }
 
 type Position struct {
@@ -17,7 +30,7 @@ type Position struct {
 func CreateToken(tokenType TokenType, text string, position Position) Token {
 	return Token{
 		TokenType: tokenType,
-		Text:      text,
+		Text:      []rune(text),
 		Position:  position,
 	}
 }
@@ -31,7 +44,7 @@ func CreatePosition(file *string, line int, column int) Position {
 }
 
 func (t *Token) String() string {
-	return fmt.Sprintf("%s '%s' at %s", t.TokenType.String(), t.Text, t.Position.String())
+	return fmt.Sprintf("%s '%s' at %s", t.TokenType.String(), string(t.Text), t.Position.String())
 }
 
 func (p *Position) String() string {

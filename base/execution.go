@@ -12,7 +12,7 @@ func Execute(fileName *string, code string, repl bool) []*interpreter.Value {
 
 	result := lexer.Lex(fileName, code)
 
-	psr := parser.NewParser(&result)
+	psr := parser.NewParser(result)
 	parseRes, errs := psr.Parse()
 
 	if len(errs) != 0 {
