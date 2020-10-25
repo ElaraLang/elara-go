@@ -105,6 +105,7 @@ func (p *Parser) varDefStatement() Stmt {
 	}
 
 	if p.check(lexer.Arrow) {
+		//Functions (eg let a => print "hello")
 		return VarDefStmt{
 			Mutable:    mut,
 			Lazy:       lazy,
@@ -161,7 +162,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 	return
 }
 
-func (p *Parser) blockStatement() (stmt Stmt) {
+func (p *Parser) blockStatement() BlockStmt {
 	result := make([]Stmt, 0)
 	errors := make([]ParseError, 0)
 	p.consume(lexer.LBrace, "Expected { at beginning of block")
@@ -173,8 +174,7 @@ func (p *Parser) blockStatement() (stmt Stmt) {
 	if len(errors) > 0 {
 		panic(errors)
 	}
-	stmt = BlockStmt{Stmts: result}
-	return
+	return BlockStmt{Stmts: result}
 }
 
 func (p *Parser) blockedDeclaration(results *[]Stmt, errors *[]ParseError) {

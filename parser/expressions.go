@@ -54,8 +54,8 @@ type TypeCheckExpr struct {
 
 type IfElseExpr struct {
 	Condition  Expr
-	MainBranch []Stmt
-	MainResult Expr
+	IfBranch   []Stmt
+	IfResult   Expr
 	ElseBranch []Stmt
 	ElseResult Expr
 }
@@ -99,6 +99,9 @@ func (TypeCastExpr) exprNode()       {}
 func (TypeCheckExpr) exprNode()      {}
 
 func (p *Parser) expression() Expr {
+	if p.peek().TokenType == lexer.If {
+		return p.ifElseExpression()
+	}
 	return p.assignment()
 }
 
@@ -377,4 +380,58 @@ func (p *Parser) primary() (expr Expr) {
 		})
 	}
 	return
+}
+
+func (p *Parser) ifElseExpression() Expr {
+	p.consume(lexer.If, "Expected if at beginning of if expression")
+	condition := p.logicalOr()
+	if p.peek().TokenType == lexer.Arrow {
+		p.consume(lexer.Arrow, "")
+		mainResult := p.expression()
+
+		elseBranch, elseResult := p.elseExpression()
+
+		return IfElseExpr{
+			Condition:  condition,
+			IfBranch:   nil,
+			IfResult:   mainResult,
+			ElseBranch: elseBranch,
+			ElseResult: elseResult,
+		}
+	}
+
+	mainBranch := p.blockStatement()
+	mainResult := mainBranch.Stmts[len(mainBranch.Stmts)-1]
+	_, isExpr := mainResult.(ExpressionStmt)
+	if !isExpr {
+		panic(ParseError{message: "Last line in an `if` block must be an expression"})
+	}
+
+	elseBranch, elseResult := p.elseExpression()
+
+	return IfElseExpr{
+		Condition:  condition,
+		IfBranch:   mainBranch.Stmts[:len(mainBranch.Stmts)-1], //drop the last result
+		IfResult:   mainResult.(ExpressionStmt).Expr,
+		ElseBranch: elseBranch,
+		ElseResult: elseResult,
+	}
+}
+
+func (p *Parser) elseExpression() ([]Stmt, Expr) {
+	p.consume(lexer.Else, "if expression must follow with else expression")
+	if p.peek().TokenType == lexer.Arrow {
+		p.advance()
+		return nil, p.expression()
+	} else {
+		elseBranch := p.blockStatement()
+		elseResult := elseBranch.Stmts[len(elseBranch.Stmts)-1]
+
+		_, isExpr := elseResult.(ExpressionStmt)
+		if !isExpr {
+			panic(ParseError{message: "Last line in an `else` expression block must be an expression"})
+		}
+
+		return elseBranch.Stmts[:len(elseBranch.Stmts)-1], elseResult.(ExpressionStmt).Expr
+	}
 }

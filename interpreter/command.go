@@ -190,6 +190,38 @@ func (c *IfElseCommand) Exec(ctx *Context) *Value {
 	}
 }
 
+type IfElseExpressionCommand struct {
+	condition  Command
+	ifBranch   []Command
+	ifResult   Command
+	elseBranch []Command
+	elseResult Command
+}
+
+func (c *IfElseExpressionCommand) Exec(ctx *Context) *Value {
+	condition := c.condition.Exec(ctx)
+	value, ok := condition.Value.(bool)
+	if !ok {
+		panic("If statement requires boolean value")
+	}
+
+	if value {
+		if c.ifBranch != nil {
+			for _, cmd := range c.ifBranch {
+				cmd.Exec(ctx)
+			}
+		}
+		return c.ifResult.Exec(ctx)
+	} else {
+		if c.elseBranch != nil {
+			for _, cmd := range c.elseBranch {
+				cmd.Exec(ctx)
+			}
+		}
+		return c.elseResult.Exec(ctx)
+	}
+}
+
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -420,6 +452,34 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		return &AssignmentCommand{
 			Name:  name,
 			value: valueCmd,
+		}
+
+	case parser.IfElseExpr:
+		condition := ExpressionToCommand(t.Condition)
+		var ifBranch []Command
+		if t.IfBranch != nil {
+			ifBranch = make([]Command, len(t.IfBranch))
+			for i, stmt := range t.IfBranch {
+				ifBranch[i] = ToCommand(stmt)
+			}
+		}
+		ifResult := ExpressionToCommand(t.IfResult)
+
+		var elseBranch []Command
+		if t.ElseBranch != nil {
+			elseBranch = make([]Command, len(t.ElseBranch))
+			for i, stmt := range t.IfBranch {
+				elseBranch[i] = ToCommand(stmt)
+			}
+		}
+		elseResult := ExpressionToCommand(t.ElseResult)
+
+		return &IfElseExpressionCommand{
+			condition:  condition,
+			ifBranch:   ifBranch,
+			ifResult:   ifResult,
+			elseBranch: elseBranch,
+			elseResult: elseResult,
 		}
 	}
 

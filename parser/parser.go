@@ -46,6 +46,7 @@ func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 		p.advance()
 		return
 	}
+
 	stmt := p.declaration()
 	*result = append(*result, stmt)
 	if !(p.match(lexer.NEWLINE) || p.isAtEnd()) {
