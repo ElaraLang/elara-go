@@ -21,7 +21,14 @@ var types = map[string]*Type{
 func BuiltInTypeByName(name string) *Type {
 	return types[name]
 }
+
+var isInitialized = false
+
 func Init() {
+	if isInitialized {
+		return
+	}
+	isInitialized = true
 	StringType.functions = map[string]Function{
 		"plus": {
 			Signature: Signature{

@@ -10,7 +10,7 @@ import (
 func TestSimpleVariableAssignment(t *testing.T) {
 	code := `let a = 3
 	a`
-	results := base.Execute(nil, code, false)
+	results, _, _, _ := base.Execute(nil, code, false)
 	expectedResults := []*interpreter.Value{
 		nil,
 		interpreter.IntValue(3),
@@ -24,7 +24,7 @@ func TestSimpleVariableAssignment(t *testing.T) {
 func TestSimpleVariableAssignmentWithType(t *testing.T) {
 	code := `let a: Int = 3
 	a`
-	results := base.Execute(nil, code, false)
+	results, _, _, _ := base.Execute(nil, code, false)
 	expectedResults := []*interpreter.Value{
 		nil,
 		interpreter.IntValue(3),

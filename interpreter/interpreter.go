@@ -16,7 +16,6 @@ func NewInterpreter(code []parser.Stmt) *Interpreter {
 }
 
 func (s *Interpreter) Exec(scriptMode bool) []*Value {
-	_ = NewStack()
 	context := NewContext()
 
 	values := make([]*Value, len(s.lines))

@@ -62,7 +62,7 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 		return NEWLINE, []rune{ch}, s.line, s.col
 	}
 
-	if isWhitespace(ch) {
+	if IsWhitespace(ch) {
 		s.col++ //consumeWhitespace will add any *further* whitespace counters
 		s.col += s.consumeWhitespace()
 		return s.Read()
@@ -83,7 +83,7 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 
 	if ch == '_' {
 		next := s.peek()
-		if isWhitespace(next) || next == eof {
+		if IsWhitespace(next) || next == eof {
 			defer func() {
 				s.col++
 			}()
@@ -167,7 +167,7 @@ func (s *TokenReader) consumeWhitespace() int {
 		if ch == eof {
 			break
 		}
-		if !isWhitespace(ch) {
+		if !IsWhitespace(ch) {
 			s.unread()
 			break
 		}

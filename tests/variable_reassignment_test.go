@@ -11,7 +11,7 @@ func TestSimpleVariableReassignment(t *testing.T) {
 	code := `let mut a = 3
 	a = 4
 	a`
-	results := base.Execute(nil, code, false)
+	results, _, _, _ := base.Execute(nil, code, false)
 	expectedResults := []*interpreter.Value{
 		nil,
 		nil,
@@ -27,7 +27,7 @@ func TestSimpleVariableReassignmentWithType(t *testing.T) {
 	code := `let mut a: Int = 3
 	a = 4
 	a`
-	results := base.Execute(nil, code, false)
+	results, _, _, _ := base.Execute(nil, code, false)
 	expectedResults := []*interpreter.Value{
 		nil,
 		nil,
@@ -60,7 +60,7 @@ func TestSimpleVariableReassignmentWithImmutableVariable(t *testing.T) {
 
 	code := `let a = 3
 	a = 4`
-	results := base.Execute(nil, code, false)
+	results, _, _, _ := base.Execute(nil, code, false)
 
 	expectedResults := []*interpreter.Value{
 		nil,

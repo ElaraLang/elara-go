@@ -24,11 +24,11 @@ func main() {
 
 	start := time.Now()
 
-	base.Execute(&fileName, string(input), repl)
+	_, lexTime, parseTime, execTime := base.Execute(&fileName, string(input), repl)
 
-	duration := time.Since(start)
+	totalTime := time.Since(start)
 
-	fmt.Printf("Executed in %s.\n", duration)
+	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
 }
 
 func loadElaraFile() (string, []byte) {
