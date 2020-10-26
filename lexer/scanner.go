@@ -4,6 +4,7 @@ import (
 	"unicode"
 )
 
+//TODO remove the amount of `defer` declarations as they seem to have a cost, and more optimisations of readIdentifier
 type TokenReader struct {
 	runes  []rune
 	cursor int
@@ -55,11 +56,10 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 	}
 
 	if ch == '\n' {
-		defer func() {
-			s.col = 0
-			s.line++
-		}()
-		return NEWLINE, []rune{ch}, s.line, s.col
+		oldCol := s.col
+		s.col = 0
+		s.line++
+		return NEWLINE, []rune{ch}, s.line - 1, oldCol
 	}
 
 	if IsWhitespace(ch) {
@@ -83,7 +83,7 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 
 	if ch == '_' {
 		next := s.peek()
-		if IsWhitespace(next) || next == eof {
+		if next == eof || IsWhitespace(next) {
 			defer func() {
 				s.col++
 			}()
@@ -192,20 +192,53 @@ func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 	s.cursor = end
 
 	str := s.runes[i:end]
-	if runeSliceEq(str, []rune("let")) {
-		return Let, str
+	length := end - i //possibly slightly faster than len()
+
+	switch str[0] {
+	case 'l':
+		{
+			if length == 3 && str[1] == 'e' && str[2] == 't' {
+				return Let, str
+			}
+			if length == 4 && str[1] == 'a' && str[2] == 'z' && str[3] == 'y' {
+				return Lazy, str
+			}
+			return Identifier, str
+		}
+	case 't':
+		{
+			if length == 4 {
+				if str[1] == 'y' && str[2] == 'p' && str[3] == 'e' {
+					return Type, str
+				}
+				if str[1] == 'r' && str[2] == 'u' && str[3] == 'e' {
+					return BooleanTrue, str
+				}
+			}
+			return Identifier, str
+		}
+	case 'i':
+		{
+			if length == 2 {
+				if str[1] == 'f' {
+					return If, str
+				}
+				if str[1] == 's' {
+					return Is, str
+				}
+			}
+			if length == 6 && str[1] == 'm' && str[2] == 'p' && str[3] == 'o' && str[4] == 'r' && str[5] == 't' {
+				return Import, str
+			}
+			return Identifier, str
+		}
 	}
-	if runeSliceEq(str, []rune("type")) {
-		return Type, str
-	}
+	//TODO optimise other comparisons
 	if runeSliceEq(str, []rune("mut")) {
 		return Mut, str
 	}
 	if runeSliceEq(str, []rune("restricted")) {
 		return Restricted, str
-	}
-	if runeSliceEq(str, []rune("lazy")) {
-		return Lazy, str
 	}
 	if runeSliceEq(str, []rune("extend")) {
 		return Extend, str
@@ -222,12 +255,6 @@ func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 	if runeSliceEq(str, []rune("namespace")) {
 		return Namespace, str
 	}
-	if runeSliceEq(str, []rune("import")) {
-		return Import, str
-	}
-	if runeSliceEq(str, []rune("if")) {
-		return If, str
-	}
 	if runeSliceEq(str, []rune("else")) {
 		return Else, str
 	}
@@ -236,12 +263,6 @@ func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 	}
 	if runeSliceEq(str, []rune("as")) {
 		return As, str
-	}
-	if runeSliceEq(str, []rune("is")) {
-		return Is, str
-	}
-	if runeSliceEq(str, []rune("true")) {
-		return BooleanTrue, str
 	}
 	if runeSliceEq(str, []rune("false")) {
 		return BooleanFalse, str

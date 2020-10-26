@@ -3,7 +3,13 @@ package lexer
 import "unicode"
 
 func IsWhitespace(ch rune) bool {
-	return unicode.IsSpace(ch)
+	return whitespace[ch]
+}
+
+var whitespace = [255]bool{
+	' ':  true,
+	'\n': true,
+	'\t': true,
 }
 
 func isBracket(ch rune) bool {
@@ -20,7 +26,7 @@ func isAngleBracket(ch rune) bool {
 
 //This function is a bit of a hotspot, mostly due to how often it's called. Not much to be done here though - map access is pretty fast :/
 func isValidIdentifier(ch rune) bool {
-	s := IllegalIdentifierCharSlice[ch]
+	s := IllegalIdentifierChars[ch]
 	return !s
 }
 

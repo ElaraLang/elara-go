@@ -131,7 +131,7 @@ var tokenNames = map[TokenType]string{
 	Identifier: "Identifier",
 	Underscore: "Underscore",
 }
-var IllegalIdentifierCharSlice = []bool{
+var IllegalIdentifierChars = []bool{
 	',':  true,
 	'.':  true,
 	':':  true,

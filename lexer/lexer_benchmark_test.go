@@ -20,7 +20,6 @@ var code = strings.Repeat(`
 		`, 10_000)
 
 func BenchmarkEverySymbol(b *testing.B) {
-	b.Logf("Lexing %d characters\n", len(code))
 	for n := 0; n < b.N; n++ {
 		_ = Lex(nil, code)
 	}
