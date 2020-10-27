@@ -468,7 +468,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		var elseBranch []Command
 		if t.ElseBranch != nil {
 			elseBranch = make([]Command, len(t.ElseBranch))
-			for i, stmt := range t.IfBranch {
+			for i, stmt := range t.ElseBranch {
 				elseBranch[i] = ToCommand(stmt)
 			}
 		}
