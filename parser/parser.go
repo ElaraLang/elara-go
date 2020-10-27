@@ -20,13 +20,15 @@ func (pe ParseError) Error() string {
 }
 
 type Parser struct {
-	tokens  []Token
+	tokens  chan *Token
+	buffer  [5]*Token
 	current int
 }
 
-func NewParser(tokens *[]Token) *Parser {
+func NewParser(tokens chan *Token) *Parser {
 	return &Parser{
-		tokens: *tokens,
+		tokens: tokens,
+		buffer: [5]*Token{},
 	}
 }
 
