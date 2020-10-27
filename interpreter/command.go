@@ -146,10 +146,6 @@ func (c *BlockCommand) Exec(ctx *Context) *Value {
 	var last *Value
 	for _, line := range c.lines {
 		last = line.Exec(ctx)
-		_, isReturn := line.(*ReturnCommand)
-		if isReturn {
-			break
-		}
 	}
 	return last
 }
@@ -231,7 +227,7 @@ type ReturnCommand struct {
 }
 
 func (c *ReturnCommand) Exec(ctx *Context) *Value {
-	return c.returning.Exec(ctx)
+	panic(c.returning.Exec(ctx))
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -256,6 +252,11 @@ func ToCommand(statement parser.Stmt) Command {
 		commands := make([]Command, len(t.Stmts))
 		for i, stmt := range t.Stmts {
 			commands[i] = ToCommand(stmt)
+			_, isReturn := commands[i].(*ReturnCommand)
+			//Small optimisation, it's not worth transforming anything that won't ever be reached
+			if isReturn {
+				break
+			}
 		}
 		return &BlockCommand{lines: commands}
 
