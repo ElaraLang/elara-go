@@ -449,7 +449,7 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 
 func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
 	start := s.cursor
-	end := start + 1
+	end := start
 	numType := Int
 
 	for {

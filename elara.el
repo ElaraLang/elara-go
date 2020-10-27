@@ -5,4 +5,5 @@ let b = if true {
     "no"
 }
 
-print(b)
+print("Is it true? " + b)
+print(3 + 4)

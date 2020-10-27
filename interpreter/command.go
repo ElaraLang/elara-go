@@ -326,25 +326,9 @@ func ExpressionToCommand(expr parser.Expr) Command {
 
 		switch op {
 		case lexer.Add:
-			return &BinaryOperatorCommand{
-				lhs: lhsCmd,
-				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
-					left := lhs.Value
-					lhsInt, ok := left.(int64)
-					if !ok {
-						panic("LHS must be an int64")
-					}
-					rhsInt, ok := rhs.Value.(int64)
-					if !ok {
-						panic("RHS must be an int64")
-					}
-
-					return &Value{
-						Type:  IntType,
-						Value: lhsInt + rhsInt,
-					}
-				},
-				rhs: rhsCmd,
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "plus"},
+				args: []Command{rhsCmd},
 			}
 		case lexer.Subtract:
 			return &BinaryOperatorCommand{

@@ -85,25 +85,27 @@ func Init() {
 		},
 	}
 
-	IntType.functions = map[string]Function{
-		"add": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *IntType,
-					},
+	intAdd := Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "value",
+					Type: *IntType,
 				},
-				ReturnType: *BooleanType,
 			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				result := ctx.receiver.Value.(int) + parameter.Value.(int)
-				return &Value{
-					Type:  IntType,
-					Value: result,
-				}
-			}),
+			ReturnType: *BooleanType,
 		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			parameter := ctx.FindParameter("value")
+			result := ctx.receiver.Value.(int64) + parameter.Value.(int64)
+			return &Value{
+				Type:  IntType,
+				Value: result,
+			}
+		}),
+	}
+	IntType.functions = map[string]Function{
+		"plus": intAdd,
+		"add":  intAdd,
 	}
 }
