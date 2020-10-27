@@ -146,6 +146,10 @@ func (c *BlockCommand) Exec(ctx *Context) *Value {
 	var last *Value
 	for _, line := range c.lines {
 		last = line.Exec(ctx)
+		_, isReturn := line.(*ReturnCommand)
+		if isReturn {
+			break
+		}
 	}
 	return last
 }
@@ -222,6 +226,14 @@ func (c *IfElseExpressionCommand) Exec(ctx *Context) *Value {
 	}
 }
 
+type ReturnCommand struct {
+	returning Command
+}
+
+func (c *ReturnCommand) Exec(ctx *Context) *Value {
+	return c.returning.Exec(ctx)
+}
+
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -259,6 +271,11 @@ func ToCommand(statement parser.Stmt) Command {
 			condition:  condition,
 			ifBranch:   ifBranch,
 			elseBranch: elseBranch,
+		}
+
+	case parser.ReturnStmt:
+		return &ReturnCommand{
+			ExpressionToCommand(t.Returning),
 		}
 	}
 

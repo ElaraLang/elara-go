@@ -1,9 +1,5 @@
-let b = if true {
-    print("It's true!")
-    "yes"
-} else {
-    "no"
+let some-func = () => {
+    return 3
+    print("Hi")
 }
-
-print("Is it true? " + b)
-print(30 * 4)
+print(some-func())

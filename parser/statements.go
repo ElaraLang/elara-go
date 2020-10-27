@@ -52,6 +52,10 @@ type GenerifiedStmt struct {
 	Statement Stmt
 }
 
+type ReturnStmt struct {
+	Returning Expr
+}
+
 func (ExpressionStmt) stmtNode() {}
 func (BlockStmt) stmtNode()      {}
 func (VarDefStmt) stmtNode()     {}
@@ -61,7 +65,7 @@ func (WhileStmt) stmtNode()      {}
 func (ExtendStmt) stmtNode()     {}
 func (GenerifiedStmt) stmtNode() {}
 func (TypeStmt) stmtNode()       {}
-
+func (ReturnStmt) stmtNode()     {}
 func (p *Parser) declaration() (stmt Stmt) {
 	if p.check(lexer.Let) {
 		return p.varDefStatement()
@@ -84,6 +88,8 @@ func (p *Parser) statement() Stmt {
 		return p.typeStatement()
 	case lexer.LAngle:
 		return p.genericStatement()
+	case lexer.Return:
+		return p.returnStatement()
 	default:
 		return p.exprStatement()
 	}
@@ -193,6 +199,12 @@ func (p *Parser) structStatement() Stmt {
 		Identifier:   string(p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text),
 		StructFields: p.structFields(),
 	}
+}
+
+func (p *Parser) returnStatement() Stmt {
+	p.consume(lexer.Return, "Expected return")
+	expr := p.expression()
+	return ReturnStmt{Returning: expr}
 }
 
 func (p *Parser) exprStatement() Stmt {

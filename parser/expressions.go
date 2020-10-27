@@ -364,6 +364,10 @@ func (p *Parser) primary() (expr Expr) {
 		str := p.consume(lexer.Identifier, "Expected identifier")
 		expr = VariableExpr{Identifier: string(str.Text)}
 		break
+
+	case lexer.Return:
+
+		break
 	}
 
 	if err != nil {
