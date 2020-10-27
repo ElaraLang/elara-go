@@ -2,11 +2,9 @@ package main
 
 import (
 	"elara/base"
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
-	"time"
 )
 
 func main() {
@@ -22,13 +20,11 @@ func main() {
 
 	fileName, input := loadElaraFile()
 
-	start := time.Now()
+	_, _, _, _ = base.Execute(&fileName, string(input), repl)
 
-	_, lexTime, parseTime, execTime := base.Execute(&fileName, string(input), repl)
+	//totalTime := time.Since(start)
 
-	totalTime := time.Since(start)
-
-	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
+	//fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
 }
 
 func loadElaraFile() (string, []byte) {
