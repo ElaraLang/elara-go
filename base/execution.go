@@ -10,15 +10,11 @@ import (
 )
 
 func Execute(fileName *string, code string, repl bool) (results []*interpreter.Value, lexTime time.Duration, parseTime time.Duration, execTime time.Duration) {
+	tokens := make(chan *lexer.Token)
+	go lexer.Lex(fileName, code, tokens)
 
-	start := time.Now()
-	result := lexer.Lex(fileName, code)
-	lexTime = time.Since(start)
-
-	start = time.Now()
-	psr := parser.NewParser(result)
+	psr := parser.NewParser(tokens)
 	parseRes, errs := psr.Parse()
-	parseTime = time.Since(start)
 
 	if len(errs) != 0 {
 		_, _ = os.Stderr.WriteString("Parse Errors: \n")
@@ -26,11 +22,9 @@ func Execute(fileName *string, code string, repl bool) (results []*interpreter.V
 		return []*interpreter.Value{}, lexTime, parseTime, time.Duration(-1)
 	}
 
-	start = time.Now()
 	evaluator := interpreter.NewInterpreter(parseRes)
 	interpreter.Init()
 
 	results = evaluator.Exec(repl)
-	execTime = time.Since(start)
 	return results, lexTime, parseTime, execTime
 }

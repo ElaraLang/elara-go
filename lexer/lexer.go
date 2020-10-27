@@ -1,10 +1,10 @@
 package lexer
 
-func Lex(file *string, code string) (tokens chan *Token) {
+import "fmt"
+
+func Lex(file *string, code string, tokens chan *Token) {
 	chars := []rune(code)
 	scanner := NewTokenReader(chars)
-
-	tokens = make(chan *Token)
 
 	for {
 		tok, runes, line, col := scanner.Read()
@@ -20,7 +20,6 @@ func Lex(file *string, code string) (tokens chan *Token) {
 		}
 
 		tokens <- &token
+		fmt.Printf("Sent token to channel %s \n", tok.String())
 	}
-
-	return tokens
 }

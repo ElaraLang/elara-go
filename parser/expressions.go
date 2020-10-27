@@ -335,7 +335,8 @@ func (p *Parser) funDef() Expr {
 
 func (p *Parser) primary() (expr Expr) {
 	var err error
-	switch p.peek().TokenType {
+	peek := p.peek()
+	switch peek.TokenType {
 	case lexer.String:
 		str := p.consume(lexer.String, "Expected string")
 		expr = StringLiteralExpr{Value: string(str.Text)}
@@ -369,13 +370,13 @@ func (p *Parser) primary() (expr Expr) {
 	if err != nil {
 		panic(ParseError{
 			token:   p.previous(),
-			message: "Expected literal",
+			message: "Expected literal, got " + peek.String(),
 		})
 	}
 
 	if expr == nil {
 		panic(ParseError{
-			token:   p.peek(),
+			token:   peek,
 			message: "Invalid expression",
 		})
 	}

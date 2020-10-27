@@ -21,19 +21,20 @@ func (pe ParseError) Error() string {
 
 type Parser struct {
 	tokens  chan *Token
-	buffer  [5]*Token
-	current int
+	current *Token
+	next    *Token
+	prev    *Token
 }
 
 func NewParser(tokens chan *Token) *Parser {
 	return &Parser{
 		tokens: tokens,
-		buffer: [5]*Token{},
 	}
 }
 
 func (p *Parser) Parse() (result []Stmt, error []ParseError) {
-	p.current = 0
+	p.current = nil
+	p.prev = nil
 	result = make([]Stmt, 0)
 	error = make([]ParseError, 0)
 	for !p.isAtEnd() {
@@ -79,17 +80,24 @@ func (p *Parser) handleError(error *[]ParseError) {
 }
 
 func (p *Parser) peek() Token {
-	return p.tokens[p.current]
+	if p.next == nil {
+		next, ok := <-p.tokens
+		if !ok || next == nil {
+			p.next = &Token{TokenType: lexer.EOF, Text: []rune{}}
+			return *p.next
+		}
+		p.next = next
+		return *next
+	}
+	return *p.next
 }
 
 func (p *Parser) previous() Token {
-	return p.tokens[p.current-1]
+	//Warning: potentially dangerous dereference!!
+	return *p.prev
 }
 
 func (p *Parser) isAtEnd() bool {
-	if p.current == len(p.tokens) {
-		return true
-	}
 	return p.peek().TokenType == lexer.EOF
 }
 
@@ -99,7 +107,12 @@ func (p *Parser) check(tokenType TokenType) bool {
 
 func (p *Parser) advance() Token {
 	if !p.isAtEnd() {
-		p.current++
+		p.prev = p.current
+		p.current = p.next
+		p.next = nil
+	}
+	if p.prev == nil {
+		return *p.current
 	}
 	return p.previous()
 }
@@ -116,8 +129,8 @@ func (p *Parser) match(types ...TokenType) bool {
 
 func (p *Parser) consume(tokenType TokenType, msg string) (token Token) {
 	if p.check(tokenType) {
-		token = p.advance()
-		return
+		p.advance()
+		return *p.current
 	}
 	panic(ParseError{token: p.peek(), message: msg})
 }
@@ -136,15 +149,17 @@ func (p *Parser) cleanNewLines() {
 	for p.match(lexer.NEWLINE) {
 	}
 }
-func (p *Parser) insert(index int, value ...Token) {
-	if len(p.tokens) == index {
-		p.tokens = append(p.tokens, value...)
-	}
-	p.tokens = append(p.tokens[:index+len(value)], p.tokens[index:]...)
-	for i := 0; i < len(value); i++ {
-		p.tokens[index+i] = value[i]
-	}
-}
+
+//This is probably a bad idea to use!
+//func (p *Parser) insert(index int, value ...Token) {
+//	if len(p.tokens) == index {
+//		p.tokens = append(p.tokens, value...)
+//	}
+//	p.tokens = append(p.tokens[:index+len(value)], p.tokens[index:]...)
+//	for i := 0; i < len(value); i++ {
+//		p.tokens[index+i] = value[i]
+//	}
+//}
 
 func (p *Parser) syncError() {
 	for !p.isAtEnd() && !p.check(lexer.NEWLINE) && !p.check(lexer.EOF) {

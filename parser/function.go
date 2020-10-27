@@ -64,27 +64,29 @@ func (p *Parser) functionArgument() FunctionArgument {
 }
 
 func (p *Parser) isFuncDef() (result bool) {
-	closing := p.findParenClosingPoint(p.current)
-	return p.tokens[closing+1].TokenType == lexer.Arrow ||
-		(p.tokens[closing+1].TokenType == lexer.Identifier && p.tokens[closing+2].TokenType == lexer.Arrow)
+	return true
+	//MASSIVE TODO
+	//closing := p.findParenClosingPoint(p)
+	//return p.tokens[closing+1].TokenType == lexer.Arrow ||
+	//	(p.tokens[closing+1].TokenType == lexer.Identifier && p.tokens[closing+2].TokenType == lexer.Arrow)
 }
 
-func (p *Parser) findParenClosingPoint(start int) (index int) {
-	if p.tokens[start].TokenType != lexer.LParen {
-		return -1
-	}
-	cur := start + 1
-	for p.tokens[cur].TokenType != lexer.RParen {
-		if p.tokens[cur].TokenType == lexer.LParen {
-			cur = p.findParenClosingPoint(cur)
-		}
-		cur++
-		if cur > len(p.tokens) {
-			panic(ParseError{
-				token:   p.previous(),
-				message: "Unexpected end before closing parenthesis",
-			})
-		}
-	}
-	return cur
-}
+//func (p *Parser) findParenClosingPoint(start int) (index int) {
+//	if p.tokens[start].TokenType != lexer.LParen {
+//		return -1
+//	}
+//	cur := start + 1
+//	for p.tokens[cur].TokenType != lexer.RParen {
+//		if p.tokens[cur].TokenType == lexer.LParen {
+//			cur = p.findParenClosingPoint(cur)
+//		}
+//		cur++
+//		if cur > len(p.tokens) {
+//			panic(ParseError{
+//				token:   p.previous(),
+//				message: "Unexpected end before closing parenthesis",
+//			})
+//		}
+//	}
+//	return cur
+//}
