@@ -255,9 +255,10 @@ func ToCommand(statement parser.Stmt) Command {
 			_, isReturn := commands[i].(*ReturnCommand)
 			//Small optimisation, it's not worth transforming anything that won't ever be reached
 			if isReturn {
-				break
+				return &BlockCommand{lines: commands[:i+1]}
 			}
 		}
+
 		return &BlockCommand{lines: commands}
 
 	case parser.IfElseStmt:

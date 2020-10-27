@@ -174,7 +174,8 @@ func (p *Parser) blockStatement() BlockStmt {
 	p.consume(lexer.LBrace, "Expected { at beginning of block")
 	p.cleanNewLines()
 	for !p.check(lexer.RBrace) {
-		p.blockedDeclaration(&result, &errors)
+		declaration := p.blockedDeclaration(&errors)
+		result = append(result, declaration)
 	}
 	p.consume(lexer.RBrace, "Expected } at beginning of block")
 	if len(errors) > 0 {
@@ -183,14 +184,16 @@ func (p *Parser) blockStatement() BlockStmt {
 	return BlockStmt{Stmts: result}
 }
 
-func (p *Parser) blockedDeclaration(results *[]Stmt, errors *[]ParseError) {
+func (p *Parser) blockedDeclaration(errors *[]ParseError) (s Stmt) {
 	defer p.handleError(errors)
-	*results = append(*results, p.declaration())
+	s = p.declaration()
 	nxt := p.peek()
 	if nxt.TokenType != lexer.NEWLINE && nxt.TokenType != lexer.RBrace {
 		panic("Expected newline after declaration in block")
 	}
 	p.cleanNewLines()
+
+	return s
 }
 
 func (p *Parser) structStatement() Stmt {

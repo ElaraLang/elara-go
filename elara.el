@@ -1,9 +1,9 @@
 let some-func = () => {
     if true => {
         return 4
+    } else => {
+        return 5
     }
-    print("Hello")
-    return 3
 }
 
 some-func() * some-func()
