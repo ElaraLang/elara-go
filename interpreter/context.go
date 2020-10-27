@@ -21,7 +21,7 @@ func NewContext() *Context {
 	}
 
 	//Todo remove
-	function := Function{
+	printFunction := Function{
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
@@ -38,16 +38,44 @@ func NewContext() *Context {
 			return UnitValue()
 		}),
 	}
-	funName := "print"
-	printContract := FunctionType(&funName, function)
+	printFunctionName := "print"
+	printContract := FunctionType(&printFunctionName, printFunction)
 
-	c.DefineVariable(funName, Variable{
-		Name:    funName,
+	c.DefineVariable(printFunctionName, Variable{
+		Name:    printFunctionName,
 		Mutable: false,
 		Type:    *printContract,
 		Value: &Value{
 			Type:  printContract,
-			Value: function,
+			Value: printFunction,
+		},
+	})
+
+	inputFunction := Function{
+		Signature: Signature{
+			Parameters: []Parameter{},
+			ReturnType: *StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			var input string
+			_, err := fmt.Scanln(&input)
+			if err != nil {
+				println(err)
+			}
+
+			return &Value{Value: input, Type: StringType}
+		}),
+	}
+	inputFunctionName := "input"
+	inputContract := FunctionType(&inputFunctionName, printFunction)
+
+	c.DefineVariable(inputFunctionName, Variable{
+		Name:    inputFunctionName,
+		Mutable: false,
+		Type:    *inputContract,
+		Value: &Value{
+			Type:  inputContract,
+			Value: inputFunction,
 		},
 	})
 	return c

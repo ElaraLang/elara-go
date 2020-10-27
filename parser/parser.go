@@ -77,6 +77,11 @@ func (p *Parser) handleError(error *[]ParseError) {
 }
 
 func (p *Parser) peek() Token {
+	if p.current >= len(p.tokens) {
+		return Token{
+			TokenType: lexer.EOF,
+		}
+	}
 	return p.tokens[p.current]
 }
 

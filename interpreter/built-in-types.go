@@ -1,5 +1,7 @@
 package interpreter
 
+import "strconv"
+
 var AnyType = EmptyType("Any")
 var UnitType = EmptyType("Unit")
 
@@ -46,6 +48,41 @@ func Init() {
 				return &Value{
 					Type:  StringType,
 					Value: concatenated,
+				}
+			}),
+		},
+		"to-int": {
+			Signature: Signature{
+				Parameters: []Parameter{},
+				ReturnType: *IntType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				value, err := strconv.ParseInt(ctx.receiver.Value.(string), 10, 64)
+				if err != nil {
+					panic(err)
+				}
+				return &Value{
+					Type:  IntType,
+					Value: value,
+				}
+			}),
+		},
+		"equals": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *StringType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				eq := ctx.receiver.Value.(string) == parameter.Value.(string)
+				return &Value{
+					Type:  BooleanType,
+					Value: eq,
 				}
 			}),
 		},

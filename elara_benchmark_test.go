@@ -5,15 +5,11 @@ import (
 	"testing"
 )
 
-var code = `let some-func = () => {
-    if true => {
-        return 4
-    } else => {
-        return 5
-    }
+var code = `let fact = (Int n) => {
+    if n == 1 => return 1
+    return n * fact(n - 1)
 }
-
-some-func() * some-func()`
+fact(8)`
 
 func BenchmarkElara(b *testing.B) {
 	for i := 0; i < b.N; i++ {

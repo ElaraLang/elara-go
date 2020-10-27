@@ -19,6 +19,9 @@ type DefineVarCommand struct {
 
 func (c DefineVarCommand) Exec(ctx *Context) *Value {
 	value := c.value.Exec(ctx)
+	if value == nil {
+		panic("Command " + reflect.TypeOf(c).Name() + " returned nil")
+	}
 	if !c.Type.Accepts(*value.Type) {
 		panic("Cannot use value of type " + value.Type.Name + " in place of " + c.Type.Name + " for variable " + c.Name)
 	}

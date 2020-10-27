@@ -364,6 +364,9 @@ func (p *Parser) primary() (expr Expr) {
 		str := p.consume(lexer.Identifier, "Expected identifier")
 		expr = VariableExpr{Identifier: string(str.Text)}
 		break
+
+	case lexer.If:
+		return p.ifElseExpression()
 	}
 
 	if err != nil {
@@ -419,10 +422,13 @@ func (p *Parser) ifElseExpression() Expr {
 }
 
 func (p *Parser) elseExpression() ([]Stmt, Expr) {
+	p.cleanNewLines()
 	p.consume(lexer.Else, "if expression must follow with else expression")
 	if p.peek().TokenType == lexer.Arrow {
 		p.advance()
 		return nil, p.expression()
+	} else if p.peek().TokenType == lexer.If {
+		return nil, p.ifElseExpression()
 	} else {
 		elseBranch := p.blockStatement()
 		elseResult := elseBranch.Stmts[len(elseBranch.Stmts)-1]

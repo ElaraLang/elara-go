@@ -33,6 +33,8 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (va
 			_, is := s.(*Value)
 			if is {
 				val = s.(*Value)
+			} else {
+				panic(s)
 			}
 		}
 	}()
