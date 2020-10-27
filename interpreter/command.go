@@ -364,6 +364,10 @@ func ExpressionToCommand(expr parser.Expr) Command {
 				Invoking: &ContextCommand{receiver: lhsCmd, variable: "divide"},
 				args:     []Command{rhsCmd},
 			}
+		case lexer.Equals:
+			return &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "equals"},
+				args: []Command{rhsCmd},
+			}
 		}
 	case parser.FuncDefExpr:
 		params := make([]Parameter, len(t.Arguments))

@@ -93,7 +93,7 @@ func Init() {
 					Type: *IntType,
 				},
 			},
-			ReturnType: *BooleanType,
+			ReturnType: *IntType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			parameter := ctx.FindParameter("value")
@@ -104,6 +104,7 @@ func Init() {
 			}
 		}),
 	}
+
 	IntType.functions = map[string]Function{
 		"plus": intAdd,
 		"add":  intAdd,
@@ -115,7 +116,7 @@ func Init() {
 						Type: *IntType,
 					},
 				},
-				ReturnType: *BooleanType,
+				ReturnType: *IntType,
 			},
 			Body: NewAbstractCommand(func(ctx *Context) *Value {
 				parameter := ctx.FindParameter("value")
@@ -134,7 +135,7 @@ func Init() {
 						Type: *IntType,
 					},
 				},
-				ReturnType: *BooleanType,
+				ReturnType: *IntType,
 			},
 			Body: NewAbstractCommand(func(ctx *Context) *Value {
 				parameter := ctx.FindParameter("value")
@@ -153,13 +154,32 @@ func Init() {
 						Type: *IntType,
 					},
 				},
-				ReturnType: *BooleanType,
+				ReturnType: *IntType,
 			},
 			Body: NewAbstractCommand(func(ctx *Context) *Value {
 				parameter := ctx.FindParameter("value")
 				result := ctx.receiver.Value.(int64) / parameter.Value.(int64)
 				return &Value{
 					Type:  IntType,
+					Value: result,
+				}
+			}),
+		},
+		"equals": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *IntType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				result := ctx.receiver.Value.(int64) == parameter.Value.(int64)
+				return &Value{
+					Type:  BooleanType,
 					Value: result,
 				}
 			}),
