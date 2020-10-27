@@ -24,11 +24,11 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (va
 
 		ctx.DefineParameter(expectedParameter.Name, paramValue)
 	}
+
 	ctx.receiver = receiver
 
 	defer func() {
 		s := recover()
-
 		if s != nil {
 			_, is := s.(*Value)
 			if is {

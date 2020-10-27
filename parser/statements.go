@@ -66,6 +66,7 @@ func (ExtendStmt) stmtNode()     {}
 func (GenerifiedStmt) stmtNode() {}
 func (TypeStmt) stmtNode()       {}
 func (ReturnStmt) stmtNode()     {}
+
 func (p *Parser) declaration() (stmt Stmt) {
 	if p.check(lexer.Let) {
 		return p.varDefStatement()
@@ -151,6 +152,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 	condition := p.logicalOr()
 	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
 	mainBranch := p.statement()
+
 	var elseBranch Stmt
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {

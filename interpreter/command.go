@@ -80,14 +80,14 @@ type InvocationCommand struct {
 }
 
 func (c *InvocationCommand) Exec(ctx *Context) *Value {
-	context, isContext := c.Invoking.(*ContextCommand)
+	context, usingReceiver := c.Invoking.(*ContextCommand)
 
-	val := c.Invoking.Exec(ctx)
-	fun, ok := val.Value.(Function)
-	if !ok {
-		panic("Cannot invoke non-function")
-	}
-	if !isContext {
+	if !usingReceiver {
+		val := c.Invoking.Exec(ctx)
+		fun, ok := val.Value.(Function)
+		if !ok {
+			panic("Cannot invoke non-function")
+		}
 		return fun.Exec(ctx, nil, c.args)
 	}
 
