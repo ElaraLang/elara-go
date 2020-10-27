@@ -107,5 +107,62 @@ func Init() {
 	IntType.functions = map[string]Function{
 		"plus": intAdd,
 		"add":  intAdd,
+		"minus": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *IntType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				result := ctx.receiver.Value.(int64) - parameter.Value.(int64)
+				return &Value{
+					Type:  IntType,
+					Value: result,
+				}
+			}),
+		},
+		"times": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *IntType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				result := ctx.receiver.Value.(int64) * parameter.Value.(int64)
+				return &Value{
+					Type:  IntType,
+					Value: result,
+				}
+			}),
+		},
+		"divide": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *IntType,
+					},
+				},
+				ReturnType: *BooleanType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				result := ctx.receiver.Value.(int64) / parameter.Value.(int64)
+				return &Value{
+					Type:  IntType,
+					Value: result,
+				}
+			}),
+		},
 	}
 }

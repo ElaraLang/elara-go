@@ -328,70 +328,22 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		case lexer.Add:
 			return &InvocationCommand{
 				Invoking: &ContextCommand{receiver: lhsCmd, variable: "plus"},
-				args: []Command{rhsCmd},
+				args:     []Command{rhsCmd},
 			}
 		case lexer.Subtract:
-			return &BinaryOperatorCommand{
-				lhs: lhsCmd,
-				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
-					left := lhs.Value
-					lhsInt, ok := left.(int64)
-					if !ok {
-						panic("LHS must be an int64")
-					}
-					rhsInt, ok := rhs.Value.(int64)
-					if !ok {
-						panic("RHS must be an int64")
-					}
-
-					return &Value{
-						Type:  IntType,
-						Value: lhsInt - rhsInt,
-					}
-				},
-				rhs: rhsCmd,
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "minus"},
+				args:     []Command{rhsCmd},
 			}
 		case lexer.Multiply:
-			return &BinaryOperatorCommand{
-				lhs: lhsCmd,
-				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
-					left := lhs.Value
-					lhsInt, ok := left.(int64)
-					if !ok {
-						panic("LHS must be an int64")
-					}
-					rhsInt, ok := rhs.Value.(int64)
-					if !ok {
-						panic("RHS must be an int64")
-					}
-
-					return &Value{
-						Type:  IntType,
-						Value: lhsInt * rhsInt,
-					}
-				},
-				rhs: rhsCmd,
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "times"},
+				args:     []Command{rhsCmd},
 			}
 		case lexer.Slash:
-			return &BinaryOperatorCommand{
-				lhs: lhsCmd,
-				op: func(ctx *Context, lhs *Value, rhs *Value) *Value {
-					left := lhs.Value
-					lhsInt, ok := left.(int64)
-					if !ok {
-						panic("LHS must be an int64")
-					}
-					rhsInt, ok := rhs.Value.(int64)
-					if !ok {
-						panic("RHS must be an int64")
-					}
-
-					return &Value{
-						Type:  IntType,
-						Value: lhsInt / rhsInt,
-					}
-				},
-				rhs: rhsCmd,
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "divide"},
+				args:     []Command{rhsCmd},
 			}
 		}
 	case parser.FuncDefExpr:

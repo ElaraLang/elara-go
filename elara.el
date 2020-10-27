@@ -6,4 +6,4 @@ let b = if true {
 }
 
 print("Is it true? " + b)
-print(3 + 4)
+print(30 * 4)
