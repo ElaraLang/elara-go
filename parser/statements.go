@@ -52,6 +52,10 @@ type GenerifiedStmt struct {
 	Statement Stmt
 }
 
+type ReturnStmt struct {
+	Returning Expr
+}
+
 func (ExpressionStmt) stmtNode() {}
 func (BlockStmt) stmtNode()      {}
 func (VarDefStmt) stmtNode()     {}
@@ -61,6 +65,7 @@ func (WhileStmt) stmtNode()      {}
 func (ExtendStmt) stmtNode()     {}
 func (GenerifiedStmt) stmtNode() {}
 func (TypeStmt) stmtNode()       {}
+func (ReturnStmt) stmtNode()     {}
 
 func (p *Parser) declaration() (stmt Stmt) {
 	if p.check(lexer.Let) {
@@ -84,6 +89,8 @@ func (p *Parser) statement() Stmt {
 		return p.typeStatement()
 	case lexer.LAngle:
 		return p.genericStatement()
+	case lexer.Return:
+		return p.returnStatement()
 	default:
 		return p.exprStatement()
 	}
@@ -105,11 +112,12 @@ func (p *Parser) varDefStatement() Stmt {
 	}
 
 	if p.check(lexer.Arrow) {
+		//Functions (eg let a => print "hello")
 		return VarDefStmt{
 			Mutable:    mut,
 			Lazy:       lazy,
 			Restricted: restricted,
-			Identifier: id.Text,
+			Identifier: string(id.Text),
 			Type:       typ,
 			Value:      p.funDef(),
 		}
@@ -122,7 +130,7 @@ func (p *Parser) varDefStatement() Stmt {
 		Mutable:    mut,
 		Lazy:       lazy,
 		Restricted: restricted,
-		Identifier: id.Text,
+		Identifier: string(id.Text),
 		Type:       typ,
 		Value:      expr,
 	}
@@ -144,6 +152,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 	condition := p.logicalOr()
 	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
 	mainBranch := p.statement()
+
 	var elseBranch Stmt
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {
@@ -161,38 +170,46 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 	return
 }
 
-func (p *Parser) blockStatement() (stmt Stmt) {
+func (p *Parser) blockStatement() BlockStmt {
 	result := make([]Stmt, 0)
 	errors := make([]ParseError, 0)
 	p.consume(lexer.LBrace, "Expected { at beginning of block")
 	p.cleanNewLines()
 	for !p.check(lexer.RBrace) {
-		p.blockedDeclaration(&result, &errors)
+		declaration := p.blockedDeclaration(&errors)
+		result = append(result, declaration)
 	}
 	p.consume(lexer.RBrace, "Expected } at beginning of block")
 	if len(errors) > 0 {
 		panic(errors)
 	}
-	stmt = BlockStmt{Stmts: result}
-	return
+	return BlockStmt{Stmts: result}
 }
 
-func (p *Parser) blockedDeclaration(results *[]Stmt, errors *[]ParseError) {
+func (p *Parser) blockedDeclaration(errors *[]ParseError) (s Stmt) {
 	defer p.handleError(errors)
-	*results = append(*results, p.declaration())
+	s = p.declaration()
 	nxt := p.peek()
 	if nxt.TokenType != lexer.NEWLINE && nxt.TokenType != lexer.RBrace {
 		panic("Expected newline after declaration in block")
 	}
 	p.cleanNewLines()
+
+	return s
 }
 
 func (p *Parser) structStatement() Stmt {
 	p.consume(lexer.Struct, "Expected struct start to begin with `struct` keyword")
 	return StructDefStmt{
-		Identifier:   p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text,
+		Identifier:   string(p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text),
 		StructFields: p.structFields(),
 	}
+}
+
+func (p *Parser) returnStatement() Stmt {
+	p.consume(lexer.Return, "Expected return")
+	expr := p.expression()
+	return ReturnStmt{Returning: expr}
 }
 
 func (p *Parser) exprStatement() Stmt {

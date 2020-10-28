@@ -1,52 +1,41 @@
 package main
 
 import (
-	"elara/interpreter"
-	"elara/lexer"
-	"elara/parser"
-	"fmt"
+	"elara/base"
 	"io/ioutil"
 	"os"
 	"path"
-	"strings"
 )
 
 func main() {
-
-	goPath := os.Getenv("GOPATH")
-	filePath := path.Join(goPath, "elara.el")
-	input, err := ioutil.ReadFile(filePath)
-	if err != nil {
-		panic(err)
-	}
-	reader := strings.NewReader(string(input))
-	scanner := lexer.NewScanner(reader)
-
-	result := make([]lexer.Token, 0)
-	for {
-		tok, str := scanner.Read()
-		result = append(result, CreateToken(tok, str))
-		if tok == lexer.EOF {
+	args := os.Args
+	//This isn't really a repl, but it will be. for now, it's close enough in that it will print the output of every expression
+	var repl = false
+	for _, arg := range args {
+		if arg == "--repl" {
+			repl = true
 			break
 		}
 	}
 
-	psr := parser.NewParser(&result)
-	parseRes, errs := psr.Parse()
+	fileName, input := loadElaraFile()
 
-	if len(errs) != 0 {
-		println("Errors")
-		fmt.Printf("%q\n", errs)
-	}
+	_, _, _, _ = base.Execute(&fileName, string(input), repl)
 
-	interpreter := interpreter.NewInterpreter(parseRes)
+	//totalTime := time.Since(start)
 
-	interpreter.Exec()
+	//fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
 }
 
-func CreateToken(tokenType lexer.TokenType, text string) lexer.Token {
-	return lexer.Token{
-		TokenType: tokenType,
-		Text:      text,
+func loadElaraFile() (string, []byte) {
+	goPath := os.Getenv("GOPATH")
+	fileName := "elara.el"
+	filePath := path.Join(goPath, fileName)
+
+	input, err := ioutil.ReadFile(filePath)
+
+	if err != nil {
+		panic(err)
 	}
+	return fileName, input
 }

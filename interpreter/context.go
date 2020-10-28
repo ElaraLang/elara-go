@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"elara/parser"
 	"elara/util"
 	"fmt"
 )
@@ -9,37 +8,74 @@ import (
 type Context struct {
 	variables map[string][]*Variable
 
-	parameters []*Value
+	parameters map[string]*Value
+
+	receiver *Value
 }
 
 func NewContext() *Context {
 	c := &Context{
 		variables:  map[string][]*Variable{},
-		parameters: []*Value{},
+		parameters: map[string]*Value{},
+		receiver:   nil,
 	}
 
 	//Todo remove
-	printContract := parser.InvocableTypeContract{
-		Args:       []parser.Type{parser.ElementaryTypeContract{Identifier: "Any"}},
-		ReturnType: parser.ElementaryTypeContract{Identifier: "Unit"},
-	}
-	c.DefineVariable("print", Variable{
-		Name:    "print",
-		Mutable: false,
-		Type:    printContract,
-		Value: Value{
-			Type: printContract,
-			Value: Function{
-				Signature: printContract,
-				body: []Command{
-					NewAbstractCommand(func(ctx *Context) Value {
-						value := ctx.FindParameter(0).Value
-						fmt.Printf("%s\n", util.Stringify(value))
-
-						return *UnitValue()
-					}),
+	printFunction := Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "value",
+					Type: *AnyType,
 				},
 			},
+			ReturnType: *UnitType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			value := ctx.FindParameter("value").Value
+			fmt.Printf("%s\n", util.Stringify(value))
+
+			return UnitValue()
+		}),
+	}
+	printFunctionName := "print"
+	printContract := FunctionType(&printFunctionName, printFunction)
+
+	c.DefineVariable(printFunctionName, Variable{
+		Name:    printFunctionName,
+		Mutable: false,
+		Type:    *printContract,
+		Value: &Value{
+			Type:  printContract,
+			Value: printFunction,
+		},
+	})
+
+	inputFunction := Function{
+		Signature: Signature{
+			Parameters: []Parameter{},
+			ReturnType: *StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			var input string
+			_, err := fmt.Scanln(&input)
+			if err != nil {
+				println(err)
+			}
+
+			return &Value{Value: input, Type: StringType}
+		}),
+	}
+	inputFunctionName := "input"
+	inputContract := FunctionType(&inputFunctionName, printFunction)
+
+	c.DefineVariable(inputFunctionName, Variable{
+		Name:    inputFunctionName,
+		Mutable: false,
+		Type:    *inputContract,
+		Value: &Value{
+			Type:  inputContract,
+			Value: inputFunction,
 		},
 	})
 	return c
@@ -60,18 +96,23 @@ func (c Context) FindVariable(name string) *Variable {
 	return vars[0]
 }
 
-func (c *Context) DefineParameter(index int, value *Value) {
-	if index >= len(c.parameters) {
-		newParameters := make([]*Value, index+1)
-		newParameters[index] = value
-		c.parameters = newParameters
-		return
-	}
-	c.parameters[index] = value
+func (c *Context) DefineParameter(name string, value *Value) {
+	c.parameters[name] = value
 }
 
-func (c Context) FindParameter(index int) *Value {
-	return c.parameters[index]
+func (c Context) FindParameterIndexed(index int) *Value {
+	i := 0
+	for _, value := range c.parameters {
+		if i == index {
+			return value
+		}
+		i++
+	}
+	return nil
+}
+
+func (c Context) FindParameter(name string) *Value {
+	return c.parameters[name]
 }
 
 func (c Context) string() string {

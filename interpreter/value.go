@@ -1,58 +1,37 @@
 package interpreter
 
 import (
-	"elara/parser"
+	"elara/util"
 	"fmt"
 )
 
 type Value struct {
-	Type  parser.Type
+	Type  *Type
 	Value interface{}
 }
 
-var unitValue = Value{
-	Type:  parser.ElementaryTypeContract{Identifier: "Unit"},
+func (v *Value) String() *string {
+	if v == nil {
+		return nil
+	}
+	formatted := fmt.Sprintf("%s (%s)", util.Stringify(v.Value), v.Type.Name)
+	return &formatted
+}
+
+var unitValue = &Value{
+	Type:  UnitType,
 	Value: "Unit",
 }
 
 func UnitValue() *Value {
-	return &unitValue
+	return unitValue
 }
 
 type Variable struct {
 	Name    string
 	Mutable bool
-	Type    parser.Type
-	Value   Value
-}
-
-type Function struct {
-	Signature parser.InvocableTypeContract
-	body      []Command
-}
-
-func (f *Function) String() string {
-	return fmt.Sprintf("Function %s => %s", f.Signature.Args, f.Signature.ReturnType)
-}
-
-func (f *Function) exec(ctx *Context, parameters []Command) Value {
-	var val Value
-
-	for i, parameter := range parameters {
-		paramValue := parameter.Exec(ctx)
-		ctx.DefineParameter(i, &paramValue)
-	}
-
-	for _, line := range f.body {
-		val = line.Exec(ctx)
-	}
-
-	return val
-}
-
-type Signature struct {
-	parameters []parser.Type
-	ReturnType parser.Type
+	Type    Type
+	Value   *Value
 }
 
 func (v Variable) string() string {

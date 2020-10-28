@@ -2,11 +2,11 @@ package parser
 
 import "C"
 import (
-	lexer "elara/lexer"
+	"elara/lexer"
 	"fmt"
 )
 
-type Scanner = lexer.Scanner
+type Scanner = lexer.TokenReader
 type Token = lexer.Token
 type TokenType = lexer.TokenType
 
@@ -16,7 +16,7 @@ type ParseError struct {
 }
 
 func (pe ParseError) Error() string {
-	return fmt.Sprintf("Parse Error: %s at %s", pe.message, pe.token.Text)
+	return fmt.Sprintf("Parse Error: %s at %s", pe.message, pe.token.String())
 }
 
 type Parser struct {
@@ -42,6 +42,11 @@ func (p *Parser) Parse() (result []Stmt, error []ParseError) {
 
 func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 	defer p.handleError(error)
+	if p.peek().TokenType == lexer.NEWLINE {
+		p.advance()
+		return
+	}
+
 	stmt := p.declaration()
 	*result = append(*result, stmt)
 	if !(p.match(lexer.NEWLINE) || p.isAtEnd()) {
@@ -72,6 +77,11 @@ func (p *Parser) handleError(error *[]ParseError) {
 }
 
 func (p *Parser) peek() Token {
+	if p.current >= len(p.tokens) {
+		return Token{
+			TokenType: lexer.EOF,
+		}
+	}
 	return p.tokens[p.current]
 }
 
@@ -80,6 +90,9 @@ func (p *Parser) previous() Token {
 }
 
 func (p *Parser) isAtEnd() bool {
+	if p.current == len(p.tokens) {
+		return true
+	}
 	return p.peek().TokenType == lexer.EOF
 }
 
@@ -110,6 +123,16 @@ func (p *Parser) consume(tokenType TokenType, msg string) (token Token) {
 		return
 	}
 	panic(ParseError{token: p.peek(), message: msg})
+}
+
+func (p *Parser) consumeValidIdentifier(msg string) (token Token) {
+	next := p.peek()
+	nextType := next.TokenType
+	if nextType != lexer.Identifier && nextType != lexer.Add && nextType != lexer.Subtract && nextType != lexer.Slash && nextType != lexer.Multiply {
+		panic(ParseError{token: p.peek(), message: msg})
+	}
+	p.advance()
+	return next
 }
 
 func (p *Parser) cleanNewLines() {

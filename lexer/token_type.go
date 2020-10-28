@@ -57,7 +57,8 @@ const (
 	Dot
 
 	//Literals
-	Boolean
+	BooleanTrue
+	BooleanFalse
 	String
 	Int
 	Float
@@ -118,7 +119,8 @@ var tokenNames = map[TokenType]string{
 	Equal:        "Equal",
 	Arrow:        "Arrow",
 	Dot:          "Dot",
-	Boolean:      "Boolean",
+	BooleanTrue:  "True",
+	BooleanFalse: "False",
 	String:       "String",
 	Int:          "Int",
 	Float:        "Float",
@@ -129,18 +131,21 @@ var tokenNames = map[TokenType]string{
 	Identifier: "Identifier",
 	Underscore: "Underscore",
 }
-var IllegalIdentifierChars = map[rune]bool{
-	',': true,
-	'.': true,
-	':': true,
-	'#': true,
-	'[': true,
-	']': true,
-	'(': true,
-	')': true,
-	'{': true,
-	'}': true,
-	'"': true,
-	'>': true,
-	'<': true,
+var IllegalIdentifierChars = []bool{
+	',':  true,
+	'.':  true,
+	':':  true,
+	'#':  true,
+	'[':  true,
+	']':  true,
+	'(':  true,
+	')':  true,
+	'{':  true,
+	'}':  true,
+	'"':  true,
+	'>':  true,
+	'<':  true,
+	' ':  true,
+	'\n': true,
+	'\t': true,
 }

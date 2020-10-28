@@ -7,36 +7,72 @@ import (
 )
 
 type Command interface {
-	Exec(ctx *Context) Value
+	Exec(ctx *Context) *Value
 }
 
 type DefineVarCommand struct {
 	Name    string
 	Mutable bool
-	Type    parser.Type
+	Type    Type
 	value   Command
 }
 
-func (c DefineVarCommand) Exec(ctx *Context) Value {
+func (c DefineVarCommand) Exec(ctx *Context) *Value {
+	value := c.value.Exec(ctx)
+	if value == nil {
+		panic("Command " + reflect.TypeOf(c).Name() + " returned nil")
+	}
+	if !c.Type.Accepts(*value.Type) {
+		panic("Cannot use value of type " + value.Type.Name + " in place of " + c.Type.Name + " for variable " + c.Name)
+	}
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
 		Type:    c.Type,
-		Value:   c.value.Exec(ctx),
+		Value:   value,
 	}
 
 	ctx.DefineVariable(c.Name, variable)
-	return variable.Value
+	return nil
+}
+
+type AssignmentCommand struct {
+	Name  string
+	value Command
+}
+
+func (c *AssignmentCommand) Exec(ctx *Context) *Value {
+	variable := ctx.FindVariable(c.Name)
+	if variable == nil {
+		panic("No such variable " + c.Name)
+	}
+
+	if !variable.Mutable {
+		panic("Cannot reassign immutable variable " + c.Name)
+	}
+
+	value := c.value.Exec(ctx)
+
+	if !variable.Type.Accepts(*value.Type) {
+		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name + " to value " + *value.String() + " of type " + value.Type.Name)
+	}
+
+	variable.Value = value
+	return nil
 }
 
 type VariableCommand struct {
 	Variable string
 }
 
-func (c VariableCommand) Exec(ctx *Context) Value {
+func (c *VariableCommand) Exec(ctx *Context) *Value {
 	variable := ctx.FindVariable(c.Variable)
 	if variable == nil {
-		panic("No such variable " + c.Variable)
+		param := ctx.FindParameter(c.Variable)
+		if param == nil {
+			panic("No such variable or parameter " + c.Variable)
+		}
+		return param
 	}
 	return variable.Value
 }
@@ -46,25 +82,39 @@ type InvocationCommand struct {
 	args     []Command
 }
 
-func (c InvocationCommand) Exec(ctx *Context) Value {
-	val := c.Invoking.Exec(ctx)
-	fun, ok := val.Value.(Function)
-	if !ok {
-		panic("Cannot invoke non-function")
+func (c *InvocationCommand) Exec(ctx *Context) *Value {
+	context, usingReceiver := c.Invoking.(*ContextCommand)
+
+	if !usingReceiver {
+		val := c.Invoking.Exec(ctx)
+		fun, ok := val.Value.(Function)
+		if !ok {
+			panic("Cannot invoke non-function")
+		}
+		return fun.Exec(ctx, nil, c.args)
 	}
 
-	return fun.exec(ctx, c.args)
+	//ContextCommand seems to think it's a special case... because it is.
+	receiver := context.receiver.Exec(ctx)
+	function, ok := receiver.Type.functions[context.variable]
+	if !ok {
+		panic("No such variable " + context.variable + " on type " + receiver.Type.Name)
+	}
+
+	exec := context.receiver.Exec(ctx)
+	return function.Exec(ctx, exec, c.args)
+
 }
 
 type AbstractCommand struct {
-	content func(ctx *Context) Value
+	content func(ctx *Context) *Value
 }
 
-func (c AbstractCommand) Exec(ctx *Context) Value {
+func (c *AbstractCommand) Exec(ctx *Context) *Value {
 	return c.content(ctx)
 }
 
-func NewAbstractCommand(content func(ctx *Context) Value) *AbstractCommand {
+func NewAbstractCommand(content func(ctx *Context) *Value) *AbstractCommand {
 	return &AbstractCommand{
 		content: content,
 	}
@@ -74,46 +124,164 @@ type LiteralCommand struct {
 	value Value
 }
 
-func (c LiteralCommand) Exec(_ *Context) Value {
-	return c.value
+func (c *LiteralCommand) Exec(_ *Context) *Value {
+	return &c.value
 }
 
 type BinaryOperatorCommand struct {
 	lhs Command
-	op  func(ctx *Context, lhs Value, rhs Value) Value
+	op  func(ctx *Context, lhs *Value, rhs *Value) *Value
 	rhs Command
 }
 
-func (c BinaryOperatorCommand) Exec(ctx *Context) Value {
+func (c *BinaryOperatorCommand) Exec(ctx *Context) *Value {
 	lhs := c.lhs.Exec(ctx)
 	rhs := c.rhs.Exec(ctx)
 
 	return c.op(ctx, lhs, rhs)
 }
 
-type FunctionDefinitionCommand struct {
+type BlockCommand struct {
+	lines []Command
 }
 
-type FunctionParameter struct {
+func (c *BlockCommand) Exec(ctx *Context) *Value {
+	var last *Value
+	for _, line := range c.lines {
+		last = line.Exec(ctx)
+	}
+	return last
+}
+
+type ContextCommand struct {
+	receiver Command
+	variable string
+}
+
+func (c *ContextCommand) Exec(ctx *Context) *Value {
+	receiver := c.receiver.Exec(ctx)
+	function, ok := receiver.Type.functions[c.variable]
+	if !ok {
+		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
+	}
+
+	return &Value{
+		Type:  FunctionType(&c.variable, function),
+		Value: function,
+	}
+}
+
+type IfElseCommand struct {
+	condition  Command
+	ifBranch   Command
+	elseBranch Command
+}
+
+func (c *IfElseCommand) Exec(ctx *Context) *Value {
+	condition := c.condition.Exec(ctx)
+	value, ok := condition.Value.(bool)
+	if !ok {
+		panic("If statement requires boolean value")
+	}
+
+	if value {
+		return c.ifBranch.Exec(ctx)
+	} else if c.elseBranch != nil {
+		return c.elseBranch.Exec(ctx)
+	} else {
+		return nil
+	}
+}
+
+type IfElseExpressionCommand struct {
+	condition  Command
+	ifBranch   []Command
+	ifResult   Command
+	elseBranch []Command
+	elseResult Command
+}
+
+func (c *IfElseExpressionCommand) Exec(ctx *Context) *Value {
+	condition := c.condition.Exec(ctx)
+	value, ok := condition.Value.(bool)
+	if !ok {
+		panic("If statement requires boolean value")
+	}
+
+	if value {
+		if c.ifBranch != nil {
+			for _, cmd := range c.ifBranch {
+				cmd.Exec(ctx)
+			}
+		}
+		return c.ifResult.Exec(ctx)
+	} else {
+		if c.elseBranch != nil {
+			for _, cmd := range c.elseBranch {
+				cmd.Exec(ctx)
+			}
+		}
+		return c.elseResult.Exec(ctx)
+	}
+}
+
+type ReturnCommand struct {
+	returning Command
+}
+
+func (c *ReturnCommand) Exec(ctx *Context) *Value {
+	panic(c.returning.Exec(ctx))
 }
 
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
-		Type := t.Type
+		Type := FromASTType(t.Type)
 		if Type == nil {
-			Type = &parser.ElementaryTypeContract{Identifier: "Any"}
+			Type = AnyType
 		}
 		valueExpr := ExpressionToCommand(t.Value)
 		return DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
-			Type:    Type,
+			Type:    *Type,
 			value:   valueExpr,
 		}
 	case parser.ExpressionStmt:
 		return ExpressionToCommand(t.Expr)
+
+	case parser.BlockStmt:
+		commands := make([]Command, len(t.Stmts))
+		for i, stmt := range t.Stmts {
+			commands[i] = ToCommand(stmt)
+			_, isReturn := commands[i].(*ReturnCommand)
+			//Small optimisation, it's not worth transforming anything that won't ever be reached
+			if isReturn {
+				return &BlockCommand{lines: commands[:i+1]}
+			}
+		}
+
+		return &BlockCommand{lines: commands}
+
+	case parser.IfElseStmt:
+		condition := ExpressionToCommand(t.Condition)
+		ifBranch := ToCommand(t.MainBranch)
+		var elseBranch Command
+		if t.ElseBranch != nil {
+			elseBranch = ToCommand(t.ElseBranch)
+		}
+
+		return &IfElseCommand{
+			condition:  condition,
+			ifBranch:   ifBranch,
+			elseBranch: elseBranch,
+		}
+
+	case parser.ReturnStmt:
+		return &ReturnCommand{
+			ExpressionToCommand(t.Returning),
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
@@ -123,7 +291,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 
 	switch t := expr.(type) {
 	case parser.VariableExpr:
-		return VariableCommand{Variable: t.Identifier}
+		return &VariableCommand{Variable: t.Identifier}
 
 	case parser.InvocationExpr:
 		fun := ExpressionToCommand(t.Invoker)
@@ -136,7 +304,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 			args = append(args, command)
 		}
 
-		return InvocationCommand{
+		return &InvocationCommand{
 			Invoking: fun,
 			args:     args,
 		}
@@ -144,18 +312,32 @@ func ExpressionToCommand(expr parser.Expr) Command {
 	case parser.StringLiteralExpr:
 		str := t.Value
 		value := Value{
-			Type:  parser.ElementaryTypeContract{Identifier: "String"},
+			Type:  StringType,
 			Value: str,
 		}
-		return LiteralCommand{value: value}
+		return &LiteralCommand{value: value}
 
 	case parser.IntegerLiteralExpr:
-		str := t.Value
+		integer := t.Value
 		value := Value{
-			Type:  parser.ElementaryTypeContract{Identifier: "Int"},
-			Value: str,
+			Type:  IntType,
+			Value: integer,
 		}
-		return LiteralCommand{value: value}
+		return &LiteralCommand{value: value}
+	case parser.FloatLiteralExpr:
+		float := t.Value
+		value := Value{
+			Type:  FloatType,
+			Value: float,
+		}
+		return &LiteralCommand{value: value}
+	case parser.BooleanLiteralExpr:
+		boolean := t.Value
+		value := Value{
+			Type:  BooleanType,
+			Value: boolean,
+		}
+		return &LiteralCommand{value: value}
 
 	case parser.BinaryExpr:
 		lhs := t.Lhs
@@ -166,50 +348,101 @@ func ExpressionToCommand(expr parser.Expr) Command {
 
 		switch op {
 		case lexer.Add:
-			return BinaryOperatorCommand{
-				lhs: lhsCmd,
-				op: func(ctx *Context, lhs Value, rhs Value) Value {
-					left := lhs.Value
-					lhsInt, ok := left.(int64)
-					if !ok {
-						panic("LHS must be an int64")
-					}
-					rhsInt, ok := rhs.Value.(int64)
-					if !ok {
-						panic("RHS must be an int64")
-					}
-
-					return Value{
-						Type:  parser.ElementaryTypeContract{Identifier: "Int"},
-						Value: lhsInt + rhsInt,
-					}
-				},
-				rhs: rhsCmd,
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "plus"},
+				args:     []Command{rhsCmd},
 			}
 		case lexer.Subtract:
-			return BinaryOperatorCommand{
-				lhs: lhsCmd,
-				op: func(ctx *Context, lhs Value, rhs Value) Value {
-					left := lhs.Value
-					lhsInt, ok := left.(int64)
-					if !ok {
-						panic("LHS must be an int64")
-					}
-					rhsInt, ok := rhs.Value.(int64)
-					if !ok {
-						panic("RHS must be an int64")
-					}
-
-					return Value{
-						Type:  parser.ElementaryTypeContract{Identifier: "Int"},
-						Value: lhsInt - rhsInt,
-					}
-				},
-				rhs: rhsCmd,
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "minus"},
+				args:     []Command{rhsCmd},
+			}
+		case lexer.Multiply:
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "times"},
+				args:     []Command{rhsCmd},
+			}
+		case lexer.Slash:
+			return &InvocationCommand{
+				Invoking: &ContextCommand{receiver: lhsCmd, variable: "divide"},
+				args:     []Command{rhsCmd},
+			}
+		case lexer.Equals:
+			return &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "equals"},
+				args: []Command{rhsCmd},
 			}
 		}
 	case parser.FuncDefExpr:
-		println(t.Statement)
+		params := make([]Parameter, len(t.Arguments))
+		for i, parameter := range t.Arguments {
+			paramType := FromASTType(parameter.Type)
+			params[i] = Parameter{
+				Type: *paramType,
+				Name: parameter.Name,
+			}
+		}
+
+		returnType := FromASTType(t.ReturnType)
+
+		fun := Function{
+			Signature: Signature{
+				Parameters: params,
+				ReturnType: *returnType,
+			},
+			Body: ToCommand(t.Statement),
+		}
+
+		functionType := FunctionType(nil, fun)
+
+		return &LiteralCommand{value: Value{
+			Type:  functionType,
+			Value: fun,
+		}}
+
+	case parser.ContextExpr:
+		contextCmd := ExpressionToCommand(t.Context)
+		varName := t.Variable.Identifier
+		return &ContextCommand{
+			contextCmd,
+			varName,
+		}
+
+	case parser.AssignmentExpr:
+		valueCmd := ExpressionToCommand(t.Value)
+		//TODO contexts
+		name := t.Identifier
+		return &AssignmentCommand{
+			Name:  name,
+			value: valueCmd,
+		}
+
+	case parser.IfElseExpr:
+		condition := ExpressionToCommand(t.Condition)
+		var ifBranch []Command
+		if t.IfBranch != nil {
+			ifBranch = make([]Command, len(t.IfBranch))
+			for i, stmt := range t.IfBranch {
+				ifBranch[i] = ToCommand(stmt)
+			}
+		}
+		ifResult := ExpressionToCommand(t.IfResult)
+
+		var elseBranch []Command
+		if t.ElseBranch != nil {
+			elseBranch = make([]Command, len(t.ElseBranch))
+			for i, stmt := range t.ElseBranch {
+				elseBranch[i] = ToCommand(stmt)
+			}
+		}
+		elseResult := ExpressionToCommand(t.ElseResult)
+
+		return &IfElseExpressionCommand{
+			condition:  condition,
+			ifBranch:   ifBranch,
+			ifResult:   ifResult,
+			elseBranch: elseBranch,
+			elseResult: elseResult,
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

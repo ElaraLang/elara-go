@@ -1,117 +1,173 @@
 package lexer
 
 import (
-	"bufio"
-	"bytes"
-	"io"
 	"unicode"
 )
 
-type Scanner struct {
-	r *bufio.Reader
+//TODO remove the amount of `defer` declarations as they seem to have a cost, and more optimisations of readIdentifier
+type TokenReader struct {
+	runes  []rune
+	cursor int
+	line   int
+	col    int
 }
 
-func NewScanner(r io.Reader) *Scanner {
-	return &Scanner{r: bufio.NewReader(r)}
+func NewTokenReader(runes []rune) *TokenReader {
+	return &TokenReader{
+		runes:  runes,
+		cursor: 0,
+		line:   0,
+		col:    0,
+	}
 }
 
-func (s *Scanner) read() rune {
-	ch, _, err := s.r.ReadRune()
-	if err != nil {
+//Reads the current rune and moves the cursor to the next rune
+func (s *TokenReader) read() rune {
+	if s.cursor >= len(s.runes) {
 		return eof
 	}
-	return ch
+	r := s.runes[s.cursor]
+	s.cursor++
+	return r
 }
 
-//places the previously read rune back on the reader
-func (s *Scanner) unread() { _ = s.r.UnreadRune() }
-
-func (s *Scanner) peek() rune {
-	peeked := s.read()
-	s.unread()
-	return peeked
+//Goes back to reading the previous rune
+func (s *TokenReader) unread() {
+	s.cursor--
 }
 
-func (s *Scanner) Read() (tok TokenType, text string) {
+func (s *TokenReader) peek() rune {
+	if s.cursor >= len(s.runes)-1 {
+		return eof
+	}
+	return s.runes[s.cursor]
+}
+
+//TODO this is pretty gross, could use a cleanup
+func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 	ch := s.read()
 
 	if ch == eof {
-		return EOF, string(ch)
+		return EOF, []rune{ch}, s.line, s.col
 	}
+
 	if ch == '\r' {
 		return s.Read()
 	}
 
 	if ch == '\n' {
-		return NEWLINE, string(ch)
+		oldCol := s.col
+		s.col = 0
+		s.line++
+		return NEWLINE, []rune{ch}, s.line - 1, oldCol
 	}
 
-	if isWhitespace(ch) {
-		s.consumeWhitespace()
+	if IsWhitespace(ch) {
+		s.col++ //consumeWhitespace will add any *further* whitespace counters
+		s.col += s.consumeWhitespace()
 		return s.Read()
 	}
 
 	if ch == ',' {
-		return Comma, string(ch)
+		defer func() {
+			s.col++
+		}()
+		return Comma, []rune{ch}, s.line, s.col
 	}
 	if ch == ':' {
-		return Colon, string(ch)
+		defer func() {
+			s.col++
+		}()
+		return Colon, []rune{ch}, s.line, s.col
 	}
+
 	if ch == '_' {
 		next := s.peek()
-		if isWhitespace(next) || next == eof {
-			return Underscore, string(ch)
+		if next == eof || IsWhitespace(next) {
+			defer func() {
+				s.col++
+			}()
+			return Underscore, []rune{ch}, s.line, s.col
 		}
 		s.unread()
 	}
 
 	if isAngleBracket(ch) {
 		s.unread()
-		return s.readAngleBracket()
+		bracket, t := s.readAngleBracket()
+		defer func() {
+			s.col += len(t)
+		}()
+		return bracket, t, s.line, s.col
 	}
 
 	if isStartOfSymbol(ch) {
 		s.unread()
-		return s.readSymbol()
+		symbol, t := s.readSymbol()
+		defer func() {
+			s.col += len(t)
+		}()
+		return symbol, t, s.line, s.col
 	}
 
 	if isOperatorSymbol(ch) {
 		s.unread()
-		op, txt := s.readOperator()
+		op, t := s.readOperator()
+		defer func() {
+			s.col += len(t)
+		}()
 		if op != Illegal && op != EOF {
-			return op, txt
+			return op, t, s.line, s.col
 		}
 	}
 
 	if isBracket(ch) {
 		s.unread()
-		return s.readBracket()
+		bracket, t := s.readBracket()
+		defer func() {
+			s.col += len(t)
+		}()
+		return bracket, t, s.line, s.col
 	}
 
 	if isNumerical(ch) {
 		s.unread()
-		return s.readNumber()
+		number, t := s.readNumber()
+		defer func() {
+			s.col += len(t)
+		}()
+		return number, t, s.line, s.col
 	}
 
 	if ch == '"' {
-		return s.readString()
+		str, t := s.readString()
+		defer func() {
+			s.col += len(t)
+		}()
+		return str, t, s.line, s.col
 	}
 
 	if isValidIdentifier(ch) {
 		s.unread()
-		return s.readIdentifier()
+		identifier, t := s.readIdentifier()
+		defer func() {
+			s.col += len(t)
+		}()
+		return identifier, t, s.line, s.col
 	}
 
-	return Illegal, string(ch)
+	return Illegal, []rune{ch}, s.line, s.col
 }
 
 //Consume all whitespace until we reach an eof or a non-whitespace character
-func (s *Scanner) consumeWhitespace() uint {
-	count := uint(0)
+func (s *TokenReader) consumeWhitespace() int {
+	count := 0
 	for {
-		if ch := s.read(); ch == eof {
+		ch := s.read()
+		if ch == eof {
 			break
-		} else if !isWhitespace(ch) {
+		}
+		if !IsWhitespace(ch) {
 			s.unread()
 			break
 		}
@@ -120,222 +176,315 @@ func (s *Scanner) consumeWhitespace() uint {
 	return count
 }
 
-func (s *Scanner) readIdentifier() (tok TokenType, text string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
-
+func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
+	i := s.cursor
+	end := i
 	for {
-		if ch := s.read(); ch == eof {
+		r := s.runes[end]
+		if r == eof || !isValidIdentifier(r) {
 			break
-		} else if !isValidIdentifier(ch) {
-			s.unread()
+		}
+		end++
+		if end >= len(s.runes) {
 			break
-		} else {
-			buf.WriteRune(ch)
 		}
 	}
+	s.cursor = end
 
-	str := buf.String()
-	switch str {
-	case "let":
-		return Let, str
-	case "type":
-		return Type, str
-	case "mut":
+	str := s.runes[i:end]
+	length := end - i //possibly slightly faster than len()
+
+	switch str[0] {
+	case 'l':
+		{
+			if length == 3 && str[1] == 'e' && str[2] == 't' {
+				return Let, str
+			}
+			if length == 4 && str[1] == 'a' && str[2] == 'z' && str[3] == 'y' {
+				return Lazy, str
+			}
+			return Identifier, str
+		}
+	case 't':
+		{
+			if length == 4 {
+				if str[1] == 'y' && str[2] == 'p' && str[3] == 'e' {
+					return Type, str
+				}
+				if str[1] == 'r' && str[2] == 'u' && str[3] == 'e' {
+					return BooleanTrue, str
+				}
+			}
+			return Identifier, str
+		}
+	case 'i':
+		{
+			if length == 2 {
+				if str[1] == 'f' {
+					return If, str
+				}
+				if str[1] == 's' {
+					return Is, str
+				}
+			}
+			if length == 6 && str[1] == 'm' && str[2] == 'p' && str[3] == 'o' && str[4] == 'r' && str[5] == 't' {
+				return Import, str
+			}
+			return Identifier, str
+		}
+	}
+	//TODO optimise other comparisons
+	if runeSliceEq(str, []rune("mut")) {
 		return Mut, str
-	case "restricted":
+	}
+	if runeSliceEq(str, []rune("restricted")) {
 		return Restricted, str
-	case "lazy":
-		return Lazy, str
-	case "extend":
+	}
+	if runeSliceEq(str, []rune("extend")) {
 		return Extend, str
-	case "return":
+	}
+	if runeSliceEq(str, []rune("return")) {
 		return Return, str
-	case "while":
+	}
+	if runeSliceEq(str, []rune("while")) {
 		return While, str
-	case "struct":
+	}
+	if runeSliceEq(str, []rune("struct")) {
 		return Struct, str
-	case "namespace":
+	}
+	if runeSliceEq(str, []rune("namespace")) {
 		return Namespace, str
-	case "import":
-		return Import, str
-	case "if":
-		return If, str
-	case "else":
+	}
+	if runeSliceEq(str, []rune("else")) {
 		return Else, str
-	case "match":
+	}
+	if runeSliceEq(str, []rune("match")) {
 		return Match, str
-	case "as":
+	}
+	if runeSliceEq(str, []rune("as")) {
 		return As, str
-	case "is":
-		return Is, str
-	case "true":
-		return Boolean, str
-	case "false":
-		return Boolean, str
+	}
+	if runeSliceEq(str, []rune("false")) {
+		return BooleanFalse, str
 	}
 
 	return Identifier, str
 }
 
-func (s *Scanner) readBracket() (tok TokenType, text string) {
+func (s *TokenReader) readBracket() (tok TokenType, text []rune) {
 	str := s.read()
 	switch str {
 	case '(':
-		return LParen, string(str)
+		return LParen, []rune{str}
 	case ')':
-		return RParen, string(str)
+		return RParen, []rune{str}
 	case '{':
-		return LBrace, string(str)
+		return LBrace, []rune{str}
 	case '}':
-		return RBrace, string(str)
+		return RBrace, []rune{str}
 	case '<':
-		return LAngle, string(str)
+		return LAngle, []rune{str}
 	case '>':
-		return RAngle, string(str)
+		return RAngle, []rune{str}
 	case '[':
-		return LSquare, string(str)
+		return LSquare, []rune{str}
 	case ']':
-		return RSquare, string(str)
+		return RSquare, []rune{str}
 	}
-	return Illegal, string(str)
+	return Illegal, []rune{str}
 }
 
-func (s *Scanner) readSymbol() (tok TokenType, text string) {
+func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
 	ch := s.read()
 
 	switch ch {
 	case '.':
-		return Dot, string(ch)
+		return Dot, []rune{ch}
 	case '=':
 		peeked := s.peek()
 		if peeked == '>' {
 			s.read()
-			return Arrow, string(ch) + string(peeked)
+			return Arrow, []rune{ch, peeked}
 		}
 		if peeked == '=' {
 			s.read()
-			return Equals, string(ch) + string(peeked)
+			return Equals, []rune{ch, peeked}
 		}
-		return Equal, string(ch)
+		return Equal, []rune{ch}
 	}
 
-	return Illegal, string(ch)
+	return Illegal, []rune{ch}
 }
-func (s *Scanner) readAngleBracket() (tok TokenType, text string) {
+func (s *TokenReader) readAngleBracket() (tok TokenType, text []rune) {
 	ch1 := s.read()
 	ch := s.peek()
 	if ch1 == '<' {
 		switch ch {
 		case '=':
 			s.read()
-			return LesserEqual, string(ch1) + string(ch)
+			return LesserEqual, []rune{ch1, ch}
 		}
-		return LAngle, string(ch1)
+		return LAngle, []rune{ch1}
 	}
 	if ch1 == '>' {
 		switch ch {
 		case '=':
 			s.read()
-			return GreaterEqual, string(ch1) + string(ch)
+			return GreaterEqual, []rune{ch1, ch}
 		}
-		return RAngle, string(ch1)
+		return RAngle, []rune{ch1}
 	}
 
-	return Illegal, string(ch1)
+	return Illegal, []rune{ch1}
 }
-func (s *Scanner) readOperator() (tok TokenType, text string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
 
+func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
+	start := s.cursor
+	end := start
 	for {
-		if ch := s.read(); ch == eof {
+		r := s.runes[end]
+		if r == eof {
 			break
-		} else if !isOperatorSymbol(ch) {
+		}
+		if !isOperatorSymbol(r) {
 			s.unread()
 			break
-		} else {
-			buf.WriteRune(ch)
+		}
+		end++
+		if end >= len(s.runes) {
+			break
 		}
 	}
-	str := buf.String()
-	switch str {
-	case "+":
+	s.cursor = end
+
+	str := s.runes[start:end]
+	switch str[0] {
+	case '+':
 		return Add, str
-	case "-":
+	case '-':
 		return Subtract, str
-	case "*":
+	case '*':
 		return Multiply, str
-	case "/":
+	case '/':
 		return Slash, str
-	case "%":
+	case '%':
 		return Mod, str
-	case "&&":
-		return And, str
-	case "||":
-		return Or, str
-	case "^":
+	case '^':
 		return Xor, str
-	case "==":
-		return Equals, str
-	case "!=":
-		return NotEquals, str
-	case ">=":
-		return GreaterEqual, str
-	case "<=":
-		return LesserEqual, str
-	case "!":
-		return Not, str
 
-		//Dirty hack, these 2 should probably be in readBracket but oh well...
-	case ">":
-		return LAngle, str
-	case "<":
-		return RAngle, str
+	case '>':
+		{
+			l := len(str)
+			if l == 1 {
+				return LAngle, str
+			}
+			n := str[1]
+			if l > 2 || n != '=' {
+				panic("Unknown operator " + string(str))
+			}
+			return GreaterEqual, str
+		}
+	case '<':
+		{
+			l := len(str)
+			if l == 1 {
+				return RAngle, str
+			}
+			n := str[1]
+			if l > 2 || n != '=' {
+				panic("Unknown operator " + string(str))
+			}
+			return LesserEqual, str
+		}
+	case '!':
+		{
+			l := len(str)
+			if l == 1 {
+				return Not, str
+			}
+			n := str[1]
+			if l > 2 || n != '=' {
+				panic("Unknown operator " + string(str))
+			}
+			return NotEquals, str
+		}
 	}
-
+	if len(str) != 2 {
+		panic("Unknown operator " + string(str))
+	}
+	if runeSliceEq(str, []rune("&&")) {
+		return And, str
+	}
+	if runeSliceEq(str, []rune("||")) {
+		return Or, str
+	}
+	if runeSliceEq(str, []rune("==")) {
+		return Equals, str
+	}
 	return Illegal, str
 }
 
-func (s *Scanner) readString() (tok TokenType, text string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
+//This function is called with the assumption that the beginning " has ALREADY been read.
+func (s *TokenReader) readString() (tok TokenType, text []rune) {
+	start := s.cursor
+	end := start + 1
 
 	for {
-		if ch := s.read(); ch == eof {
+		r := s.runes[end]
+		if r == eof {
 			break
-		} else if ch == '"' {
+		}
+		end++
+		if r == '"' {
 			break
-		} else {
-			buf.WriteRune(ch)
+		}
+		if end >= len(s.runes) {
+			break
 		}
 	}
-	return String, buf.String()
+
+	s.cursor = end
+	return String, s.runes[start : end-1]
 }
 
-func (s *Scanner) readNumber() (tok TokenType, text string) {
-	var buf bytes.Buffer
-	buf.WriteRune(s.read())
-
+func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
+	start := s.cursor
+	end := start
 	numType := Int
+
 	for {
-		ch := s.read()
-		if ch == eof {
+		r := s.runes[end]
+		if r == eof {
 			break
 		}
-		if ch == '\n' {
+		if r == '\n' {
 			s.unread()
 			break
 		}
-		if ch == '.' {
+		if r == '.' {
 			numType = Float
-		} else if !unicode.IsNumber(ch) {
+		} else if !unicode.IsNumber(r) {
 			s.unread()
 			break
 		}
-
-		buf.WriteRune(ch)
+		end++
+		if end >= len(s.runes) {
+			break
+		}
 	}
+	s.cursor = end
 
-	return numType, buf.String()
+	return numType, s.runes[start:end]
+}
+
+func runeSliceEq(a []rune, b []rune) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for i := range a {
+		if a[i] != b[i] {
+			return false
+		}
+	}
+	return true
 }

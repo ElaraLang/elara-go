@@ -99,6 +99,9 @@ func (TypeCastExpr) exprNode()       {}
 func (TypeCheckExpr) exprNode()      {}
 
 func (p *Parser) expression() Expr {
+	if p.peek().TokenType == lexer.If {
+		return p.ifElseExpression()
+	}
 	return p.assignment()
 }
 
@@ -281,7 +284,7 @@ func (p *Parser) invoke() (expr Expr) {
 			}
 			break
 		case lexer.Dot:
-			id := p.consume(lexer.Identifier, "Expected identifier inside context getter/setter")
+			id := p.consumeValidIdentifier("Expected identifier inside context getter/setter")
 
 			expr = ContextExpr{
 				Context:  expr,
@@ -339,13 +342,15 @@ func (p *Parser) primary() (expr Expr) {
 	switch p.peek().TokenType {
 	case lexer.String:
 		str := p.consume(lexer.String, "Expected string")
-		expr = StringLiteralExpr{Value: str.Text}
+		expr = StringLiteralExpr{Value: string(str.Text)}
 		break
-	case lexer.Boolean:
-		str := p.consume(lexer.Boolean, "Expected boolean")
-		var boolean bool
-		boolean, error = strconv.ParseBool(str.Text)
-		expr = BooleanLiteralExpr{Value: boolean}
+	case lexer.BooleanTrue:
+		p.consume(lexer.BooleanTrue, "Expected BooleanTrue")
+		expr = BooleanLiteralExpr{Value: true}
+		break
+	case lexer.BooleanFalse:
+		p.consume(lexer.BooleanFalse, "Expected BooleanFalse")
+		expr = BooleanLiteralExpr{Value: false}
 		break
 	case lexer.Int:
 		str := p.consume(lexer.Int, "Expected integer")
@@ -363,6 +368,9 @@ func (p *Parser) primary() (expr Expr) {
 		str := p.consume(lexer.Identifier, "Expected identifier")
 		expr = VariableExpr{Identifier: str.Text}
 		break
+
+	case lexer.If:
+		return p.ifElseExpression()
 	case lexer.LParen:
 		p.advance()
 		expr = GroupExpr{Group: p.expression()}
@@ -383,4 +391,61 @@ func (p *Parser) primary() (expr Expr) {
 		})
 	}
 	return
+}
+
+func (p *Parser) ifElseExpression() Expr {
+	p.consume(lexer.If, "Expected if at beginning of if expression")
+	condition := p.logicalOr()
+	if p.peek().TokenType == lexer.Arrow {
+		p.consume(lexer.Arrow, "")
+		mainResult := p.expression()
+
+		elseBranch, elseResult := p.elseExpression()
+
+		return IfElseExpr{
+			Condition:  condition,
+			IfBranch:   nil,
+			IfResult:   mainResult,
+			ElseBranch: elseBranch,
+			ElseResult: elseResult,
+		}
+	}
+
+	mainBranch := p.blockStatement()
+	mainResult := mainBranch.Stmts[len(mainBranch.Stmts)-1]
+	_, isExpr := mainResult.(ExpressionStmt)
+	if !isExpr {
+		panic(ParseError{message: "Last line in an `if` block must be an expression"})
+	}
+
+	elseBranch, elseResult := p.elseExpression()
+
+	return IfElseExpr{
+		Condition:  condition,
+		IfBranch:   mainBranch.Stmts[:len(mainBranch.Stmts)-1], //drop the last result
+		IfResult:   mainResult.(ExpressionStmt).Expr,
+		ElseBranch: elseBranch,
+		ElseResult: elseResult,
+	}
+}
+
+func (p *Parser) elseExpression() ([]Stmt, Expr) {
+	p.cleanNewLines()
+	p.consume(lexer.Else, "if expression must follow with else expression")
+	if p.peek().TokenType == lexer.Arrow {
+		p.advance()
+		return nil, p.expression()
+	} else if p.peek().TokenType == lexer.If {
+		return nil, p.ifElseExpression()
+	} else {
+		elseBranch := p.blockStatement()
+		elseResult := elseBranch.Stmts[len(elseBranch.Stmts)-1]
+
+		_, isExpr := elseResult.(ExpressionStmt)
+		if !isExpr {
+			panic(ParseError{message: "Last line in an `else` expression block must be an expression"})
+		}
+
+		return elseBranch.Stmts[:len(elseBranch.Stmts)-1], elseResult.(ExpressionStmt).Expr
+	}
 }

@@ -1,24 +1,38 @@
 package lexer
 
-import (
-	"strings"
-)
+func Lex(file *string, code string) *[]Token {
+	chars := []rune(code)
+	scanner := NewTokenReader(chars)
 
-func lex(code string) []Token {
-	reader := strings.NewReader(code)
-	scanner := NewScanner(reader)
+	//Note: in our big benchmark, the token:chars ratio seems to be about 1:1.2 (5:6). Could be worth doing len(code) / 1.2 and rounding?
+	estimateLength := len(code)
+	if estimateLength > 10 {
+		estimateLength /= 2
+	}
+	tokens := make([]Token, estimateLength)
+	i := 0
 
-	tokens := make([]Token, 0)
 	for {
-		tok, str := scanner.Read()
+		tok, runes, line, col := scanner.Read()
 		if tok == EOF {
+			tokens = tokens[:i]
 			break
 		}
 
-		tokens = append(tokens, Token{
+		token := Token{
 			TokenType: tok,
-			Text:      str,
-		})
+			Text:      runes,
+			Position:  CreatePosition(file, line, col),
+		}
+
+		if i <= len(tokens)-1 {
+			tokens[i] = token
+			i++
+		} else {
+			tokens = append(tokens, token)
+			i = len(tokens)
+		}
 	}
-	return tokens
+
+	return &tokens
 }
