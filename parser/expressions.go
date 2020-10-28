@@ -54,8 +54,8 @@ type TypeCheckExpr struct {
 
 type IfElseExpr struct {
 	Condition  Expr
-	MainBranch []Stmt
-	MainResult Expr
+	IfBranch   []Stmt
+	IfResult   Expr
 	ElseBranch []Stmt
 	ElseResult Expr
 }
@@ -288,7 +288,7 @@ func (p *Parser) invoke() (expr Expr) {
 
 			expr = ContextExpr{
 				Context:  expr,
-				Variable: VariableExpr{Identifier: id.Text},
+				Variable: VariableExpr{Identifier: string(id.Text)},
 			}
 			break
 		}
@@ -338,7 +338,7 @@ func (p *Parser) funDef() Expr {
 }
 
 func (p *Parser) primary() (expr Expr) {
-	var error error
+	var err error
 	switch p.peek().TokenType {
 	case lexer.String:
 		str := p.consume(lexer.String, "Expected string")
@@ -355,18 +355,18 @@ func (p *Parser) primary() (expr Expr) {
 	case lexer.Int:
 		str := p.consume(lexer.Int, "Expected integer")
 		var integer int64
-		integer, error = strconv.ParseInt(str.Text, 10, 64)
+		integer, err = strconv.ParseInt(string(str.Text), 10, 64)
 		expr = IntegerLiteralExpr{Value: integer}
 		break
 	case lexer.Float:
 		str := p.consume(lexer.Float, "Expected float")
 		var float float64
-		float, error = strconv.ParseFloat(str.Text, 64)
+		float, err = strconv.ParseFloat(string(str.Text), 64)
 		expr = FloatLiteralExpr{Value: float}
 		break
 	case lexer.Identifier:
 		str := p.consume(lexer.Identifier, "Expected identifier")
-		expr = VariableExpr{Identifier: str.Text}
+		expr = VariableExpr{Identifier: string(str.Text)}
 		break
 
 	case lexer.If:
@@ -377,7 +377,7 @@ func (p *Parser) primary() (expr Expr) {
 		p.consume(lexer.RParen, "Expected ')' after grouped expression")
 	}
 
-	if error != nil {
+	if err != nil {
 		panic(ParseError{
 			token:   p.previous(),
 			message: "Expected literal",

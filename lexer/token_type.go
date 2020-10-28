@@ -147,5 +147,6 @@ var IllegalIdentifierChars = []bool{
 	'<':  true,
 	' ':  true,
 	'\n': true,
+	'\r': true,
 	'\t': true,
 }
