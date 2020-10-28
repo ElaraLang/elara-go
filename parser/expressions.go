@@ -263,7 +263,11 @@ func (p *Parser) unary() (expr Expr) {
 }
 
 func (p *Parser) invoke() (expr Expr) {
-	expr = p.funDef()
+	if p.check(lexer.LParen) && p.isFuncDef() {
+		expr = p.funDef()
+	} else {
+		expr = p.primary()
+	}
 
 	for p.match(lexer.LParen, lexer.Dot) {
 		switch p.previous().TokenType {
@@ -359,6 +363,10 @@ func (p *Parser) primary() (expr Expr) {
 		str := p.consume(lexer.Identifier, "Expected identifier")
 		expr = VariableExpr{Identifier: str.Text}
 		break
+	case lexer.LParen:
+		p.advance()
+		expr = GroupExpr{Group: p.expression()}
+		p.consume(lexer.RParen, "Expected ')' after grouped expression")
 	}
 
 	if error != nil {
