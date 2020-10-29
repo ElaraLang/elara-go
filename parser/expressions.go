@@ -302,12 +302,10 @@ func (p *Parser) funDef() Expr {
 	case lexer.LParen:
 		args := p.functionArguments()
 		var typ Type
-
+		p.consume(lexer.Arrow, "Expected arrow at function definition")
 		if p.check(lexer.Identifier) {
 			typ = p.typeContract()
 		}
-		p.consume(lexer.Arrow, "Expected arrow at function definition")
-
 		return FuncDefExpr{
 			Arguments:  args,
 			ReturnType: typ,
