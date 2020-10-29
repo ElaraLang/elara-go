@@ -7,6 +7,7 @@ import (
 type Function struct {
 	Signature Signature
 	Body      Command
+	name      *string
 }
 
 func (f *Function) String() string {
@@ -38,7 +39,16 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (va
 			}
 		}
 	}()
-	return f.Body.Exec(ctx)
+
+	value := f.Body.Exec(ctx)
+	if !f.Signature.ReturnType.Accepts(*value.Type) {
+		name := "<anonymous>"
+		if f.name != nil {
+			name = *f.name
+		}
+		panic(fmt.Sprintf("Function '%s' did not return value of type %s, instead was %s", name, f.Signature.ReturnType.Name, value.Type.Name))
+	}
+	return value
 }
 
 type Signature struct {

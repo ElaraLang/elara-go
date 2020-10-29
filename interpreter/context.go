@@ -51,7 +51,9 @@ func NewContext() *Context {
 		},
 	})
 
+	inputFunctionName := "input"
 	inputFunction := Function{
+		name: &inputFunctionName,
 		Signature: Signature{
 			Parameters: []Parameter{},
 			ReturnType: *StringType,
@@ -66,7 +68,7 @@ func NewContext() *Context {
 			return &Value{Value: input, Type: StringType}
 		}),
 	}
-	inputFunctionName := "input"
+
 	inputContract := FunctionType(&inputFunctionName, printFunction)
 
 	c.DefineVariable(inputFunctionName, Variable{

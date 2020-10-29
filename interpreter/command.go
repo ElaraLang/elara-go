@@ -241,7 +241,7 @@ func ToCommand(statement parser.Stmt) Command {
 		if Type == nil {
 			Type = AnyType
 		}
-		valueExpr := ExpressionToCommand(t.Value)
+		valueExpr := NamedExpressionToCommand(t.Value, &t.Identifier)
 		return DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
@@ -286,8 +286,11 @@ func ToCommand(statement parser.Stmt) Command {
 
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
 }
-
 func ExpressionToCommand(expr parser.Expr) Command {
+	return NamedExpressionToCommand(expr, nil)
+}
+
+func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 
 	switch t := expr.(type) {
 	case parser.VariableExpr:
@@ -385,6 +388,7 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		returnType := FromASTType(t.ReturnType)
 
 		fun := Function{
+			name: name,
 			Signature: Signature{
 				Parameters: params,
 				ReturnType: *returnType,
@@ -408,9 +412,9 @@ func ExpressionToCommand(expr parser.Expr) Command {
 		}
 
 	case parser.AssignmentExpr:
-		valueCmd := ExpressionToCommand(t.Value)
 		//TODO contexts
 		name := t.Identifier
+		valueCmd := NamedExpressionToCommand(t.Value, &name)
 		return &AssignmentCommand{
 			Name:  name,
 			value: valueCmd,
