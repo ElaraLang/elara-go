@@ -40,8 +40,8 @@ type WhileStmt struct {
 }
 
 type ExtendStmt struct {
-	Condition Expr
-	Body      Stmt
+	Identifier string
+	Body       Stmt
 }
 type TypeStmt struct {
 	Identifier string
@@ -91,6 +91,8 @@ func (p *Parser) statement() Stmt {
 		return p.genericStatement()
 	case lexer.Return:
 		return p.returnStatement()
+	case lexer.Extend:
+		return p.extendStatement()
 	default:
 		return p.exprStatement()
 	}
@@ -214,4 +216,13 @@ func (p *Parser) returnStatement() Stmt {
 
 func (p *Parser) exprStatement() Stmt {
 	return ExpressionStmt{Expr: p.expression()}
+}
+
+func (p *Parser) extendStatement() Stmt {
+	p.consume(lexer.Extend, "Expected 'extend'")
+	id := p.consumeValidIdentifier("Expected struct name to extend")
+	return ExtendStmt{
+		Identifier: string(id.Text),
+		Body:       p.blockStatement(),
+	}
 }
