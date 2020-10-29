@@ -34,6 +34,7 @@ func (p *Parser) Parse() (result []Stmt, error []ParseError) {
 	p.current = 0
 	result = make([]Stmt, 0)
 	error = make([]ParseError, 0)
+
 	for !p.isAtEnd() {
 		p.parseLine(&result, &error)
 	}
@@ -44,6 +45,11 @@ func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 	defer p.handleError(error)
 	if p.peek().TokenType == lexer.NEWLINE {
 		p.advance()
+		return
+	}
+
+	if p.current == 0 && p.check(lexer.Namespace) {
+		*result = append(*result, p.parseFileMeta())
 		return
 	}
 

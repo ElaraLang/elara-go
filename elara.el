@@ -1,3 +1,5 @@
+namespace "Examples/Calculator"
+
 print("Welcome to the official Elara calculator. Please input the first number:")
 
 let a = input()
