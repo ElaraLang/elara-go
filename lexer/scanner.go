@@ -427,7 +427,7 @@ func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
 //This function is called with the assumption that the beginning " has ALREADY been read.
 func (s *TokenReader) readString() (tok TokenType, text []rune) {
 	start := s.cursor
-	end := start + 1
+	end := start
 
 	for {
 		r := s.runes[end]

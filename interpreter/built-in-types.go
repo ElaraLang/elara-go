@@ -1,6 +1,9 @@
 package interpreter
 
-import "strconv"
+import (
+	"elara/util"
+	"strconv"
+)
 
 var AnyType = EmptyType("Any")
 var UnitType = EmptyType("Unit")
@@ -44,7 +47,7 @@ func Init() {
 			},
 			Body: NewAbstractCommand(func(ctx *Context) *Value {
 				parameter := ctx.FindParameter("value")
-				concatenated := ctx.receiver.Value.(string) + parameter.Value.(string)
+				concatenated := ctx.receiver.Value.(string) + util.Stringify(parameter.Value)
 				return &Value{
 					Type:  StringType,
 					Value: concatenated,
@@ -79,7 +82,7 @@ func Init() {
 			},
 			Body: NewAbstractCommand(func(ctx *Context) *Value {
 				parameter := ctx.FindParameter("value")
-				eq := ctx.receiver.Value.(string) == parameter.Value.(string)
+				eq := ctx.receiver.Value.(string) == parameter.Value
 				return &Value{
 					Type:  BooleanType,
 					Value: eq,

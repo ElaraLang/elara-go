@@ -1,4 +1,4 @@
 let a = () => String {
-    4
+    "4"
 }
-print(a())
+print(a() == "" + 4)
