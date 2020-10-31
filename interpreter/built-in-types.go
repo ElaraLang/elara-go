@@ -148,12 +148,21 @@ func Init() {
 					Value: result,
 				}
 			} else {
-				//TODO
-				//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
-				result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
-				return &Value{
-					Type:  StringType,
-					Value: result,
+				asFloat, isFloat := parameter.Value.(float64)
+				if isFloat {
+					result := float64(ctx.receiver.Value.(int64)) + asFloat
+					return &Value{
+						Type:  FloatType,
+						Value: result,
+					}
+				} else {
+					//TODO
+					//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
+					result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
+					return &Value{
+						Type:  StringType,
+						Value: result,
+					}
 				}
 			}
 		}),

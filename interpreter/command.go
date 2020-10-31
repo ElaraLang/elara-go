@@ -3,6 +3,7 @@ package interpreter
 import (
 	"elara/lexer"
 	"elara/parser"
+	"elara/util"
 	"reflect"
 )
 
@@ -22,7 +23,9 @@ func (c DefineVarCommand) Exec(ctx *Context) *Value {
 	if c.runtimeType == nil {
 		c.runtimeType = FromASTType(*c.Type, ctx)
 	}
-
+	if ctx.FindVariable(c.Name) != nil {
+		panic("Variable named " + c.Name + " already exists")
+	}
 	value := c.value.Exec(ctx)
 	if value == nil {
 		panic("Command " + reflect.TypeOf(c.value).Name() + " returned nil")
@@ -107,7 +110,8 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 	receiver := context.receiver.Exec(ctx)
 	value, ok := receiver.Type.variables.m[context.variable]
 	if !ok {
-		panic("No such variable " + context.variable + " on type " + receiver.Type.Name)
+		//TODO print the types
+		panic("No such variable " + context.variable + "(" + util.Stringify(c.args) + ") on type " + receiver.Type.Name)
 	}
 	function, ok := value.Value.Value.(Function)
 	if !ok {
