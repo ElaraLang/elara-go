@@ -1,4 +1,6 @@
 namespace examples/calculator
 import elara/std
 
-test()
+struct Test {
+    String afefe
+}
