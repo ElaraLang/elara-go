@@ -105,7 +105,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 
 	//ContextCommand seems to think it's a special case... because it is.
 	receiver := context.receiver.Exec(ctx)
-	value, ok := receiver.Type.variables[context.variable]
+	value, ok := receiver.Type.variables.m[context.variable]
 	if !ok {
 		panic("No such variable " + context.variable + " on type " + receiver.Type.Name)
 	}
@@ -217,7 +217,7 @@ func (c *ContextCommand) Exec(ctx *Context) *Value {
 		}
 		return variable
 	}
-	variable, ok := receiver.Type.variables[c.variable]
+	variable, ok := receiver.Type.variables.m[c.variable]
 	if !ok {
 		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
 	}
@@ -313,7 +313,7 @@ type StructDefCommand struct {
 }
 
 func (c *StructDefCommand) Exec(ctx *Context) *Value {
-	variables := make(map[string]Variable, len(c.fields))
+	variables := NewVariableMap()
 
 	for _, field := range c.fields {
 		var Type Type
@@ -322,16 +322,16 @@ func (c *StructDefCommand) Exec(ctx *Context) *Value {
 		} else {
 			Type = *FromASTType(*field.FieldType, ctx)
 		}
-		variables[field.Identifier] = Variable{
+		variables.Set(field.Identifier, Variable{
 			Name:    field.Identifier,
 			Mutable: field.Mutable,
 			Type:    Type,
 			Value:   nil,
-		}
+		})
 	}
 	ctx.types[c.name] = Type{
 		Name:      c.name,
-		variables: variables,
+		variables: *variables,
 	}
 	return nil
 }

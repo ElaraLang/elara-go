@@ -262,11 +262,11 @@ func Init() {
 	})
 }
 
-func convert(functions map[string]Function) map[string]Variable {
-	m := make(map[string]Variable, len(functions))
+func convert(functions map[string]Function) VariableMap {
+	m := NewVariableMap()
 	for name, function := range functions {
 		t := FunctionType(function)
-		m[name] = Variable{
+		m.Set(name, Variable{
 			Name:    name,
 			Mutable: false,
 			Type:    *t,
@@ -274,7 +274,7 @@ func convert(functions map[string]Function) map[string]Variable {
 				Type:  t,
 				Value: function,
 			},
-		}
+		})
 	}
-	return m
+	return *m
 }

@@ -7,7 +7,13 @@ struct Test {
     Int extra
 }
 
-let t = Test("Hello", 3, 4)
+struct Test2 {
+    String name
+    Int i
+}
+
+
+let t: Test2 = Test("Hello", 3, 4)
 print(t.name)
 print(t.i)
 print(t.extra)
