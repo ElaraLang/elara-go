@@ -37,7 +37,7 @@ func Init() {
 		return
 	}
 	isInitialized = true
-	StringType.functions = map[string]Function{
+	StringType.variables = convert(map[string]Function{
 		"plus": {
 			Signature: Signature{
 				Parameters: []Parameter{
@@ -92,9 +92,9 @@ func Init() {
 				}
 			}),
 		},
-	}
+	})
 
-	BooleanType.functions = map[string]Function{
+	BooleanType.variables = convert(map[string]Function{
 		"and": {
 			Signature: Signature{
 				Parameters: []Parameter{
@@ -126,7 +126,7 @@ func Init() {
 				}
 			}),
 		},
-	}
+	})
 
 	intAdd := Function{
 		Signature: Signature{
@@ -148,7 +148,7 @@ func Init() {
 		}),
 	}
 
-	IntType.functions = map[string]Function{
+	IntType.variables = convert(map[string]Function{
 		"plus": intAdd,
 		"add":  intAdd,
 		"minus": {
@@ -227,10 +227,10 @@ func Init() {
 				}
 			}),
 		},
-	}
+	})
 
 	printlnName := "print"
-	OutputType.functions = map[string]Function{
+	OutputType.variables = convert(map[string]Function{
 		printlnName: {
 			Signature: Signature{
 				Parameters: []Parameter{
@@ -248,5 +248,22 @@ func Init() {
 			}),
 			name: &printlnName,
 		},
+	})
+}
+
+func convert(funcs map[string]Function) map[string]Variable {
+	m := make(map[string]Variable, len(funcs))
+	for name, function := range funcs {
+		t := FunctionType(&name, function)
+		m[name] = Variable{
+			Name:    name,
+			Mutable: false,
+			Type:    *t,
+			Value: &Value{
+				Type:  t,
+				Value: function,
+			},
+		}
 	}
+	return m
 }

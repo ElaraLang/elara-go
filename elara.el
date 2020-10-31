@@ -1,4 +1,5 @@
 namespace examples/calculator
 import elara/std
 
-test()
+let a = 3
+print()

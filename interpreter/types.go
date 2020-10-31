@@ -9,16 +9,16 @@ import (
 
 type Type struct {
 	Name      string
-	functions map[string]Function
+	variables map[string]Variable
 }
 
 func (t *Type) Accepts(other Type) bool {
 	if &other == t {
 		return true
 	}
-	for i := range t.functions {
-		fun1 := t.functions[i]
-		fun2 := other.functions[i]
+	for i := range t.variables {
+		fun1 := t.variables[i]
+		fun2 := other.variables[i]
 		if !reflect.DeepEqual(fun1, fun2) {
 			return false
 		}
@@ -29,35 +29,35 @@ func (t *Type) Accepts(other Type) bool {
 func EmptyType(name string) *Type {
 	return &Type{
 		Name:      name,
-		functions: map[string]Function{},
+		variables: map[string]Variable{},
 	}
 }
-func SimpleType(name string, functions map[string]Function) *Type {
+func SimpleType(name string, functions map[string]Variable) *Type {
 	return &Type{
 		Name:      name,
-		functions: functions,
+		variables: functions,
 	}
 }
 
 func AliasType(other Type) *Type {
 	return &Type{
 		Name:      other.Name,
-		functions: other.functions,
+		variables: other.variables,
 	}
 }
 
 func CompoundType(a Type, b Type) *Type {
-	functionCompound := map[string]Function{}
-	for name, function := range a.functions {
+	functionCompound := map[string]Variable{}
+	for name, function := range a.variables {
 		functionCompound[name] = function
 	}
-	for name, function := range b.functions {
+	for name, function := range b.variables {
 		functionCompound[name] = function
 	}
 
 	return &Type{
 		Name:      fmt.Sprintf("%sAnd%s", a.Name, b.Name),
-		functions: functionCompound,
+		variables: functionCompound,
 	}
 }
 
@@ -72,15 +72,33 @@ func FunctionType(name *string, function Function) *Type {
 			paramNames[i] = function.Signature.Parameters[i].Name
 		}
 		newName := fmt.Sprintf("%sTo%sFunction", strings.Join(paramNames, ""), function.Signature.ReturnType.Name)
+		t := *FunctionType(&newName, function)
 		return &Type{
-			Name:      newName,
-			functions: map[string]Function{newName: function},
+			Name: newName,
+			variables: map[string]Variable{newName: {
+				Name:    newName,
+				Mutable: false,
+				Type:    t,
+				Value: &Value{
+					Type:  &t,
+					Value: function,
+				},
+			}},
 		}
 	}
-	return &Type{
-		Name:      *name,
-		functions: map[string]Function{*name: function},
+	t := &Type{
+		Name: *name,
 	}
+	t.variables = map[string]Variable{*name: {
+		Name:    *name,
+		Mutable: false,
+		Type:    *t,
+		Value: &Value{
+			Type:  t,
+			Value: function,
+		},
+	}}
+	return t
 }
 
 func FromASTType(ast parser.Type) *Type {
@@ -94,7 +112,7 @@ func FromASTType(ast parser.Type) *Type {
 		if builtIn != nil {
 			return builtIn
 		}
-		return SimpleType(identifier, map[string]Function{})
+		return SimpleType(identifier, map[string]Variable{})
 	}
 
 	panic("Could not handle " + reflect.TypeOf(ast).Name())

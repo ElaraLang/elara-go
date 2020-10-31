@@ -89,18 +89,21 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 		val := c.Invoking.Exec(ctx)
 		fun, ok := val.Value.(Function)
 		if !ok {
-			panic("Cannot invoke non-function")
+			panic("Cannot invoke non-value")
 		}
 		return fun.Exec(ctx, nil, c.args)
 	}
 
 	//ContextCommand seems to think it's a special case... because it is.
 	receiver := context.receiver.Exec(ctx)
-	function, ok := receiver.Type.functions[context.variable]
+	value, ok := receiver.Type.variables[context.variable]
 	if !ok {
 		panic("No such variable " + context.variable + " on type " + receiver.Type.Name)
 	}
-
+	function, ok := value.Value.Value.(Function)
+	if !ok {
+		panic("Cannot invoke non-function " + value.string())
+	}
 	exec := context.receiver.Exec(ctx)
 	return function.Exec(ctx, exec, c.args)
 
@@ -160,15 +163,12 @@ type ContextCommand struct {
 
 func (c *ContextCommand) Exec(ctx *Context) *Value {
 	receiver := c.receiver.Exec(ctx)
-	function, ok := receiver.Type.functions[c.variable]
+	variable, ok := receiver.Type.variables[c.variable]
 	if !ok {
 		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
 	}
 
-	return &Value{
-		Type:  FunctionType(&c.variable, function),
-		Value: function,
-	}
+	return variable.Value
 }
 
 type IfElseCommand struct {
@@ -253,6 +253,34 @@ func (c *ImportCommand) Exec(ctx *Context) *Value {
 	return nil
 }
 
+type StructDefCommand struct {
+	name   string
+	fields []parser.StructField
+}
+
+func (c *StructDefCommand) Exec(ctx *Context) *Value {
+
+	variables := make(map[string]Variable, len(c.fields))
+	for _, field := range c.fields {
+		var Type Type
+		if field.FieldType == nil {
+			Type = *AnyType
+		} else {
+			Type = *FromASTType(*field.FieldType)
+		}
+		variables[field.Identifier] = Variable{
+			Name:    field.Identifier,
+			Mutable: field.Mutable,
+			Type:    Type,
+			Value:   nil,
+		}
+	}
+	ctx.types[c.name] = Type{
+		Name:      c.name,
+		variables: variables,
+	}
+	return nil
+}
 func ToCommand(statement parser.Stmt) Command {
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
@@ -308,6 +336,12 @@ func ToCommand(statement parser.Stmt) Command {
 	case parser.ImportStmt:
 		return &ImportCommand{
 			imports: t.Imports,
+		}
+	case parser.StructDefStmt:
+		name := t.Identifier
+		return &StructDefCommand{
+			name:   name,
+			fields: t.StructFields,
 		}
 	}
 

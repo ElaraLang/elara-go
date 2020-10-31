@@ -11,6 +11,8 @@ type Context struct {
 	namespace  string
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
+
+	types map[string]Type
 }
 
 var globalContext = &Context{
@@ -19,6 +21,8 @@ var globalContext = &Context{
 	parameters:  map[string]*Value{},
 	receiver:    nil,
 	contextPath: map[string][]*Context{},
+
+	types: map[string]Type{},
 }
 
 func (c *Context) Init(namespace string) {
@@ -36,6 +40,7 @@ func NewContext() *Context {
 		receiver:    nil,
 		namespace:   "",
 		contextPath: map[string][]*Context{},
+		types:       map[string]Type{},
 	}
 	c.DefineVariable("stdout", Variable{
 		Name:    "stdout",
@@ -78,13 +83,13 @@ func NewContext() *Context {
 	return c
 }
 
-func (c Context) DefineVariable(name string, value Variable) {
+func (c *Context) DefineVariable(name string, value Variable) {
 	vars := c.variables[name]
 	vars = append(vars, &value)
 	c.variables[name] = vars
 }
 
-func (c Context) FindVariable(name string) *Variable {
+func (c *Context) FindVariable(name string) *Variable {
 	vars := c.variables[name]
 
 	if vars == nil {
@@ -105,7 +110,7 @@ func (c *Context) DefineParameter(name string, value *Value) {
 	c.parameters[name] = value
 }
 
-func (c Context) FindParameterIndexed(index int) *Value {
+func (c *Context) FindParameterIndexed(index int) *Value {
 	i := 0
 	for _, value := range c.parameters {
 		if i == index {
@@ -116,7 +121,7 @@ func (c Context) FindParameterIndexed(index int) *Value {
 	return nil
 }
 
-func (c Context) FindParameter(name string) *Value {
+func (c *Context) FindParameter(name string) *Value {
 	return c.parameters[name]
 }
 
@@ -134,7 +139,7 @@ func (c *Context) Import(namespace string) {
 	c.contextPath[namespace] = ns
 }
 
-func (c Context) string() string {
+func (c *Context) string() string {
 	s := ""
 	for key, values := range c.variables {
 		s += fmt.Sprintf("%s = [\n", key)
