@@ -148,6 +148,7 @@ func (c *Context) FindConstructor(name string) *Value {
 		return nil
 	}
 	constructorParams := make([]Parameter, 0)
+	//TODO This could be a problem. Maps aren't guaranteed to preserve their ordering, so occasionally things will get out of sync.
 	for _, v := range t.variables {
 		if v.Value == nil {
 			constructorParams = append(constructorParams, Parameter{
