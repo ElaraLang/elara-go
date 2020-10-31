@@ -442,7 +442,6 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 			break
 		}
 	}
-
 	s.cursor = end
 	return String, s.runes[start : end-1]
 }

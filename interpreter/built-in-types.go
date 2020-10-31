@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"elara/util"
+	"fmt"
 	"strconv"
 )
 
@@ -12,6 +13,7 @@ var IntType = EmptyType("Int")
 var FloatType = EmptyType("Float")
 var BooleanType = EmptyType("Boolean")
 var StringType = EmptyType("String")
+var OutputType = EmptyType("Output")
 
 var types = map[string]*Type{
 	"Any":  AnyType,
@@ -21,6 +23,7 @@ var types = map[string]*Type{
 	"Float":   FloatType,
 	"Boolean": BooleanType,
 	"String":  StringType,
+	"Output":  OutputType,
 }
 
 func BuiltInTypeByName(name string) *Type {
@@ -223,6 +226,27 @@ func Init() {
 					Value: result,
 				}
 			}),
+		},
+	}
+
+	printlnName := "print"
+	OutputType.functions = map[string]Function{
+		printlnName: {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *AnyType,
+					},
+				},
+				ReturnType: *UnitType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				fmt.Printf(util.Stringify(parameter.Value))
+				return UnitValue()
+			}),
+			name: &printlnName,
 		},
 	}
 }

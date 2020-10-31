@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"elara/util"
 	"fmt"
 )
 
@@ -38,38 +37,15 @@ func NewContext() *Context {
 		namespace:   "",
 		contextPath: map[string][]*Context{},
 	}
-
-	//Todo remove
-	printFunction := Function{
-		Signature: Signature{
-			Parameters: []Parameter{
-				{
-					Name: "value",
-					Type: *AnyType,
-				},
-			},
-			ReturnType: *UnitType,
-		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
-			value := ctx.FindParameter("value").Value
-			fmt.Printf("%s\n", util.Stringify(value))
-
-			return UnitValue()
-		}),
-	}
-	printFunctionName := "print"
-	printContract := FunctionType(&printFunctionName, printFunction)
-
-	c.DefineVariable(printFunctionName, Variable{
-		Name:    printFunctionName,
+	c.DefineVariable("stdout", Variable{
+		Name:    "stdout",
 		Mutable: false,
-		Type:    *printContract,
+		Type:    *OutputType,
 		Value: &Value{
-			Type:  printContract,
-			Value: printFunction,
+			Type:  OutputType,
+			Value: nil,
 		},
 	})
-
 	inputFunctionName := "input"
 	inputFunction := Function{
 		name: &inputFunctionName,
@@ -88,7 +64,7 @@ func NewContext() *Context {
 		}),
 	}
 
-	inputContract := FunctionType(&inputFunctionName, printFunction)
+	inputContract := FunctionType(&inputFunctionName, inputFunction)
 
 	c.DefineVariable(inputFunctionName, Variable{
 		Name:    inputFunctionName,

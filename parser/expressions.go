@@ -3,6 +3,7 @@ package parser
 import (
 	"elara/lexer"
 	"strconv"
+	"strings"
 )
 
 type Expr interface{ exprNode() }
@@ -340,7 +341,11 @@ func (p *Parser) primary() (expr Expr) {
 	switch p.peek().TokenType {
 	case lexer.String:
 		str := p.consume(lexer.String, "Expected string")
-		expr = StringLiteralExpr{Value: string(str.Text)}
+		text := string(str.Text)
+		text = strings.ReplaceAll(text, "\\n", "\n")
+		//TODO other special characters
+
+		expr = StringLiteralExpr{Value: text}
 		break
 	case lexer.BooleanTrue:
 		p.consume(lexer.BooleanTrue, "Expected BooleanTrue")
