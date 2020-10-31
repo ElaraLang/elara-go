@@ -16,7 +16,7 @@ func NewInterpreter(code []parser.Stmt) *Interpreter {
 }
 
 func (s *Interpreter) Exec(scriptMode bool) []*Value {
-	context := NewContext()
+	context := NewContext("elara/default")
 
 	values := make([]*Value, len(s.lines))
 

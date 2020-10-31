@@ -6,18 +6,20 @@ import (
 )
 
 type Context struct {
-	variables map[string][]*Variable
-
+	variables  map[string][]*Variable
 	parameters map[string]*Value
-
-	receiver *Value
+	receiver   *Value
+	namespace  string
+	imports    []string
 }
 
-func NewContext() *Context {
+func NewContext(namespace string) *Context {
 	c := &Context{
 		variables:  map[string][]*Variable{},
 		parameters: map[string]*Value{},
 		receiver:   nil,
+		namespace:  namespace,
+		imports:    []string{},
 	}
 
 	//Todo remove

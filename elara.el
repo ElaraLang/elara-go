@@ -1,5 +1,4 @@
-namespace "Examples/Calculator"
-
+namespace examples/calculator
 print("Welcome to the official Elara calculator. Please input the first number:")
 
 let a = input()

@@ -233,6 +233,18 @@ func (c *ReturnCommand) Exec(ctx *Context) *Value {
 	panic(c.returning.Exec(ctx))
 }
 
+type MetaInfoCommand struct {
+	namespace string
+	imports   []string
+}
+
+func (c *MetaInfoCommand) Exec(ctx *Context) *Value {
+	ctx.namespace = c.namespace
+	ctx.imports = append(ctx.imports, c.imports...)
+
+	return nil
+}
+
 func ToCommand(statement parser.Stmt) Command {
 
 	switch t := statement.(type) {
@@ -281,6 +293,11 @@ func ToCommand(statement parser.Stmt) Command {
 	case parser.ReturnStmt:
 		return &ReturnCommand{
 			ExpressionToCommand(t.Returning),
+		}
+	case parser.MetaInfoStmt:
+		return &MetaInfoCommand{
+			namespace: t.Namespace,
+			imports:   t.Imports,
 		}
 	}
 
