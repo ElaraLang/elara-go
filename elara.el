@@ -6,6 +6,6 @@ struct Test {
     Int i
 }
 
-let t = Test("Hello", 3)
+let t = Test("Hello")
 print(t.name)
 print(t.i)

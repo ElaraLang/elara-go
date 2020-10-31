@@ -15,6 +15,9 @@ func (f *Function) String() string {
 }
 
 func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (val *Value) {
+	if len(parameters) != len(f.Signature.Parameters) {
+		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
+	}
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
 		expectedParameter := f.Signature.Parameters[i]
