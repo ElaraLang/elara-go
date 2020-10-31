@@ -19,7 +19,7 @@ func (t *Type) Accepts(other Type) bool {
 	for i := range t.variables {
 		fun1 := t.variables[i]
 		fun2 := other.variables[i]
-		if !reflect.DeepEqual(fun1, fun2) {
+		if !fun1.Equals(fun2) {
 			return false
 		}
 	}
