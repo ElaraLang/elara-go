@@ -5,16 +5,21 @@ import (
 	"regexp"
 )
 
-type MetaInfoStmt struct {
+type NamespaceStmt struct {
 	Namespace string
-	Imports   []string
 }
 
-func (MetaInfoStmt) stmtNode() {}
+func (NamespaceStmt) stmtNode() {}
+
+type ImportStmt struct {
+	Imports []string
+}
+
+func (ImportStmt) stmtNode() {}
 
 var namespaceRegex, _ = regexp.Compile(".+/.+")
 
-func (p *Parser) parseFileMeta() MetaInfoStmt {
+func (p *Parser) parseFileMeta() (NamespaceStmt, ImportStmt) {
 	p.consume(lexer.Namespace, "Expected file namespace declaration!")
 	nsToken := p.consume(lexer.Identifier, "Expected valid namespace!")
 	ns := string(nsToken.Text)
@@ -39,8 +44,9 @@ func (p *Parser) parseFileMeta() MetaInfoStmt {
 		imports = append(imports, impNs)
 		p.cleanNewLines()
 	}
-	return MetaInfoStmt{
-		Namespace: ns,
-		Imports:   imports,
-	}
+	return NamespaceStmt{
+			Namespace: ns,
+		}, ImportStmt{
+			Imports: imports,
+		}
 }

@@ -10,16 +10,33 @@ type Context struct {
 	parameters map[string]*Value
 	receiver   *Value
 	namespace  string
-	imports    []string
+	//A map from namespace -> context slice
+	contextPath map[string][]*Context
 }
 
-func NewContext(namespace string) *Context {
+var globalContext = &Context{
+	namespace:   "__global__",
+	variables:   map[string][]*Variable{},
+	parameters:  map[string]*Value{},
+	receiver:    nil,
+	contextPath: map[string][]*Context{},
+}
+
+func (c *Context) Init(namespace string) {
+	if c.namespace != "" {
+		panic("Context has already been initialized!")
+	}
+	c.namespace = namespace
+	globalContext.contextPath[c.namespace] = append(globalContext.contextPath[c.namespace], c)
+}
+
+func NewContext() *Context {
 	c := &Context{
-		variables:  map[string][]*Variable{},
-		parameters: map[string]*Value{},
-		receiver:   nil,
-		namespace:  namespace,
-		imports:    []string{},
+		variables:   map[string][]*Variable{},
+		parameters:  map[string]*Value{},
+		receiver:    nil,
+		namespace:   "",
+		contextPath: map[string][]*Context{},
 	}
 
 	//Todo remove
@@ -95,6 +112,14 @@ func (c Context) FindVariable(name string) *Variable {
 	vars := c.variables[name]
 
 	if vars == nil {
+		for _, contexts := range c.contextPath {
+			for _, context := range contexts {
+				v := context.FindVariable(name)
+				if v != nil {
+					return v
+				}
+			}
+		}
 		return nil
 	}
 	return vars[0]
@@ -117,6 +142,20 @@ func (c Context) FindParameterIndexed(index int) *Value {
 
 func (c Context) FindParameter(name string) *Value {
 	return c.parameters[name]
+}
+
+func (c *Context) Import(namespace string) {
+	contexts := globalContext.contextPath[namespace]
+	if contexts == nil {
+		panic("Nothing found in namespace " + namespace)
+	}
+	ns := c.contextPath[namespace]
+	if ns == nil {
+		c.contextPath[namespace] = contexts
+		return
+	}
+	ns = append(ns, contexts...)
+	c.contextPath[namespace] = ns
 }
 
 func (c Context) string() string {

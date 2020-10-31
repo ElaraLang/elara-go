@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 )
 
@@ -20,7 +21,9 @@ func main() {
 		}
 	}
 
-	fileName, input := loadElaraFile()
+	loadStdLib()
+
+	fileName, input := loadFile("elara.el")
 	start := time.Now()
 	_, lexTime, parseTime, execTime := base.Execute(&fileName, string(input), repl)
 
@@ -29,9 +32,24 @@ func main() {
 	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
 }
 
-func loadElaraFile() (string, []byte) {
+func loadStdLib() {
 	goPath := os.Getenv("GOPATH")
-	fileName := "elara.el"
+	filePath := path.Join(goPath, "stdlib/")
+	filepath.Walk(filePath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			panic(err)
+		}
+		if info.IsDir() {
+			return nil
+		}
+		_, content := loadFile(path)
+		base.Execute(&path, string(content), false)
+		return nil
+	})
+}
+
+func loadFile(fileName string) (string, []byte) {
+	goPath := os.Getenv("GOPATH")
 	filePath := path.Join(goPath, fileName)
 
 	input, err := ioutil.ReadFile(filePath)

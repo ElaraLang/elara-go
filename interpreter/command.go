@@ -233,20 +233,27 @@ func (c *ReturnCommand) Exec(ctx *Context) *Value {
 	panic(c.returning.Exec(ctx))
 }
 
-type MetaInfoCommand struct {
+type NamespaceCommand struct {
 	namespace string
-	imports   []string
 }
 
-func (c *MetaInfoCommand) Exec(ctx *Context) *Value {
-	ctx.namespace = c.namespace
-	ctx.imports = append(ctx.imports, c.imports...)
+func (c *NamespaceCommand) Exec(ctx *Context) *Value {
+	ctx.Init(c.namespace)
+	return nil
+}
 
+type ImportCommand struct {
+	imports []string
+}
+
+func (c *ImportCommand) Exec(ctx *Context) *Value {
+	for _, s := range c.imports {
+		ctx.Import(s)
+	}
 	return nil
 }
 
 func ToCommand(statement parser.Stmt) Command {
-
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
 		Type := FromASTType(t.Type)
@@ -294,10 +301,13 @@ func ToCommand(statement parser.Stmt) Command {
 		return &ReturnCommand{
 			ExpressionToCommand(t.Returning),
 		}
-	case parser.MetaInfoStmt:
-		return &MetaInfoCommand{
+	case parser.NamespaceStmt:
+		return &NamespaceCommand{
 			namespace: t.Namespace,
-			imports:   t.Imports,
+		}
+	case parser.ImportStmt:
+		return &ImportCommand{
+			imports: t.Imports,
 		}
 	}
 

@@ -49,7 +49,8 @@ func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 	}
 
 	if p.current == 0 && p.check(lexer.Namespace) {
-		*result = append(*result, p.parseFileMeta())
+		ns, importStmt := p.parseFileMeta()
+		*result = append(*result, ns, importStmt)
 		return
 	}
 
