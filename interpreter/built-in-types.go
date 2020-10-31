@@ -140,10 +140,21 @@ func Init() {
 		},
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			parameter := ctx.FindParameter("value")
-			result := ctx.receiver.Value.(int64) + parameter.Value.(int64)
-			return &Value{
-				Type:  IntType,
-				Value: result,
+			asInt, isInt := parameter.Value.(int64)
+			if isInt {
+				result := ctx.receiver.Value.(int64) + asInt
+				return &Value{
+					Type:  IntType,
+					Value: result,
+				}
+			} else {
+				//TODO
+				//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
+				result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
+				return &Value{
+					Type:  StringType,
+					Value: result,
+				}
 			}
 		}),
 	}
@@ -251,10 +262,10 @@ func Init() {
 	})
 }
 
-func convert(funcs map[string]Function) map[string]Variable {
-	m := make(map[string]Variable, len(funcs))
-	for name, function := range funcs {
-		t := FunctionType(&name, function)
+func convert(functions map[string]Function) map[string]Variable {
+	m := make(map[string]Variable, len(functions))
+	for name, function := range functions {
+		t := FunctionType(function)
 		m[name] = Variable{
 			Name:    name,
 			Mutable: false,

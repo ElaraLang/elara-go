@@ -65,14 +65,19 @@ func UnionType(a Type, b Type) *Type {
 	panic("TODO")
 }
 
-func FunctionType(name *string, function Function) *Type {
-	if name == nil {
+func FunctionType(function Function) *Type {
+	if function.name == nil {
 		paramNames := make([]string, len(function.Signature.Parameters))
 		for i := range function.Signature.Parameters {
 			paramNames[i] = function.Signature.Parameters[i].Name
 		}
 		newName := fmt.Sprintf("%sTo%sFunction", strings.Join(paramNames, ""), function.Signature.ReturnType.Name)
-		t := *FunctionType(&newName, function)
+
+		//Dirty hack but I cba to define a new function, especially with no overloading...
+		function.name = &newName
+		t := *FunctionType(function)
+		function.name = nil
+
 		return &Type{
 			Name: newName,
 			variables: map[string]Variable{newName: {
@@ -87,10 +92,10 @@ func FunctionType(name *string, function Function) *Type {
 		}
 	}
 	t := &Type{
-		Name: *name,
+		Name: *function.name,
 	}
-	t.variables = map[string]Variable{*name: {
-		Name:    *name,
+	t.variables = map[string]Variable{*function.name: {
+		Name:    *function.name,
 		Mutable: false,
 		Type:    *t,
 		Value: &Value{
@@ -101,7 +106,7 @@ func FunctionType(name *string, function Function) *Type {
 	return t
 }
 
-func FromASTType(ast parser.Type) *Type {
+func FromASTType(ast parser.Type, ctx *Context) *Type {
 	if ast == nil {
 		return AnyType
 	}
@@ -112,7 +117,11 @@ func FromASTType(ast parser.Type) *Type {
 		if builtIn != nil {
 			return builtIn
 		}
-		return SimpleType(identifier, map[string]Variable{})
+		defined, isDefined := ctx.types[identifier]
+		if isDefined {
+			return &defined
+		}
+		panic("No such type " + identifier)
 	}
 
 	panic("Could not handle " + reflect.TypeOf(ast).Name())

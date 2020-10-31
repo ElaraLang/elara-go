@@ -11,24 +11,29 @@ type Command interface {
 }
 
 type DefineVarCommand struct {
-	Name    string
-	Mutable bool
-	Type    Type
-	value   Command
+	Name        string
+	Mutable     bool
+	Type        *parser.Type
+	value       Command
+	runtimeType *Type
 }
 
 func (c DefineVarCommand) Exec(ctx *Context) *Value {
+	if c.runtimeType == nil {
+		c.runtimeType = FromASTType(*c.Type, ctx)
+	}
+
 	value := c.value.Exec(ctx)
 	if value == nil {
-		panic("Command " + reflect.TypeOf(c).Name() + " returned nil")
+		panic("Command " + reflect.TypeOf(c.value).Name() + " returned nil")
 	}
-	if !c.Type.Accepts(*value.Type) {
-		panic("Cannot use value of type " + value.Type.Name + " in place of " + c.Type.Name + " for variable " + c.Name)
+	if !c.runtimeType.Accepts(*value.Type) {
+		panic("Cannot use value of type " + value.Type.Name + " in place of " + c.runtimeType.Name + " for variable " + c.Name)
 	}
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
-		Type:    c.Type,
+		Type:    *c.runtimeType,
 		Value:   value,
 	}
 
@@ -70,7 +75,11 @@ func (c *VariableCommand) Exec(ctx *Context) *Value {
 	if variable == nil {
 		param := ctx.FindParameter(c.Variable)
 		if param == nil {
-			panic("No such variable or parameter " + c.Variable)
+			constructor := ctx.FindConstructor(c.Variable)
+			if constructor == nil {
+				panic("No such variable or parameter or constructor" + c.Variable)
+			}
+			return constructor
 		}
 		return param
 	}
@@ -131,6 +140,43 @@ func (c *LiteralCommand) Exec(_ *Context) *Value {
 	return &c.value
 }
 
+type FunctionLiteralCommand struct {
+	name       *string
+	parameters []parser.FunctionArgument
+	returnType parser.Type
+	body       Command
+}
+
+func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
+	params := make([]Parameter, len(c.parameters))
+
+	for i, parameter := range c.parameters {
+		paramType := FromASTType(parameter.Type, ctx)
+		params[i] = Parameter{
+			Type: *paramType,
+			Name: parameter.Name,
+		}
+	}
+
+	returnType := FromASTType(c.returnType, ctx)
+
+	fun := Function{
+		name: c.name,
+		Signature: Signature{
+			Parameters: params,
+			ReturnType: *returnType,
+		},
+		Body: c.body,
+	}
+
+	functionType := FunctionType(fun)
+
+	return &Value{
+		Type:  functionType,
+		Value: fun,
+	}
+}
+
 type BinaryOperatorCommand struct {
 	lhs Command
 	op  func(ctx *Context, lhs *Value, rhs *Value) *Value
@@ -163,6 +209,14 @@ type ContextCommand struct {
 
 func (c *ContextCommand) Exec(ctx *Context) *Value {
 	receiver := c.receiver.Exec(ctx)
+	instance, isInstance := receiver.Value.(Instance)
+	if isInstance {
+		variable, ok := instance.Values[c.variable]
+		if !ok {
+			panic("Instance of type " + instance.Type.Name + " didn't define a value for " + receiver.Type.Name)
+		}
+		return variable
+	}
 	variable, ok := receiver.Type.variables[c.variable]
 	if !ok {
 		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
@@ -259,14 +313,14 @@ type StructDefCommand struct {
 }
 
 func (c *StructDefCommand) Exec(ctx *Context) *Value {
-
 	variables := make(map[string]Variable, len(c.fields))
+
 	for _, field := range c.fields {
 		var Type Type
 		if field.FieldType == nil {
 			Type = *AnyType
 		} else {
-			Type = *FromASTType(*field.FieldType)
+			Type = *FromASTType(*field.FieldType, ctx)
 		}
 		variables[field.Identifier] = Variable{
 			Name:    field.Identifier,
@@ -281,18 +335,15 @@ func (c *StructDefCommand) Exec(ctx *Context) *Value {
 	}
 	return nil
 }
+
 func ToCommand(statement parser.Stmt) Command {
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
-		Type := FromASTType(t.Type)
-		if Type == nil {
-			Type = AnyType
-		}
 		valueExpr := NamedExpressionToCommand(t.Value, &t.Identifier)
 		return DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
-			Type:    *Type,
+			Type:    &t.Type,
 			value:   valueExpr,
 		}
 	case parser.ExpressionStmt:
@@ -347,6 +398,7 @@ func ToCommand(statement parser.Stmt) Command {
 
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
 }
+
 func ExpressionToCommand(expr parser.Expr) Command {
 	return NamedExpressionToCommand(expr, nil)
 }
@@ -437,32 +489,12 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			}
 		}
 	case parser.FuncDefExpr:
-		params := make([]Parameter, len(t.Arguments))
-		for i, parameter := range t.Arguments {
-			paramType := FromASTType(parameter.Type)
-			params[i] = Parameter{
-				Type: *paramType,
-				Name: parameter.Name,
-			}
+		return &FunctionLiteralCommand{
+			name:       name,
+			parameters: t.Arguments,
+			returnType: t.ReturnType,
+			body:       ToCommand(t.Statement),
 		}
-
-		returnType := FromASTType(t.ReturnType)
-
-		fun := Function{
-			name: name,
-			Signature: Signature{
-				Parameters: params,
-				ReturnType: *returnType,
-			},
-			Body: ToCommand(t.Statement),
-		}
-
-		functionType := FunctionType(nil, fun)
-
-		return &LiteralCommand{value: Value{
-			Type:  functionType,
-			Value: fun,
-		}}
 
 	case parser.ContextExpr:
 		contextCmd := ExpressionToCommand(t.Context)

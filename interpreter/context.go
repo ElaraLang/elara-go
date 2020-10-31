@@ -69,7 +69,7 @@ func NewContext() *Context {
 		}),
 	}
 
-	inputContract := FunctionType(&inputFunctionName, inputFunction)
+	inputContract := FunctionType(inputFunction)
 
 	c.DefineVariable(inputFunctionName, Variable{
 		Name:    inputFunctionName,
@@ -91,19 +91,19 @@ func (c *Context) DefineVariable(name string, value Variable) {
 
 func (c *Context) FindVariable(name string) *Variable {
 	vars := c.variables[name]
+	if vars != nil {
+		return vars[0]
+	}
 
-	if vars == nil {
-		for _, contexts := range c.contextPath {
-			for _, context := range contexts {
-				v := context.FindVariable(name)
-				if v != nil {
-					return v
-				}
+	for _, contexts := range c.contextPath {
+		for _, context := range contexts {
+			v := context.FindVariable(name)
+			if v != nil {
+				return v
 			}
 		}
-		return nil
 	}
-	return vars[0]
+	return nil
 }
 
 func (c *Context) DefineParameter(name string, value *Value) {
@@ -123,6 +123,66 @@ func (c *Context) FindParameterIndexed(index int) *Value {
 
 func (c *Context) FindParameter(name string) *Value {
 	return c.parameters[name]
+}
+
+func (c *Context) FindType(name string) *Type {
+	t, ok := c.types[name]
+	if ok {
+		return &t
+	}
+	for _, contexts := range c.contextPath {
+		for _, context := range contexts {
+			t := context.FindType(name)
+			if t != nil {
+				return t
+			}
+		}
+	}
+	return nil
+}
+
+func (c *Context) FindConstructor(name string) *Value {
+
+	t := c.FindType(name)
+	if t == nil {
+		return nil
+	}
+	constructorParams := make([]Parameter, 0)
+	for _, v := range t.variables {
+		if v.Value == nil {
+			constructorParams = append(constructorParams, Parameter{
+				Name: v.Name,
+				Type: v.Type,
+			})
+		}
+	}
+
+	constructor := Function{
+		Signature: Signature{
+			Parameters: constructorParams,
+			ReturnType: *t,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			values := make(map[string]*Value, len(constructorParams))
+			for _, param := range constructorParams {
+				values[param.Name] = ctx.FindParameter(param.Name)
+			}
+			return &Value{
+				Type: t,
+				Value: Instance{
+					Type:   t,
+					Values: values,
+				},
+			}
+
+		}),
+		name: &name,
+	}
+
+	return &Value{
+		Type:  FunctionType(constructor),
+		Value: constructor,
+	}
 }
 
 func (c *Context) Import(namespace string) {
