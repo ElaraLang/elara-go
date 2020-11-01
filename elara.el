@@ -1,15 +1,15 @@
-namespace examples/what
+namespace examples/main
 import elara/std
 
-struct A {
+struct Test {
     String name
 }
 
-extend A {
+extend Test {
     let b = 3
     let print-name => print(name)
 }
 
-let a = A("Test")
-a.print-name()
-print(a.b)
+let test = Test("Test Struct")
+test.print-name()
+print(test.b)
