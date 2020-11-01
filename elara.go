@@ -14,16 +14,19 @@ func main() {
 	args := os.Args
 	//This isn't really a repl, but it will be. for now, it's close enough in that it will print the output of every expression
 	var repl = false
-	for _, arg := range args {
+	var fileName = "elara.el"
+	for i, arg := range args {
 		if arg == "--repl" {
 			repl = true
-			break
+		}
+		if arg == "--file" {
+			fileName = args[i + 1]
 		}
 	}
 
 	loadStdLib()
 
-	fileName, input := loadFile("elara.el")
+	_, input := loadFile(fileName)
 	start := time.Now()
 	_, lexTime, parseTime, execTime := base.Execute(&fileName, string(input), repl)
 
