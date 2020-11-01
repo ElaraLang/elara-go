@@ -167,6 +167,45 @@ func Init() {
 			}
 		}),
 	}
+	floatAdd := Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "value",
+					Type: *IntType,
+				},
+			},
+			ReturnType: *IntType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			parameter := ctx.FindParameter("value")
+			asInt, isInt := parameter.Value.(int64)
+			if isInt {
+				result := ctx.receiver.Value.(float64) + float64(asInt)
+				return &Value{
+					Type:  FloatType,
+					Value: result,
+				}
+			} else {
+				asFloat, isFloat := parameter.Value.(float64)
+				if isFloat {
+					result := ctx.receiver.Value.(float64) + asFloat
+					return &Value{
+						Type:  FloatType,
+						Value: result,
+					}
+				} else {
+					//TODO
+					//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
+					result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
+					return &Value{
+						Type:  StringType,
+						Value: result,
+					}
+				}
+			}
+		}),
+	}
 
 	IntType.variables = convert(map[string]Function{
 		"plus": intAdd,
@@ -247,6 +286,10 @@ func Init() {
 				}
 			}),
 		},
+	})
+	FloatType.variables = convert(map[string]Function{
+		"plus": floatAdd,
+		"add":  floatAdd,
 	})
 
 	printlnName := "print"

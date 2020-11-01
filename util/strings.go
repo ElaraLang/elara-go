@@ -13,6 +13,8 @@ func Stringify(s interface{}) string {
 		return fmt.Sprintf("%d", t)
 	case int64:
 		return fmt.Sprintf("%d", t)
+	case float64:
+		return fmt.Sprintf("%g", t)
 	case bool:
 		return fmt.Sprintf("%t", t)
 	}
