@@ -19,24 +19,30 @@ type DefineVarCommand struct {
 	runtimeType *Type
 }
 
-func (c DefineVarCommand) Exec(ctx *Context) *Value {
+func (c *DefineVarCommand) getType(ctx *Context) *Type {
 	if c.runtimeType == nil {
 		c.runtimeType = FromASTType(*c.Type, ctx)
 	}
-	if ctx.FindVariable(c.Name) != nil {
+	return c.runtimeType
+}
+func (c *DefineVarCommand) Exec(ctx *Context) *Value {
+	if ctx.FindVariableMaxDepth(c.Name, 1) != nil {
 		panic("Variable named " + c.Name + " already exists")
 	}
 	value := c.value.Exec(ctx)
+
 	if value == nil {
 		panic("Command " + reflect.TypeOf(c.value).Name() + " returned nil")
 	}
-	if !c.runtimeType.Accepts(*value.Type) {
-		panic("Cannot use value of type " + value.Type.Name + " in place of " + c.runtimeType.Name + " for variable " + c.Name)
+
+	variableType := c.getType(ctx)
+	if !variableType.Accepts(*value.Type) {
+		panic("Cannot use value of type " + value.Type.Name + " in place of " + variableType.Name + " for variable " + c.Name)
 	}
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
-		Type:    *c.runtimeType,
+		Type:    *variableType,
 		Value:   value,
 	}
 
@@ -74,13 +80,28 @@ type VariableCommand struct {
 }
 
 func (c *VariableCommand) Exec(ctx *Context) *Value {
+	if ctx.receiver != nil {
+		receiver := ctx.receiver
+		asInstance, isInstance := ctx.receiver.Value.(Instance)
+		if isInstance {
+			instanceVariable, exists := asInstance.Values[c.Variable]
+			if exists {
+				return instanceVariable
+			}
+		}
+		typeVariable, exists := receiver.Type.variables.m[c.Variable]
+		if exists {
+			return typeVariable.Value
+		}
+	}
+
 	variable := ctx.FindVariable(c.Variable)
 	if variable == nil {
 		param := ctx.FindParameter(c.Variable)
 		if param == nil {
 			constructor := ctx.FindConstructor(c.Variable)
 			if constructor == nil {
-				panic("No such variable or parameter or constructor" + c.Variable)
+				panic("No such variable or parameter or constructor " + c.Variable)
 			}
 			return constructor
 		}
@@ -217,7 +238,11 @@ func (c *ContextCommand) Exec(ctx *Context) *Value {
 	if isInstance {
 		variable, ok := instance.Values[c.variable]
 		if !ok {
-			panic("Instance of type " + instance.Type.Name + " didn't define a value for " + receiver.Type.Name)
+			value, ok := receiver.Type.variables.m[c.variable]
+			if !ok {
+				panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
+			}
+			return value.Value
 		}
 		return variable
 	}
@@ -239,7 +264,7 @@ func (c *IfElseCommand) Exec(ctx *Context) *Value {
 	condition := c.condition.Exec(ctx)
 	value, ok := condition.Value.(bool)
 	if !ok {
-		panic("If statement requires boolean value")
+		panic("If statements requires boolean value")
 	}
 
 	if value {
@@ -263,7 +288,7 @@ func (c *IfElseExpressionCommand) Exec(ctx *Context) *Value {
 	condition := c.condition.Exec(ctx)
 	value, ok := condition.Value.(bool)
 	if !ok {
-		panic("If statement requires boolean value")
+		panic("If statements requires boolean value")
 	}
 
 	if value {
@@ -340,11 +365,38 @@ func (c *StructDefCommand) Exec(ctx *Context) *Value {
 	return nil
 }
 
+type ExtendCommand struct {
+	Type       string
+	statements []Command
+}
+
+func (c *ExtendCommand) Exec(ctx *Context) *Value {
+	extending := ctx.FindType(c.Type)
+	if extending == nil {
+		panic("No such type " + c.Type)
+	}
+	for _, statement := range c.statements {
+		switch statement.(type) {
+		case *DefineVarCommand:
+			defVar := statement.(*DefineVarCommand)
+			value := defVar.value.Exec(ctx)
+			variable := &Variable{
+				Name:    defVar.Name,
+				Mutable: defVar.Mutable,
+				Type:    *defVar.getType(ctx),
+				Value:   value,
+			}
+			extending.variables.Set(defVar.Name, *variable)
+		}
+	}
+	return nil
+}
+
 func ToCommand(statement parser.Stmt) Command {
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
 		valueExpr := NamedExpressionToCommand(t.Value, &t.Identifier)
-		return DefineVarCommand{
+		return &DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
 			Type:    &t.Type,
@@ -397,6 +449,16 @@ func ToCommand(statement parser.Stmt) Command {
 		return &StructDefCommand{
 			name:   name,
 			fields: t.StructFields,
+		}
+
+	case parser.ExtendStmt:
+		commands := make([]Command, len(t.Body.Stmts))
+		for i, stmt := range t.Body.Stmts {
+			commands[i] = ToCommand(stmt)
+		}
+		return &ExtendCommand{
+			Type:       t.Identifier,
+			statements: commands,
 		}
 	}
 

@@ -1,11 +1,9 @@
 namespace elara/std
 
-let print = (Any msg) => {
+let print = (Any msg) => Unit {
     print-raw(msg + "\n")
 }
 
 let print-raw = (Any msg) => {
-    stdout.print(msg)
+    stdout.write(msg)
 }
-
-let test => print("Hi")

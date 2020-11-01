@@ -1,6 +1,15 @@
 namespace examples/what
 import elara/std
 
-let a-number = 3
-let a-float = 4.569
-print(a-float + a-float)
+struct A {
+    String name
+}
+
+extend A {
+    let b = 3
+    let print-name => print(name)
+}
+
+let a = A("Test")
+a.print-name()
+print(a.b)

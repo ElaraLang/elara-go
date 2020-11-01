@@ -41,7 +41,7 @@ type WhileStmt struct {
 
 type ExtendStmt struct {
 	Identifier string
-	Body       Stmt
+	Body       BlockStmt
 }
 type TypeStmt struct {
 	Identifier string

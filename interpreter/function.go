@@ -11,13 +11,20 @@ type Function struct {
 }
 
 func (f *Function) String() string {
-	return fmt.Sprintf("Function %s => %s", f.Signature.Parameters, f.Signature.ReturnType)
+	name := "Function"
+	if f.name != nil {
+		name = *f.name
+	}
+	return fmt.Sprintf("%s %s => %s", name, f.Signature.Parameters, f.Signature.ReturnType)
 }
 
 func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (val *Value) {
 	if len(parameters) != len(f.Signature.Parameters) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
 	}
+
+	ctx.EnterScope(f.String())
+
 	for i, parameter := range parameters {
 		paramValue := parameter.Exec(ctx)
 		expectedParameter := f.Signature.Parameters[i]
@@ -32,6 +39,7 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (va
 	ctx.receiver = receiver
 
 	defer func() {
+		ctx.ExitScope()
 		s := recover()
 		if s != nil {
 			_, is := s.(*Value)

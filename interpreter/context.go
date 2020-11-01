@@ -12,7 +12,13 @@ type Context struct {
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
 
-	types map[string]Type
+	types  map[string]Type
+	scopes []Scope
+}
+
+type Scope struct {
+	name    string
+	context Context
 }
 
 var globalContext = &Context{
@@ -22,7 +28,8 @@ var globalContext = &Context{
 	receiver:    nil,
 	contextPath: map[string][]*Context{},
 
-	types: map[string]Type{},
+	types:  map[string]Type{},
+	scopes: []Scope{},
 }
 
 func (c *Context) Init(namespace string) {
@@ -41,6 +48,7 @@ func NewContext() *Context {
 		namespace:   "",
 		contextPath: map[string][]*Context{},
 		types:       map[string]Type{},
+		scopes:      []Scope{},
 	}
 	c.DefineVariable("stdout", Variable{
 		Name:    "stdout",
@@ -62,7 +70,7 @@ func NewContext() *Context {
 			var input string
 			_, err := fmt.Scanln(&input)
 			if err != nil {
-				println(err)
+				panic(err)
 			}
 
 			return &Value{Value: input, Type: StringType}
@@ -84,45 +92,70 @@ func NewContext() *Context {
 }
 
 func (c *Context) DefineVariable(name string, value Variable) {
-	vars := c.variables[name]
-	vars = append(vars, &value)
-	c.variables[name] = vars
+
+	if len(c.scopes) == 0 {
+		vars := c.variables[name]
+		vars = append(vars, &value)
+		c.variables[name] = vars
+		return
+	}
+
+	c.scopes[len(c.scopes)-1].context.DefineVariable(name, value)
 }
 
 func (c *Context) FindVariable(name string) *Variable {
-	vars := c.variables[name]
-	if vars != nil {
-		return vars[0]
+	return c.FindVariableMaxDepth(name, 0)
+}
+
+func (c *Context) FindVariableMaxDepth(name string, maxDepth int) *Variable {
+	if len(c.scopes) == 0 {
+		vars := c.variables[name]
+		if vars != nil {
+			return vars[len(vars)-1]
+		}
+
+		for _, contexts := range c.contextPath {
+			for _, context := range contexts {
+				v := context.FindVariable(name)
+				if v != nil {
+					return v
+				}
+			}
+		}
+		return nil
 	}
 
-	for _, contexts := range c.contextPath {
-		for _, context := range contexts {
-			v := context.FindVariable(name)
-			if v != nil {
-				return v
-			}
+	for i := len(c.scopes) - 1; i >= maxDepth; i-- {
+		last := c.scopes[i]
+		found := last.context.FindVariableMaxDepth(name, 0)
+		if found != nil {
+			return found
 		}
 	}
 	return nil
 }
 
 func (c *Context) DefineParameter(name string, value *Value) {
-	c.parameters[name] = value
-}
-
-func (c *Context) FindParameterIndexed(index int) *Value {
-	i := 0
-	for _, value := range c.parameters {
-		if i == index {
-			return value
-		}
-		i++
+	if len(c.scopes) == 0 {
+		c.parameters[name] = value
+		return
 	}
-	return nil
+	c.scopes[len(c.scopes)-1].context.DefineParameter(name, value)
 }
 
 func (c *Context) FindParameter(name string) *Value {
-	return c.parameters[name]
+	if len(c.scopes) == 0 {
+		return c.parameters[name]
+	}
+
+	for i := len(c.scopes) - 1; i >= 0; i-- {
+		last := c.scopes[i]
+		found := last.context.FindParameter(name)
+		if found != nil {
+			return found
+		}
+	}
+	return nil
 }
 
 func (c *Context) FindType(name string) *Type {
@@ -139,6 +172,18 @@ func (c *Context) FindType(name string) *Type {
 		}
 	}
 	return nil
+}
+
+func (c *Context) EnterScope(name string) {
+	scope := Scope{
+		name:    name,
+		context: *c,
+	}
+	c.scopes = append(c.scopes, scope)
+}
+func (c *Context) ExitScope() {
+	//Drop the last scope
+	c.scopes = c.scopes[:len(c.scopes)-1]
 }
 
 func (c *Context) FindConstructor(name string) *Value {
