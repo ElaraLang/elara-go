@@ -1,10 +1,10 @@
 package base
 
 import (
-	"elara/interpreter"
-	"elara/lexer"
-	"elara/parser"
 	"fmt"
+	"github.com/ElaraLang/elara/interpreter"
+	"github.com/ElaraLang/elara/lexer"
+	"github.com/ElaraLang/elara/parser"
 	"os"
 	"time"
 )

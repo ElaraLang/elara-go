@@ -1,6 +1,6 @@
 package parser
 
-import "elara/lexer"
+import "github.com/ElaraLang/elara/lexer"
 
 type Type interface {
 	typeOf()

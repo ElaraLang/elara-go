@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"elara/lexer"
+	"github.com/ElaraLang/elara/lexer"
 )
 
 type GenericContract struct {

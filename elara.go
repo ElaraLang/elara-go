@@ -1,8 +1,8 @@
 package main
 
 import (
-	"elara/base"
 	"fmt"
+	"github.com/ElaraLang/elara/base"
 	"io/ioutil"
 	"os"
 	"path"
@@ -20,7 +20,7 @@ func main() {
 			repl = true
 		}
 		if arg == "--file" {
-			fileName = args[i + 1]
+			fileName = args[i+1]
 		}
 	}
 

@@ -2,8 +2,8 @@ package parser
 
 import "C"
 import (
-	"elara/lexer"
 	"fmt"
+	"github.com/ElaraLang/elara/lexer"
 )
 
 type Scanner = lexer.TokenReader

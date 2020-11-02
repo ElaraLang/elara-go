@@ -1,7 +1,7 @@
 package tests
 
 import (
-	"elara/base"
+	"github.com/ElaraLang/elara/base"
 	"testing"
 )
 

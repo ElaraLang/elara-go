@@ -1,8 +1,8 @@
 package interpreter
 
 import (
-	"elara/parser"
 	"fmt"
+	"github.com/ElaraLang/elara/parser"
 	"reflect"
 	"strings"
 )

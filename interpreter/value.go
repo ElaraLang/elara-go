@@ -1,8 +1,8 @@
 package interpreter
 
 import (
-	"elara/util"
 	"fmt"
+	"github.com/ElaraLang/elara/util"
 )
 
 type Value struct {

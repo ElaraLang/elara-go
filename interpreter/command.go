@@ -1,9 +1,9 @@
 package interpreter
 
 import (
-	"elara/lexer"
-	"elara/parser"
-	"elara/util"
+	"github.com/ElaraLang/elara/lexer"
+	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/util"
 	"reflect"
 )
 
