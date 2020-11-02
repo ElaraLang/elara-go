@@ -154,7 +154,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 	condition := p.logicalOr()
 	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
 	mainBranch := p.statement()
-
+	p.cleanNewLines()
 	var elseBranch Stmt
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {
