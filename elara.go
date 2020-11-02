@@ -38,24 +38,37 @@ func main() {
 func loadStdLib() {
 	goPath := os.Getenv("GOPATH")
 	filePath := path.Join(goPath, "stdlib/")
-	filepath.Walk(filePath, func(path string, info os.FileInfo, err error) error {
+	defer func() {
+		err := recover()
+		if err == nil {
+			return
+		}
+		//Maybe it's not present in GOPATH, let's try in working directory
+		cur, err := os.Executable()
 		if err != nil {
 			panic(err)
 		}
-		if info.IsDir() {
-			return nil
-		}
-		_, content := loadFile(path)
-		base.Execute(&path, string(content), false)
+		filePath = path.Join(filepath.Dir(cur), "stdlib/")
+		filepath.Walk(filePath, loadWalkedFile)
+	}()
+	filepath.Walk(filePath, loadWalkedFile)
+}
+
+func loadWalkedFile(path string, info os.FileInfo, err error) error {
+	if err != nil {
+		panic(err)
+	}
+	if info.IsDir() {
 		return nil
-	})
+	}
+	_, content := loadFile(path)
+	base.Execute(&path, string(content), false)
+	return nil
 }
 
 func loadFile(fileName string) (string, []byte) {
-	goPath := os.Getenv("GOPATH")
-	filePath := path.Join(goPath, fileName)
 
-	input, err := ioutil.ReadFile(filePath)
+	input, err := ioutil.ReadFile(fileName)
 
 	if err != nil {
 		panic(err)
