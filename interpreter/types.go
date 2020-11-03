@@ -66,36 +66,26 @@ func UnionType(a Type, b Type) *Type {
 }
 
 func FunctionType(function Function) *Type {
-	if function.name == nil {
-		paramNames := make([]string, len(function.Signature.Parameters))
-		for i := range function.Signature.Parameters {
-			paramNames[i] = function.Signature.Parameters[i].Name
+	//Build the function name based on signature
+	var parameters string
+	if len(function.Signature.Parameters) == 0 {
+		parameters = "()"
+	} else {
+		paramTypes := make([]string, len(function.Signature.Parameters))
+		for i, param := range function.Signature.Parameters {
+			paramTypes[i] = param.Type.Name
 		}
-		newName := fmt.Sprintf("%sTo%sFunction", strings.Join(paramNames, ""), function.Signature.ReturnType.Name)
-
-		//Dirty hack but I cba to define a new function, especially with no overloading...
-		function.name = &newName
-		t := *FunctionType(function)
-		function.name = nil
-
-		return &Type{
-			Name: newName,
-			variables: *VariableMapOf(map[string]Variable{newName: {
-				Name:    newName,
-				Mutable: false,
-				Type:    t,
-				Value: &Value{
-					Type:  &t,
-					Value: function,
-				},
-			}}),
-		}
+		parameters = "(" + strings.Join(paramTypes, ", ") + ")"
 	}
+
+	functionName := parameters + " => " + function.Signature.ReturnType.Name
+
 	t := &Type{
-		Name: *function.name,
+		Name: functionName,
 	}
-	t.variables = *VariableMapOf(map[string]Variable{*function.name: {
-		Name:    *function.name,
+
+	t.variables = *VariableMapOf(map[string]Variable{functionName: {
+		Name:    functionName,
 		Mutable: false,
 		Type:    *t,
 		Value: &Value{

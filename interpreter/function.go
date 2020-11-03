@@ -18,15 +18,14 @@ func (f *Function) String() string {
 	return fmt.Sprintf("%s %s => %s", name, f.Signature.Parameters, f.Signature.ReturnType)
 }
 
-func (f *Function) Exec(ctx *Context, receiver *Value, parameters []Command) (val *Value) {
+func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val *Value) {
 	if len(parameters) != len(f.Signature.Parameters) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
 	}
 
 	ctx.EnterScope(f.String())
 
-	for i, parameter := range parameters {
-		paramValue := parameter.Exec(ctx)
+	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
 
 		if !expectedParameter.Type.Accepts(*paramValue.Type) {

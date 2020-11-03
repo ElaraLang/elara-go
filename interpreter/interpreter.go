@@ -24,6 +24,17 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 		line := s.lines[i]
 		command := ToCommand(line)
 
+		//Ignore any top level returns
+		defer func() {
+			r := recover()
+			if r != nil {
+				_, isValue := r.(*Value)
+				if isValue {
+					return
+				}
+				panic(r)
+			}
+		}()
 		res := command.Exec(s.context)
 		values[i] = res
 		if scriptMode {
