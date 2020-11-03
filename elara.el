@@ -1,15 +1,9 @@
 namespace examples/main
 import elara/std
 
-struct Test {
-    String name
+let fact = (Int n) => {
+    if n == 1 => return 1
+    return n * fact(n - 1)
 }
 
-extend Test {
-    let b = 3
-    let print-name => print(name)
-}
-
-let test = Test("Test Struct")
-test.print-name()
-print(test.b)
+print(fact(10))

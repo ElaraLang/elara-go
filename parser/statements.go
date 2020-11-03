@@ -155,6 +155,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
 	mainBranch := p.statement()
 	p.cleanNewLines()
+
 	var elseBranch Stmt
 	if p.match(lexer.Else) {
 		if p.check(lexer.If) {
@@ -191,10 +192,12 @@ func (p *Parser) blockStatement() BlockStmt {
 func (p *Parser) blockedDeclaration(errors *[]ParseError) (s Stmt) {
 	defer p.handleError(errors)
 	s = p.declaration()
-	nxt := p.peek()
-	if nxt.TokenType != lexer.NEWLINE && nxt.TokenType != lexer.RBrace {
-		panic("Expected newline after declaration in block")
-	}
+
+	//This is no longer guaranteed as if statements clean any new lines while looking for an else branch
+	//nxt := p.peek()
+	//if nxt.TokenType != lexer.NEWLINE && nxt.TokenType != lexer.RBrace {
+	//	panic("Expected newline after declaration in block")
+	//}
 	p.cleanNewLines()
 
 	return s

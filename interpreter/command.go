@@ -3,8 +3,9 @@ package interpreter
 import (
 	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
-	"github.com/ElaraLang/elara/util"
+	_ "github.com/ElaraLang/elara/util"
 	"reflect"
+	"strings"
 )
 
 type Command interface {
@@ -124,22 +125,36 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 		if !ok {
 			panic("Cannot invoke non-value")
 		}
-		return fun.Exec(ctx, nil, c.args)
+
+		argValues := make([]*Value, len(c.args))
+		for i, arg := range c.args {
+			argValues[i] = arg.Exec(ctx)
+		}
+		return fun.Exec(ctx, nil, argValues)
 	}
 
 	//ContextCommand seems to think it's a special case... because it is.
 	receiver := context.receiver.Exec(ctx)
 	value, ok := receiver.Type.variables.m[context.variable]
 	if !ok {
-		//TODO print the types
-		panic("No such variable " + context.variable + "(" + util.Stringify(c.args) + ") on type " + receiver.Type.Name)
+
+		argTypes := make([]string, len(c.args))
+		for i, arg := range c.args {
+			argTypes[i] = arg.Exec(ctx).Type.Name
+		}
+		panic("No such function " + receiver.Type.Name + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
 	}
 	function, ok := value.Value.Value.(Function)
 	if !ok {
 		panic("Cannot invoke non-function " + value.string())
 	}
 	exec := context.receiver.Exec(ctx)
-	return function.Exec(ctx, exec, c.args)
+
+	argValues := make([]*Value, len(c.args))
+	for i, arg := range c.args {
+		argValues[i] = arg.Exec(ctx)
+	}
+	return function.Exec(ctx, exec, argValues)
 
 }
 

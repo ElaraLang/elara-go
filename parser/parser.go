@@ -74,7 +74,7 @@ func (p *Parser) handleError(error *[]ParseError) {
 		default:
 			*error = append(*error, ParseError{
 				token:   p.previous(),
-				message: "Invalid error thrown by Parser",
+				message: "Invalid error thrown by Parser: ",
 			})
 			break
 		}
