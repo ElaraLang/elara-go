@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-func Execute(fileName *string, code string, repl bool) (results []*interpreter.Value, lexTime time.Duration, parseTime time.Duration, execTime time.Duration) {
+func Execute(fileName *string, code string, scriptMode bool) (results []*interpreter.Value, lexTime time.Duration, parseTime time.Duration, execTime time.Duration) {
 
 	start := time.Now()
 	result := lexer.Lex(fileName, code)
@@ -30,7 +30,7 @@ func Execute(fileName *string, code string, repl bool) (results []*interpreter.V
 	evaluator := interpreter.NewInterpreter(parseRes)
 	interpreter.Init()
 
-	results = evaluator.Exec(repl)
+	results = evaluator.Exec(scriptMode)
 	execTime = time.Since(start)
 	return results, lexTime, parseTime, execTime
 }

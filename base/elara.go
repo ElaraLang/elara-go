@@ -1,9 +1,8 @@
-package main
+package base
 
 import (
 	"archive/zip"
 	"fmt"
-	"github.com/ElaraLang/elara/base"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -15,29 +14,12 @@ import (
 	"time"
 )
 
-func main() {
-	args := os.Args
-	//This isn't really a repl, but it will be. for now, it's close enough in that it will print the output of every expression
-	var repl = false
-	var fileName *string
-	for i, arg := range args {
-		if arg == "--repl" {
-			repl = true
-		}
-		if arg == "--file" {
-			fileName = &args[i+1]
-		}
-	}
-	if fileName == nil {
-		println("Error: no file provided. Please pass a file to execute with the --file argument")
-		return
-	}
-
+func ExecuteFull(fileName string, scriptMode bool) {
 	loadStdLib()
 
-	_, input := loadFile(*fileName)
+	_, input := loadFile(fileName)
 	start := time.Now()
-	_, lexTime, parseTime, execTime := base.Execute(fileName, string(input), repl)
+	_, lexTime, parseTime, execTime := Execute(&fileName, string(input), scriptMode)
 
 	totalTime := time.Since(start)
 
@@ -145,7 +127,7 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	_, content := loadFile(path)
-	base.Execute(&path, string(content), false)
+	Execute(&path, string(content), false)
 	return nil
 }
 
