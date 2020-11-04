@@ -2,6 +2,7 @@ package main
 
 import (
 	"archive/zip"
+	"bufio"
 	"fmt"
 	"github.com/ElaraLang/elara/base"
 	"io"
@@ -28,20 +29,43 @@ func main() {
 			fileName = &args[i+1]
 		}
 	}
-	if fileName == nil {
-		println("Error: no file provided. Please pass a file to execute with the --file argument")
-		return
-	}
-
 	loadStdLib()
 
-	_, input := loadFile(*fileName)
-	start := time.Now()
-	_, lexTime, parseTime, execTime := base.Execute(fileName, string(input), repl)
+	if repl {
+		var input string
+		buf := bufio.NewReader(os.Stdin)
+		repl := base.NewReplSession()
+		fmt.Println("~-->>[Elara~Repl]<<--~")
+		for {
+			fmt.Print(">>>")
+			rawInput, err := buf.ReadBytes('\n')
+			if err != nil {
+				fmt.Println(err)
+				break
+			} else {
+				input = string(rawInput)
+			}
+			if input == "quit" {
+				fmt.Println("----Exit----")
+				break
+			}
+			result := repl.Execute(input)
+			fmt.Println(result)
+		}
+	} else {
+		if fileName == nil {
+			println("Error: no file provided. Please pass a file to execute with the --file argument")
+			return
+		}
 
-	totalTime := time.Since(start)
+		_, input := loadFile(*fileName)
+		start := time.Now()
+		_, lexTime, parseTime, execTime := base.Execute(fileName, string(input), repl)
 
-	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
+		totalTime := time.Since(start)
+
+		fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
+	}
 }
 
 func loadStdLib() {

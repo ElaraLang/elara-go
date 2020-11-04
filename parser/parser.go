@@ -23,10 +23,19 @@ type Parser struct {
 	current int
 }
 
+func NewEmptyParser() *Parser {
+	return &Parser{}
+}
+
 func NewParser(tokens *[]Token) *Parser {
 	return &Parser{
 		tokens: *tokens,
 	}
+}
+
+func (p *Parser) Reset(tokens *[]Token) {
+	p.tokens = *tokens
+	p.current = 0
 }
 
 func (p *Parser) Parse() (result []Stmt, error []ParseError) {
