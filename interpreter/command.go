@@ -391,9 +391,9 @@ func (c *ExtendCommand) Exec(ctx *Context) *Value {
 		panic("No such type " + c.Type)
 	}
 	for _, statement := range c.statements {
-		switch statement.(type) {
+		switch statement := statement.(type) {
 		case *DefineVarCommand:
-			defVar := statement.(*DefineVarCommand)
+			defVar := statement
 			value := defVar.value.Exec(ctx)
 			variable := &Variable{
 				Name:    defVar.Name,
