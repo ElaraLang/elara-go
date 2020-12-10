@@ -11,6 +11,9 @@ var code = `let b = if true => "yes" else => "no"
 func BenchmarkSimpleExecution(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
-		_, _, _, _ = base.Execute(nil, code, false)
+		res, _, _, _ := base.Execute(nil, code, false)
+		if res[1].Value != "yes" {
+			b.Fail()
+		}
 	}
 }

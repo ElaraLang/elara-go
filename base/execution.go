@@ -12,7 +12,7 @@ import (
 func Execute(fileName *string, code string, repl bool) (results []*interpreter.Value, lexTime time.Duration, parseTime time.Duration, execTime time.Duration) {
 
 	start := time.Now()
-	result := lexer.Lex(*fileName, code)
+	result := lexer.Lex(fileName, code)
 	lexTime = time.Since(start)
 
 	start = time.Now()

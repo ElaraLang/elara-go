@@ -1,9 +1,6 @@
 namespace examples/main
 import elara/std
 
-let fact = (Int n) => {
-    if n == 1 => return 1
-    return n * fact(n - 1)
-}
+let content = read-file("data.txt") split "\n" |> map to-int
 
-print(fact(10))
+content zip content |> filter (a, b) => a + b == 2020 |> for-each print

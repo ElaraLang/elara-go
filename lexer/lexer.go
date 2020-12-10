@@ -1,6 +1,6 @@
 package lexer
 
-func Lex(file string, code string) *[]Token {
+func Lex(file *string, code string) *[]Token {
 	chars := []rune(code)
 	scanner := NewTokenReader(chars)
 
@@ -22,7 +22,7 @@ func Lex(file string, code string) *[]Token {
 		token := Token{
 			TokenType: tok,
 			Text:      runes,
-			Position:  CreatePosition(&file, line, col),
+			Position:  CreatePosition(file, line, col),
 		}
 
 		if i <= len(tokens)-1 {

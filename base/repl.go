@@ -7,7 +7,7 @@ import (
 	"github.com/ElaraLang/elara/parser"
 )
 
-const replFile = "Repl"
+var replFile = "Repl"
 
 type ReplSession struct {
 	Parser    parser.Parser
@@ -22,7 +22,7 @@ func NewReplSession() ReplSession {
 }
 
 func (repl *ReplSession) Execute(input string) interface{} {
-	tokens := lexer.Lex(replFile, input)
+	tokens := lexer.Lex(&replFile, input)
 	repl.Parser.Reset(tokens)
 	result, err := repl.Parser.Parse()
 	if len(err) > 0 {
