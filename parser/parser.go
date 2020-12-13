@@ -164,6 +164,18 @@ func (p *Parser) insert(index int, value ...Token) {
 	}
 }
 
+func (p *Parser) insertBlankType(index int, value ...TokenType) {
+	blankTokens := make([]Token, len(value))
+	for i := range value {
+		blankTokens[i] = Token{
+			TokenType: value[i],
+			Text:      nil,
+			Position:  lexer.CreatePosition(nil, -1, 1),
+		}
+	}
+	p.insert(index, blankTokens...)
+}
+
 func (p *Parser) syncError() {
 	for !p.isAtEnd() && !p.check(lexer.NEWLINE) && !p.check(lexer.EOF) {
 		p.advance()

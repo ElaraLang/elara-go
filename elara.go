@@ -45,7 +45,7 @@ func main() {
 			} else {
 				input = string(rawInput)
 			}
-			if input == "quit" {
+			if strings.Trim(input, "\n\r") == "quit" {
 				fmt.Println("----Exit----")
 				break
 			}
