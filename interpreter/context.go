@@ -77,7 +77,7 @@ func NewContext() *Context {
 		}),
 	}
 
-	inputContract := FunctionType(inputFunction)
+	inputContract := FunctionType(&inputFunction)
 
 	c.DefineVariable(inputFunctionName, Variable{
 		Name:    inputFunctionName,
@@ -226,7 +226,7 @@ func (c *Context) FindConstructor(name string) *Value {
 	}
 
 	return &Value{
-		Type:  FunctionType(constructor),
+		Type:  FunctionType(&constructor),
 		Value: constructor,
 	}
 }
