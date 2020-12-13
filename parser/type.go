@@ -8,6 +8,7 @@ type Type interface {
 
 type DefinedTypeContract struct {
 	DefType []DefinedType
+	Name    string
 }
 type ElementaryTypeContract struct {
 	Identifier string

@@ -16,6 +16,15 @@ func NewInterpreter(code []parser.Stmt) *Interpreter {
 		context: NewContext(),
 	}
 }
+func NewEmptyInterpreter() *Interpreter {
+	return &Interpreter{
+		context: NewContext(),
+	}
+}
+
+func (s *Interpreter) ResetLines(lines *[]parser.Stmt) {
+	s.lines = *lines
+}
 
 func (s *Interpreter) Exec(scriptMode bool) []*Value {
 	values := make([]*Value, len(s.lines))

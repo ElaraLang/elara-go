@@ -23,10 +23,19 @@ type Parser struct {
 	current int
 }
 
+func NewEmptyParser() *Parser {
+	return &Parser{}
+}
+
 func NewParser(tokens *[]Token) *Parser {
 	return &Parser{
 		tokens: *tokens,
 	}
+}
+
+func (p *Parser) Reset(tokens *[]Token) {
+	p.tokens = *tokens
+	p.current = 0
 }
 
 func (p *Parser) Parse() (result []Stmt, error []ParseError) {
@@ -155,6 +164,18 @@ func (p *Parser) insert(index int, value ...Token) {
 	}
 }
 
+func (p *Parser) insertBlankType(index int, value ...TokenType) {
+	blankTokens := make([]Token, len(value))
+	for i := range value {
+		blankTokens[i] = Token{
+			TokenType: value[i],
+			Text:      nil,
+			Position:  lexer.CreatePosition(nil, -1, 1),
+		}
+	}
+	p.insert(index, blankTokens...)
+}
+
 func (p *Parser) syncError() {
 	for !p.isAtEnd() && !p.check(lexer.NEWLINE) && !p.check(lexer.EOF) {
 		p.advance()
@@ -168,7 +189,7 @@ func (p *Parser) parseProperties(propTypes ...lexer.TokenType) []bool {
 		tokTyp := p.advance().TokenType
 		for i := 0; i < len(propTypes); i++ {
 			if propTypes[i] == tokTyp {
-				if result[i] == true {
+				if result[i] {
 					panic(ParseError{
 						token:   p.previous(),
 						message: "Multiple variable properties of same type defined",
