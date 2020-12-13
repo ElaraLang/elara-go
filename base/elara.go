@@ -1,8 +1,8 @@
 package base
 
 import (
-	"archive/zip"
 	"fmt"
+	"github.com/mholt/archiver"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -10,7 +10,6 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -72,47 +71,9 @@ func downloadStandardLibrary(to string) {
 		panic(err)
 	}
 
-	unzip(zipPath, to)
-}
-
-func unzip(file string, to string) {
-	r, err := zip.OpenReader(file)
+	err = archiver.NewZip().Unarchive(zipPath, to)
 	if err != nil {
 		panic(err)
-	}
-	defer r.Close()
-
-	for _, f := range r.File {
-		path := filepath.Join(to, f.Name)
-
-		// Check for ZipSlip. More Info: http://bit.ly/2MsjAWE
-		if !strings.HasPrefix(path, filepath.Clean(to)+string(os.PathSeparator)) {
-			panic(fmt.Sprintf("%s: illegal file path", path))
-		}
-
-		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, os.ModePerm)
-			continue
-		}
-
-		if err = os.MkdirAll(filepath.Dir(path), os.ModePerm); err != nil {
-			panic(err)
-		}
-		outFile, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			panic(err)
-		}
-
-		rc, err := f.Open()
-		if err != nil {
-			panic(err)
-		}
-		_, err = io.Copy(outFile, rc)
-		outFile.Close()
-		rc.Close()
-		if err != nil {
-			panic(err)
-		}
 	}
 }
 
