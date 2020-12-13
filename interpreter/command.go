@@ -3,6 +3,7 @@ package interpreter
 import (
 	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/util"
 	_ "github.com/ElaraLang/elara/util"
 	"reflect"
 	"strings"
@@ -209,7 +210,7 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 		Body: c.body,
 	}
 
-	functionType := FunctionType(fun)
+	functionType := FunctionType(&fun)
 
 	return &Value{
 		Type:  functionType,
@@ -366,7 +367,7 @@ func (c *StructDefCommand) Exec(ctx *Context) *Value {
 		} else {
 			Type = *FromASTType(*field.FieldType, ctx)
 		}
-		variables.Set(field.Identifier, Variable{
+		variables.Set(field.Identifier, &Variable{
 			Name:    field.Identifier,
 			Mutable: field.Mutable,
 			Type:    Type,
@@ -375,7 +376,7 @@ func (c *StructDefCommand) Exec(ctx *Context) *Value {
 	}
 	ctx.types[c.name] = Type{
 		Name:      c.name,
-		variables: *variables,
+		variables: variables,
 	}
 	return nil
 }
@@ -401,10 +402,25 @@ func (c *ExtendCommand) Exec(ctx *Context) *Value {
 				Type:    *defVar.getType(ctx),
 				Value:   value,
 			}
-			extending.variables.Set(defVar.Name, *variable)
+			extending.variables.Set(defVar.Name, variable)
 		}
 	}
 	return nil
+}
+
+type TypeCheckCommand struct {
+	expression Command
+	checkType  parser.Type
+}
+
+func (c *TypeCheckCommand) Exec(ctx *Context) *Value {
+	checkAgainst := FromASTType(c.checkType, ctx)
+	if checkAgainst == nil {
+		panic("No such type " + util.Stringify(c.checkType))
+	}
+	res := c.expression.Exec(ctx)
+	is := res.Type.Accepts(*checkAgainst)
+	return BooleanValue(is)
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -620,6 +636,12 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			ifResult:   ifResult,
 			elseBranch: elseBranch,
 			elseResult: elseResult,
+		}
+
+	case parser.TypeCheckExpr:
+		return &TypeCheckCommand{
+			expression: ExpressionToCommand(t.Expr),
+			checkType:  t.Type,
 		}
 	}
 

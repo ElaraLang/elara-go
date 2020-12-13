@@ -6,4 +6,4 @@ let fact = (Int n) => {
     return n * fact(n - 1)
 }
 
-print(fact(10))
+print(fact(3) is Int)

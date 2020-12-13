@@ -126,6 +126,23 @@ func Init() {
 				}
 			}),
 		},
+		"plus": {
+			Signature: Signature{
+				Parameters: []Parameter{
+					{
+						Name: "value",
+						Type: *AnyType,
+					},
+				},
+				ReturnType: *StringType,
+			},
+			Body: NewAbstractCommand(func(ctx *Context) *Value {
+				parameter := ctx.FindParameter("value")
+				thisStr := util.Stringify(ctx.receiver.Value)
+				otherStr := util.Stringify(parameter.Value)
+				return StringValue(thisStr + otherStr)
+			}),
+		},
 	})
 
 	intAdd := Function{
@@ -288,14 +305,14 @@ func Init() {
 	})
 }
 
-func convert(functions map[string]Function) VariableMap {
+func convert(functions map[string]Function) *VariableMap {
 	m := NewVariableMap()
 	for name, function := range functions {
-		t := FunctionType(function)
+		t := FunctionType(&function)
 		if function.name == nil {
 			function.name = &name
 		}
-		m.Set(name, Variable{
+		m.Set(name, &Variable{
 			Name:    name,
 			Mutable: false,
 			Type:    *t,
@@ -305,7 +322,7 @@ func convert(functions map[string]Function) VariableMap {
 			},
 		})
 	}
-	return *m
+	return m
 }
 
 func intAdd(ctx *Context) *Value {

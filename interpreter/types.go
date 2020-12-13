@@ -9,7 +9,7 @@ import (
 
 type Type struct {
 	Name      string
-	variables VariableMap
+	variables *VariableMap
 }
 
 func (t *Type) Accepts(other Type) bool {
@@ -19,7 +19,10 @@ func (t *Type) Accepts(other Type) bool {
 	for i := range t.variables.m {
 		fun1 := t.variables.m[i]
 		fun2 := other.variables.m[i]
-		if !fun1.Equals(fun2) {
+		if fun1 == fun2 {
+			continue
+		}
+		if !fun1.Equals(*fun2) {
 			return false
 		}
 	}
@@ -29,13 +32,13 @@ func (t *Type) Accepts(other Type) bool {
 func EmptyType(name string) *Type {
 	return &Type{
 		Name:      name,
-		variables: *NewVariableMap(),
+		variables: NewVariableMap(),
 	}
 }
 func SimpleType(name string, functions VariableMap) *Type {
 	return &Type{
 		Name:      name,
-		variables: functions,
+		variables: &functions,
 	}
 }
 
@@ -57,7 +60,7 @@ func CompoundType(a Type, b Type) *Type {
 
 	return &Type{
 		Name:      fmt.Sprintf("%sAnd%s", a.Name, b.Name),
-		variables: *functionCompound,
+		variables: functionCompound,
 	}
 }
 
@@ -65,8 +68,8 @@ func UnionType(a Type, b Type) *Type {
 	panic("TODO")
 }
 
-func FunctionType(function Function) *Type {
-	//Build the function name based on signature
+func FunctionType(function *Function) *Type {
+	//Build the type name based on signature
 	var parameters string
 	if len(function.Signature.Parameters) == 0 {
 		parameters = "()"
@@ -84,15 +87,17 @@ func FunctionType(function Function) *Type {
 		Name: functionName,
 	}
 
-	t.variables = *VariableMapOf(map[string]Variable{functionName: {
-		Name:    functionName,
+	t.variables = NewVariableMap()
+	t.variables.Set(functionName, &Variable{
+		Name:    "value",
 		Mutable: false,
 		Type:    *t,
 		Value: &Value{
 			Type:  t,
 			Value: function,
 		},
-	}})
+	})
+
 	return t
 }
 
@@ -118,26 +123,18 @@ func FromASTType(ast parser.Type, ctx *Context) *Type {
 }
 
 type VariableMap struct {
-	m    map[string]Variable
+	m    map[string]*Variable
 	keys []string
 }
 
 func NewVariableMap() *VariableMap {
 	return &VariableMap{
-		m:    map[string]Variable{},
+		m:    map[string]*Variable{},
 		keys: []string{},
 	}
 }
 
-func VariableMapOf(m map[string]Variable) *VariableMap {
-	variables := NewVariableMap()
-	for s, variable := range m {
-		variables.Set(s, variable)
-	}
-	return variables
-}
-
-func (n *VariableMap) Set(k string, v Variable) {
+func (n *VariableMap) Set(k string, v *Variable) {
 	n.m[k] = v
 	n.keys = append(n.keys, k)
 }
