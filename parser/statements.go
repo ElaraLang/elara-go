@@ -71,7 +71,6 @@ func (p *Parser) declaration() (stmt Stmt) {
 	if p.check(lexer.Let) {
 		return p.varDefStatement()
 	}
-
 	return p.statement()
 }
 
@@ -107,24 +106,19 @@ func (p *Parser) varDefStatement() Stmt {
 	restricted := properties[2]
 
 	id := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
-
 	var typ Type
 	if p.match(lexer.Colon) {
 		typ = p.typeContract()
 	}
 
-	if p.check(lexer.Arrow) {
-		//Functions (eg let a => print "hello")
-		return VarDefStmt{
-			Mutable:    mut,
-			Lazy:       lazy,
-			Restricted: restricted,
-			Identifier: string(id.Text),
-			Type:       typ,
-			Value:      p.funDef(),
-		}
+	switch p.peek().TokenType {
+	case lexer.LParen:
+		p.insertBlankType(p.current, lexer.Equal)
+		break
+	case lexer.Arrow:
+		p.insertBlankType(p.current, lexer.Equal, lexer.LParen, lexer.RParen)
+		break
 	}
-
 	p.consume(lexer.Equal, "Expected Equal on variable declaration")
 	expr := p.expression()
 
