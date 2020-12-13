@@ -72,6 +72,10 @@ type AccessExpr struct {
 	Index Expr
 }
 
+type CollectionExpr struct {
+	Elements []Expr
+}
+
 type StringLiteralExpr struct {
 	Value string
 }
@@ -90,6 +94,7 @@ type BooleanLiteralExpr struct {
 
 func (FuncDefExpr) exprNode()        {}
 func (AccessExpr) exprNode()         {}
+func (CollectionExpr) exprNode()     {}
 func (StringLiteralExpr) exprNode()  {}
 func (IntegerLiteralExpr) exprNode() {}
 func (FloatLiteralExpr) exprNode()   {}
@@ -236,7 +241,9 @@ func (p *Parser) access() (expr Expr) {
 			Expr:  expr,
 			Index: index,
 		}
+		p.consume(lexer.RSquare, "Expected ']' after access index")
 	}
+
 	return
 }
 
@@ -285,11 +292,12 @@ func (p *Parser) unary() (expr Expr) {
 }
 
 func (p *Parser) invoke() (expr Expr) {
-	if p.check(lexer.LParen) && p.isFuncDef() {
-		expr = p.funDef()
-	} else {
-		expr = p.primary()
-	}
+	expr = p.funDef()
+	/*	if p.check(lexer.LParen) && p.isFuncDef() {
+			expr = p.funDef()
+		} else {
+			expr = p.primary()
+		}*/
 
 	for p.match(lexer.LParen, lexer.Dot) {
 		switch p.previous().TokenType {
@@ -352,6 +360,25 @@ func (p *Parser) funDef() Expr {
 	default:
 		return p.primary()
 	}
+}
+
+func (p *Parser) collection() (expr Expr) {
+	if p.match(lexer.LSquare) {
+		col := make([]Expr, 0)
+		for {
+			col = append(col, p.expression())
+			p.cleanNewLines()
+			if !p.match(lexer.Comma) {
+				break
+			}
+		}
+		expr = CollectionExpr{
+			Elements: col,
+		}
+	} else {
+		expr = p.primary()
+	}
+	return
 }
 
 func (p *Parser) primary() (expr Expr) {
