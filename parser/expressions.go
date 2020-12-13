@@ -67,6 +67,11 @@ type FuncDefExpr struct {
 	Statement  Stmt
 }
 
+type AccessExpr struct {
+	Expr  Expr
+	Index Expr
+}
+
 type StringLiteralExpr struct {
 	Value string
 }
@@ -84,6 +89,7 @@ type BooleanLiteralExpr struct {
 }
 
 func (FuncDefExpr) exprNode()        {}
+func (AccessExpr) exprNode()         {}
 func (StringLiteralExpr) exprNode()  {}
 func (IntegerLiteralExpr) exprNode() {}
 func (FloatLiteralExpr) exprNode()   {}
@@ -217,6 +223,18 @@ func (p *Parser) comparison() (expr Expr) {
 			Lhs: expr,
 			Op:  op.TokenType,
 			Rhs: rhs,
+		}
+	}
+	return
+}
+
+func (p *Parser) access() (expr Expr) {
+	expr = p.addition()
+	for p.match(lexer.LSquare) {
+		index := p.expression()
+		expr = AccessExpr{
+			Expr:  expr,
+			Index: index,
 		}
 	}
 	return
