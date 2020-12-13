@@ -189,7 +189,7 @@ func (p *Parser) parseProperties(propTypes ...lexer.TokenType) []bool {
 		tokTyp := p.advance().TokenType
 		for i := 0; i < len(propTypes); i++ {
 			if propTypes[i] == tokTyp {
-				if result[i] == true {
+				if result[i] {
 					panic(ParseError{
 						token:   p.previous(),
 						message: "Multiple variable properties of same type defined",
