@@ -176,7 +176,7 @@ func (p *Parser) blockStatement() BlockStmt {
 		declaration := p.blockedDeclaration(&errors)
 		result = append(result, declaration)
 	}
-	p.consume(lexer.RBrace, "Expected } at beginning of block")
+	p.consume(lexer.RBrace, "Expected } at end of block")
 	if len(errors) > 0 {
 		panic(errors)
 	}

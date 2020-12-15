@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/ElaraLang/elara/lexer"
+import (
+	"github.com/ElaraLang/elara/lexer"
+)
 
 type FunctionArgument struct {
 	Lazy    bool
@@ -33,6 +35,10 @@ func (p *Parser) functionArguments() (args []FunctionArgument) {
 	for !p.match(lexer.RParen) {
 		arg := p.functionArgument()
 		args = append(args, arg)
+		p.cleanNewLines()
+		if !p.check(lexer.RParen) {
+			p.consume(lexer.Comma, "Expected comma to separate function arguments")
+		}
 	}
 	return
 }
