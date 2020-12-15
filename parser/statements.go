@@ -135,8 +135,7 @@ func (p *Parser) varDefStatement() Stmt {
 func (p *Parser) whileStatement() Stmt {
 	p.consume(lexer.While, "Expected while at beginning of while loop")
 	expr := p.expression()
-	p.consume(lexer.Arrow, "Expected arrow after condition for while loop")
-	body := p.statement()
+	body := p.blockStatement()
 	return WhileStmt{
 		Condition: expr,
 		Body:      body,
