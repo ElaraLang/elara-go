@@ -22,7 +22,9 @@ func Execute(fileName *string, code string, scriptMode bool) (results []*interpr
 
 	if len(errs) != 0 {
 		_, _ = os.Stderr.WriteString("Parse Errors: \n")
-		_, _ = os.Stderr.WriteString(fmt.Sprintf("%q\n", errs))
+		for _, err := range errs {
+			_, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err))
+		}
 		return []*interpreter.Value{}, lexTime, parseTime, time.Duration(-1)
 	}
 
