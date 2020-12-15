@@ -1,6 +1,9 @@
-namespace examples/main
+namespace test/lol
 import elara/std
 
-while (t) {
-    print("fefef")
+let mut count = 0
+
+while count != 3 {
+    print("Pass " + count)
+    count = count + 1
 }

@@ -9,7 +9,7 @@ func Lex(file *string, code string) *[]Token {
 	if estimateLength > 10 {
 		estimateLength /= 2
 	}
-	tokens := make([]Token, estimateLength)
+	tokens := make([]Token, estimateLength) //pre-sizing our slice avoids having to copy to append a lot
 	i := 0
 
 	for {

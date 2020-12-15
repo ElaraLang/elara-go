@@ -63,8 +63,7 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 	}
 
 	if IsWhitespace(ch) {
-		s.col++ //consumeWhitespace will add any *further* whitespace counters
-		s.col += s.consumeWhitespace()
+		s.consumeWhitespace()
 		return s.Read()
 	}
 
@@ -161,18 +160,23 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 
 //Consume all whitespace until we reach an eof or a non-whitespace character
 func (s *TokenReader) consumeWhitespace() int {
-	count := 0
+	count := 1 //We know this function will be called when the lexer has already encountered at least 1 whitespace
 	for {
 		ch := s.read()
 		if ch == eof {
 			break
 		}
-		if !IsWhitespace(ch) {
+		if ch == '\n' {
+			s.line++
+			s.col = 0
+		} else if ch == '\t' || ch == ' ' {
+			count++
+		} else {
 			s.unread()
 			break
 		}
-		count++
 	}
+	s.col += count
 	return count
 }
 

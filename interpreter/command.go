@@ -423,6 +423,26 @@ func (c *TypeCheckCommand) Exec(ctx *Context) *Value {
 	return BooleanValue(is)
 }
 
+type WhileCommand struct {
+	condition Command
+	body      Command
+}
+
+func (c *WhileCommand) Exec(ctx *Context) *Value {
+	for {
+		val := c.condition.Exec(ctx)
+		condition, ok := val.Value.(bool)
+		if !ok {
+			panic("If statements requires boolean condition")
+		}
+		if !condition {
+			break
+		}
+		c.body.Exec(ctx)
+	}
+	return nil
+}
+
 func ToCommand(statement parser.Stmt) Command {
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
@@ -491,6 +511,12 @@ func ToCommand(statement parser.Stmt) Command {
 			Type:       t.Identifier,
 			statements: commands,
 		}
+
+	case parser.WhileStmt:
+		return &WhileCommand{
+			condition: ExpressionToCommand(t.Condition),
+			body:      ToCommand(t.Body),
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
@@ -512,7 +538,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 		for _, arg := range t.Args {
 			command := ExpressionToCommand(arg)
 			if command == nil {
-				panic("Could not convert expression " + reflect.TypeOf(arg).Name() + " to command")
+				panic("Could not convert expression " + reflect.TypeOf(arg).Name() + " to condition")
 			}
 			args = append(args, command)
 		}
@@ -584,6 +610,20 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			return &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "equals"},
 				args: []Command{rhsCmd},
 			}
+		case lexer.NotEquals:
+			return NewAbstractCommand(func(ctx *Context) *Value {
+				command := &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "equals"},
+					args: []Command{rhsCmd},
+				}
+
+				val := command.Exec(ctx)
+
+				asBool, ok := (*val).Value.(bool)
+				if !ok {
+					panic("equals function did not return bool")
+				}
+				return BooleanValue(!asBool)
+			})
 		}
 	case parser.FuncDefExpr:
 		return &FunctionLiteralCommand{
