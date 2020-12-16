@@ -66,10 +66,12 @@ func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 
 	if p.peek().TokenType == lexer.Identifier {
 		return ElementaryTypeContract{Identifier: string(p.advance().Text)}
-	} else if p.match(lexer.LParen) {
+	} else if p.check(lexer.LParen) {
 		isFunc := p.isFuncDef()
 		if isFunc {
 			args := make([]Type, 0)
+			p.consume(lexer.LParen, "Function type args not started properly with '('")
+
 			for !p.check(lexer.RParen) {
 				argTyp := p.typeContract()
 				args = append(args, argTyp)
@@ -88,7 +90,7 @@ func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 		} else {
 			contract = p.contractualOr(allowDef)
 
-			p.consume(lexer.RBrace, "contract group not closed. Expected '}'")
+			p.consume(lexer.LParen, "contract group not closed. Expected '}'")
 			return
 		}
 	}

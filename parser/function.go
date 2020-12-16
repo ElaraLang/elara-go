@@ -45,22 +45,16 @@ func (p *Parser) functionArguments() (args []FunctionArgument) {
 
 func (p *Parser) functionArgument() FunctionArgument {
 	lazy := p.parseProperties(lexer.Lazy)[0]
-	i1 := p.consume(lexer.Identifier, "Invalid argument in function def")
-	if p.match(lexer.Equal) {
-		return FunctionArgument{
-			Lazy:    lazy,
-			Type:    nil,
-			Name:    string(i1.Text),
-			Default: p.expression(),
-		}
+	checkIndex := p.current + 1
+	var typ Type
+	if len(p.tokens) > checkIndex && p.tokens[checkIndex].TokenType != lexer.Equal {
+		typ = p.typeContractDefinable()
 	}
 	id := p.consume(lexer.Identifier, "Invalid argument in function def")
 	var def Expr
 	if p.match(lexer.Equal) {
-
 		def = p.expression()
 	}
-	typ := ElementaryTypeContract{Identifier: string(i1.Text)}
 	return FunctionArgument{
 		Lazy:    lazy,
 		Type:    typ,
