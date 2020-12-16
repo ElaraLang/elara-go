@@ -117,6 +117,16 @@ func FromASTType(ast parser.Type, ctx *Context) *Type {
 			return &defined
 		}
 		panic("No such type " + identifier)
+
+	case parser.InvocableTypeContract:
+		params := make([]string, len(t.Args))
+		for i, r := range t.Args {
+			params[i] = FromASTType(r, ctx).Name
+		}
+		functionName := strings.Join(params, ", ") + " => " + FromASTType(t.ReturnType, ctx).Name
+		return &Type{
+			Name: functionName,
+		} //We really need a better way of doing this
 	}
 
 	panic("Could not handle " + reflect.TypeOf(ast).Name())

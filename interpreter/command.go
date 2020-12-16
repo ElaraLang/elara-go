@@ -683,6 +683,8 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			expression: ExpressionToCommand(t.Expr),
 			checkType:  t.Type,
 		}
+	case parser.GroupExpr:
+		return ExpressionToCommand(t.Group)
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

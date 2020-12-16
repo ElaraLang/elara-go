@@ -1,4 +1,12 @@
 namespace test/lol
 import elara/std
 
-"Hello".toString()
+let loop(Int times, () => Unit fun) => {
+    let mut count = 0
+    while count != times {
+        fun()
+        count = count + 1
+    }
+}
+
+loop(5, () => print("Hi"))
