@@ -1,0 +1,16 @@
+namespace test/lol
+import elara/std
+
+extend String {
+   let x = 3
+}
+
+let plus(String s, Any b) => {
+    s.plus(b.toString())
+}
+
+let blah (String s, Int b) => {
+    s + b
+}
+
+print("hello".blah(3))

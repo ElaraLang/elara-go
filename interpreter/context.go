@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"sort"
 )
 
 type Context struct {
@@ -38,6 +39,9 @@ func (c *Context) Init(namespace string) {
 	}
 	c.namespace = namespace
 	globalContext.contextPath[c.namespace] = append(globalContext.contextPath[c.namespace], c)
+	for _, t := range types {
+		c.types[t.Name] = *t
+	}
 }
 
 func NewContext() *Context {
@@ -88,6 +92,8 @@ func NewContext() *Context {
 			Value: inputFunction,
 		},
 	})
+
+	Init(c)
 	return c
 }
 
@@ -256,4 +262,50 @@ func (c *Context) string() string {
 	}
 
 	return s
+}
+
+func (c *Context) FindFunction(name string, signature Signature) *Function {
+	vars := c.variables[name]
+	functions := make([]Function, 0)
+	distances := make([]int, 0)
+
+	for _, v := range vars {
+		fun, ok := v.Value.Value.(Function)
+		if ok {
+			if !fun.Signature.Accepts(signature) {
+				continue
+			}
+			functions = append(functions, fun)
+
+			distance := signature.Distance(fun.Signature)
+			distances = append(distances, distance)
+		}
+	}
+
+	sort.Slice(functions, func(i, j int) bool {
+		return distances[i] > distances[j]
+	})
+
+	if len(functions) >= 1 {
+		return &functions[0]
+	}
+
+	for i := range c.scopes {
+		fun := c.scopes[i].context.FindFunction(name, signature)
+		if fun != nil {
+			return fun
+		}
+	}
+	for i := range c.contextPath {
+		contexts := c.contextPath[i]
+		for j := range contexts {
+			ctx := contexts[j]
+			fun := ctx.FindFunction(name, signature)
+			if fun != nil {
+				return fun
+			}
+		}
+	}
+
+	return nil
 }

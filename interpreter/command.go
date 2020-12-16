@@ -6,7 +6,7 @@ import (
 	"github.com/ElaraLang/elara/util"
 	_ "github.com/ElaraLang/elara/util"
 	"reflect"
-	"strings"
+	"strconv"
 )
 
 type Command interface {
@@ -28,9 +28,10 @@ func (c *DefineVarCommand) getType(ctx *Context) *Type {
 	return c.runtimeType
 }
 func (c *DefineVarCommand) Exec(ctx *Context) *Value {
-	if ctx.FindVariableMaxDepth(c.Name, 1) != nil {
-		panic("Variable named " + c.Name + " already exists")
-	}
+	//existing := ctx.FindVariableMaxDepth(c.Name, 1)
+	//if  existing!= nil {
+	//	panic("Variable named " + c.Name + " already exists")
+	//} //TODO we're not gonna worry about this for now because functions, but we'll need to consider duplicates with the same signature
 	value := c.value.Exec(ctx)
 
 	if value == nil {
@@ -118,7 +119,7 @@ type InvocationCommand struct {
 }
 
 func (c *InvocationCommand) Exec(ctx *Context) *Value {
-	context, usingReceiver := c.Invoking.(*ContextCommand)
+	contextCommand, usingReceiver := c.Invoking.(*ContextCommand)
 
 	if !usingReceiver {
 		val := c.Invoking.Exec(ctx)
@@ -131,31 +132,33 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 		for i, arg := range c.args {
 			argValues[i] = arg.Exec(ctx)
 		}
-		return fun.Exec(ctx, nil, argValues)
+		return fun.Exec(ctx, argValues)
 	}
 
 	//ContextCommand seems to think it's a special case... because it is.
-	receiver := context.receiver.Exec(ctx)
-	value, ok := receiver.Type.variables.m[context.variable]
-	if !ok {
-
-		argTypes := make([]string, len(c.args))
-		for i, arg := range c.args {
-			argTypes[i] = arg.Exec(ctx).Type.Name
-		}
-		panic("No such function " + receiver.Type.Name + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
+	receiver := contextCommand.receiver.Exec(ctx)
+	params := make([]Parameter, 1+len(c.args))
+	params[0] = Parameter{
+		Name: "<receiver>",
+		Type: *receiver.Type,
 	}
-	function, ok := value.Value.Value.(Function)
-	if !ok {
-		panic("Cannot invoke non-function " + value.string())
-	}
-	exec := context.receiver.Exec(ctx)
-
-	argValues := make([]*Value, len(c.args))
+	paramValues := make([]*Value, 1+len(c.args))
+	paramValues[0] = receiver
 	for i, arg := range c.args {
-		argValues[i] = arg.Exec(ctx)
+		paramValues[i+1] = arg.Exec(ctx)
+		params[i+1] = Parameter{
+			Name: strconv.Itoa(i + 1),
+			Type: *paramValues[i+1].Type,
+		}
 	}
-	return function.Exec(ctx, exec, argValues)
+	function := ctx.FindFunction(contextCommand.variable, Signature{
+		Parameters: params,
+		ReturnType: *AnyType,
+	})
+	if function == nil {
+		panic("Could not find function " + contextCommand.variable)
+	}
+	return function.Exec(ctx, paramValues)
 
 }
 

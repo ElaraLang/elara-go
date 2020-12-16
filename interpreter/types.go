@@ -35,6 +35,7 @@ func EmptyType(name string) *Type {
 		variables: NewVariableMap(),
 	}
 }
+
 func SimpleType(name string, functions VariableMap) *Type {
 	return &Type{
 		Name:      name,

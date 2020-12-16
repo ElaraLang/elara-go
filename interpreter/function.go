@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"math"
 )
 
 type Function struct {
@@ -18,7 +19,7 @@ func (f *Function) String() string {
 	return fmt.Sprintf("%s %s => %s", name, f.Signature.Parameters, f.Signature.ReturnType)
 }
 
-func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val *Value) {
+func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	if len(parameters) != len(f.Signature.Parameters) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
 	}
@@ -34,8 +35,6 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 
 		ctx.DefineParameter(expectedParameter.Name, paramValue)
 	}
-
-	ctx.receiver = receiver
 
 	defer func() {
 		ctx.ExitScope()
@@ -64,6 +63,44 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 type Signature struct {
 	Parameters []Parameter
 	ReturnType Type
+}
+
+func (sig *Signature) Accepts(other Signature) bool {
+	if len(sig.Parameters) != len(other.Parameters) {
+		return false
+	}
+	for i, param := range sig.Parameters {
+		if !param.Type.Accepts(other.Parameters[i].Type) {
+			return false
+		}
+	}
+	return sig.ReturnType.Accepts(other.ReturnType)
+}
+
+/**
+Get the distance of a given signature to another one
+This is similar to the Levenshtein Distance algorithm in that 0 means the signatures are the same,
+and any additional value is the number of adjustments that must be made to *types only* to reach the other signature
+*/
+func (sig *Signature) Distance(other Signature) int {
+	if sig == &other {
+		return 0
+	}
+	changes := 0
+	changes += int(math.Abs(float64(len(sig.Parameters) - len(other.Parameters)))) //distance between the param types themself
+
+	if len(sig.Parameters) == len(other.Parameters) {
+		for i, parameter := range sig.Parameters {
+			if !parameter.Type.Accepts(other.Parameters[i].Type) {
+				changes++
+			}
+		}
+	}
+
+	if !sig.ReturnType.Accepts(other.ReturnType) {
+		changes++
+	}
+	return changes
 }
 
 type Parameter struct {
