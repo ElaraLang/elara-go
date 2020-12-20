@@ -329,6 +329,9 @@ type ReturnCommand struct {
 }
 
 func (c *ReturnCommand) Exec(ctx *Context) *Value {
+	if c.returning == nil {
+		panic(UnitValue())
+	}
 	panic(c.returning.Exec(ctx))
 }
 
@@ -484,8 +487,13 @@ func ToCommand(statement parser.Stmt) Command {
 		}
 
 	case parser.ReturnStmt:
+		if t.Returning != nil {
+			return &ReturnCommand{
+				ExpressionToCommand(t.Returning),
+			}
+		}
 		return &ReturnCommand{
-			ExpressionToCommand(t.Returning),
+			nil,
 		}
 	case parser.NamespaceStmt:
 		return &NamespaceCommand{

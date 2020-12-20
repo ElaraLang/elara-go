@@ -278,11 +278,12 @@ func (p *Parser) unary() (expr Expr) {
 }
 
 func (p *Parser) invoke() (expr Expr) {
-	if p.check(lexer.LParen) && p.isFuncDef() {
-		expr = p.funDef()
-	} else {
-		expr = p.collection()
-	}
+	expr = p.funDef()
+	/*	if p.check(lexer.LParen) && p.isFuncDef() {
+			expr = p.funDef()
+		} else {
+			expr = p.primary()
+		}*/
 
 	for p.match(lexer.LParen, lexer.Dot, lexer.LSquare) {
 		switch p.previous().TokenType {
