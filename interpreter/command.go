@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"context"
 	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
 	"github.com/ElaraLang/elara/util"
@@ -693,6 +694,10 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 		}
 	case parser.GroupExpr:
 		return ExpressionToCommand(t.Group)
+
+	case parser.CollectionExpr:
+		//t.Elements
+		context.TODO()
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

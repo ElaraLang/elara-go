@@ -35,6 +35,7 @@ func EmptyType(name string) *Type {
 		variables: NewVariableMap(),
 	}
 }
+
 func SimpleType(name string, functions VariableMap) *Type {
 	return &Type{
 		Name:      name,
@@ -101,6 +102,13 @@ func FunctionType(function *Function) *Type {
 	return t
 }
 
+func CollectionType(elem *Type) *Type {
+	return &Type{
+		Name:      elem.Name + "[]",
+		variables: NewVariableMap(),
+	}
+}
+
 func FromASTType(ast parser.Type, ctx *Context) *Type {
 	if ast == nil {
 		return AnyType
@@ -128,6 +136,7 @@ func FromASTType(ast parser.Type, ctx *Context) *Type {
 			Name:      functionName,
 			variables: NewVariableMap(),
 		} //We really need a better way of doing this
+		//case parser.
 	}
 
 	panic("Could not handle " + reflect.TypeOf(ast).Name())
