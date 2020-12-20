@@ -205,7 +205,10 @@ func (p *Parser) structStatement() Stmt {
 
 func (p *Parser) returnStatement() Stmt {
 	p.consume(lexer.Return, "Expected return")
-	expr := p.expression()
+	var expr Expr
+	if p.peek().TokenType != lexer.NEWLINE {
+		expr = p.expression()
+	}
 	return ReturnStmt{Returning: expr}
 }
 
