@@ -145,8 +145,8 @@ func (p *Parser) whileStatement() Stmt {
 func (p *Parser) ifStatement() (stmt Stmt) {
 	p.consume(lexer.If, "Expected if at beginning of if statement")
 	condition := p.logicalOr()
-	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
-	mainBranch := p.statement()
+	p.cleanNewLines()
+	mainBranch := p.blockStatement()
 	p.cleanNewLines()
 
 	var elseBranch Stmt
@@ -154,8 +154,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 		if p.check(lexer.If) {
 			elseBranch = p.ifStatement()
 		} else {
-			p.consume(lexer.Arrow, "Expected arrow after condition for else statement")
-			elseBranch = p.statement()
+			elseBranch = p.blockStatement()
 		}
 	}
 	stmt = IfElseStmt{
