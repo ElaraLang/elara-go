@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://github.com/ElaraLang/Elara/blob/master/4.jpg?raw=true">
+  <img src="https://github.com/ElaraLang/Elara-Old/blob/master/4.jpg?raw=true">
 </p>
 
 # Elara

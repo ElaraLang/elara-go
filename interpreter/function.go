@@ -23,7 +23,7 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
 	}
 
-	ctx.EnterScope(f.String())
+	scope := ctx.EnterScope(f.String())
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
@@ -32,13 +32,12 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name, expectedParameter.Name, *paramValue.String()))
 		}
 
-		ctx.DefineParameter(expectedParameter.Name, paramValue)
+		scope.DefineParameter(expectedParameter.Name, paramValue)
 	}
 
-	ctx.receiver = receiver
+	scope.receiver = receiver
 
 	defer func() {
-		ctx.ExitScope()
 		s := recover()
 		if s != nil {
 			_, is := s.(*Value)
@@ -50,7 +49,10 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 		}
 	}()
 
-	value := f.Body.Exec(ctx)
+	value := f.Body.Exec(scope)
+	if value == nil {
+		value = UnitValue()
+	}
 	if !f.Signature.ReturnType.Accepts(*value.Type) {
 		name := "<anonymous>"
 		if f.name != nil {

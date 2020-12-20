@@ -125,7 +125,8 @@ func FromASTType(ast parser.Type, ctx *Context) *Type {
 		}
 		functionName := strings.Join(params, ", ") + " => " + FromASTType(t.ReturnType, ctx).Name
 		return &Type{
-			Name: functionName,
+			Name:      functionName,
+			variables: NewVariableMap(),
 		} //We really need a better way of doing this
 	}
 

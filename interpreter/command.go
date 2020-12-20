@@ -97,19 +97,19 @@ func (c *VariableCommand) Exec(ctx *Context) *Value {
 		}
 	}
 
-	variable := ctx.FindVariable(c.Variable)
-	if variable == nil {
-		param := ctx.FindParameter(c.Variable)
-		if param == nil {
+	param := ctx.FindParameter(c.Variable)
+	if param == nil {
+		variable := ctx.FindVariable(c.Variable)
+		if variable == nil {
 			constructor := ctx.FindConstructor(c.Variable)
 			if constructor == nil {
 				panic("No such variable or parameter or constructor " + c.Variable)
 			}
 			return constructor
 		}
-		return param
+		return variable.Value
 	}
-	return variable.Value
+	return param
 }
 
 type InvocationCommand struct {
