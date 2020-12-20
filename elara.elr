@@ -14,3 +14,5 @@ let loop(Int times, (Int) => Unit fun) => {
 }
 
 loop(5, (Int i) => { print("Hi " + i) })
+
+let list = [1, 2, 3]

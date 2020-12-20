@@ -233,6 +233,20 @@ func (p *Parser) comparison() (expr Expr) {
 	return
 }
 
+func (p *Parser) access() (expr Expr) {
+	expr = p.addition()
+	for p.match(lexer.LSquare) {
+		index := p.expression()
+		expr = AccessExpr{
+			Expr:  expr,
+			Index: index,
+		}
+		p.consume(lexer.RSquare, "Expected ']' after access index")
+	}
+
+	return
+}
+
 func (p *Parser) addition() (expr Expr) {
 	expr = p.multiplication()
 
@@ -278,22 +292,14 @@ func (p *Parser) unary() (expr Expr) {
 }
 
 func (p *Parser) invoke() (expr Expr) {
-	expr = p.invokeProvided(nil)
-	return
-}
-
-func (p *Parser) invokeProvided(provided Expr) (expr Expr) {
-	if provided == nil {
-		if p.check(lexer.LParen) && p.isFuncDef() {
+	expr = p.funDef()
+	/*	if p.check(lexer.LParen) && p.isFuncDef() {
 			expr = p.funDef()
 		} else {
 			expr = p.primary()
-		}
-	} else {
-		expr = provided
-	}
+		}*/
 
-	for p.match(lexer.LParen, lexer.Dot, lexer.LSquare) {
+	for p.match(lexer.LParen, lexer.Dot) {
 		switch p.previous().TokenType {
 		case lexer.LParen:
 			separator := lexer.Comma
@@ -303,6 +309,7 @@ func (p *Parser) invokeProvided(provided Expr) (expr Expr) {
 				Invoker: expr,
 				Args:    args,
 			}
+			break
 		case lexer.Dot:
 			id := p.consumeValidIdentifier("Expected identifier inside context getter/setter")
 
@@ -310,12 +317,7 @@ func (p *Parser) invokeProvided(provided Expr) (expr Expr) {
 				Context:  expr,
 				Variable: VariableExpr{Identifier: string(id.Text)},
 			}
-		case lexer.LSquare:
-			expr = AccessExpr{
-				Expr:  expr,
-				Index: p.expression(),
-			}
-			p.consume(lexer.RSquare, "Expected ']' after access index")
+			break
 		}
 	}
 	return
@@ -356,7 +358,7 @@ func (p *Parser) funDef() Expr {
 			Statement:  p.exprStatement(),
 		}
 	default:
-		return p.collection()
+		return p.primary()
 	}
 }
 
