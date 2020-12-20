@@ -278,19 +278,10 @@ func (p *Parser) unary() (expr Expr) {
 }
 
 func (p *Parser) invoke() (expr Expr) {
-	expr = p.invokeProvided(nil)
-	return
-}
-
-func (p *Parser) invokeProvided(provided Expr) (expr Expr) {
-	if provided == nil {
-		if p.check(lexer.LParen) && p.isFuncDef() {
-			expr = p.funDef()
-		} else {
-			expr = p.primary()
-		}
+	if p.check(lexer.LParen) && p.isFuncDef() {
+		expr = p.funDef()
 	} else {
-		expr = provided
+		expr = p.collection()
 	}
 
 	for p.match(lexer.LParen, lexer.Dot, lexer.LSquare) {
@@ -370,6 +361,7 @@ func (p *Parser) collection() (expr Expr) {
 				break
 			}
 		}
+		p.consume(lexer.RSquare, "Expected ']' at end of collection literal")
 		expr = CollectionExpr{
 			Elements: col,
 		}

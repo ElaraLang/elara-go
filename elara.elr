@@ -1,16 +1,4 @@
 namespace test/lol
 import elara/std
 
-let recursiveLoop(Int current, Int total, () => Unit fun) => {
-    if current == total {
-           return
-    }
-    fun()
-    recursiveLoop(current + 1, total, fun)
-}
-
-let loop(Int times, () => Unit fun) => {
-    recursiveLoop(0, times, fun)
-}
-
-loop(5, () => { print("Hi") })
+let a = [1,2,3,4]
