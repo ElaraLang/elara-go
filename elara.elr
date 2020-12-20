@@ -1,12 +1,16 @@
 namespace test/lol
 import elara/std
 
-let loop(Int times, () => Unit fun) => {
-    let mut count = 0
-    while count != times {
-        fun()
-        count = count + 1
+let recursiveLoop(Int current, Int total, () => Unit fun) => {
+    if current == total {
+           return
     }
+    fun()
+    recursiveLoop(current + 1, total, fun)
 }
 
-loop(5, () => print("Hi"))
+let loop(Int times, () => Unit fun) => {
+    recursiveLoop(0, times, fun)
+}
+
+loop(5, () => { print("Hi") })
