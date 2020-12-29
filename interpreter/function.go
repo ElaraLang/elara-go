@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Function struct {
@@ -15,7 +16,7 @@ func (f *Function) String() string {
 	if f.name != nil {
 		name = *f.name
 	}
-	return fmt.Sprintf("%s %s => %s", name, f.Signature.Parameters, f.Signature.ReturnType)
+	return name + f.Signature.String()
 }
 
 func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val *Value) {
@@ -28,8 +29,8 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
 
-		if !expectedParameter.Type.Accepts(*paramValue.Type) {
-			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name, expectedParameter.Name, *paramValue.String()))
+		if !expectedParameter.Type.Accepts(paramValue.Type) {
+			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, *paramValue.String()))
 		}
 
 		scope.DefineParameter(expectedParameter.Name, paramValue)
@@ -53,7 +54,7 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 	if value == nil {
 		value = UnitValue()
 	}
-	if !f.Signature.ReturnType.Accepts(*value.Type) {
+	if !f.Signature.ReturnType.Accepts(value.Type) {
 		name := "<anonymous>"
 		if f.name != nil {
 			name = *f.name
@@ -66,6 +67,14 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 type Signature struct {
 	Parameters []Parameter
 	ReturnType Type
+}
+
+func (s *Signature) String() string {
+	paramNames := make([]string, len(s.Parameters))
+	for i := range s.Parameters {
+		paramNames[i] = s.Parameters[i].Type.Name()
+	}
+	return fmt.Sprintf("(%s) => %s", strings.Join(paramNames, ", "), s.ReturnType.Name())
 }
 
 type Parameter struct {

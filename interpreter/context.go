@@ -10,6 +10,7 @@ type Context struct {
 	receiver   *Value
 	namespace  string
 	name       string //The optional name of the context - may be empty
+
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
 
@@ -73,12 +74,12 @@ func NewContext() *Context {
 		}),
 	}
 
-	inputContract := FunctionType(&inputFunction)
+	inputContract := NewFunctionType(&inputFunction)
 
 	c.DefineVariable(inputFunctionName, Variable{
 		Name:    inputFunctionName,
 		Mutable: false,
-		Type:    *inputContract,
+		Type:    inputContract,
 		Value: &Value{
 			Type:  inputContract,
 			Value: inputFunction,
@@ -147,10 +148,10 @@ func (c *Context) FindParameter(name string) *Value {
 	return c.parent.FindParameter(name)
 }
 
-func (c *Context) FindType(name string) *Type {
+func (c *Context) FindType(name string) Type {
 	t, ok := c.types[name]
 	if ok {
-		return &t
+		return t
 	}
 	for _, contexts := range c.contextPath {
 		for _, context := range contexts {
@@ -177,10 +178,13 @@ func (c *Context) FindConstructor(name string) *Value {
 	if t == nil {
 		return nil
 	}
+	asStruct, isStruct := t.(*StructType)
+	if !isStruct {
+		panic("Cannot construct non struct type")
+	}
 	constructorParams := make([]Parameter, 0)
-	for _, key := range t.variables.keys {
-		v := t.variables.m[key]
-		if v.Value == nil {
+	for _, v := range asStruct.Properties {
+		if v.DefaultValue == nil {
 			constructorParams = append(constructorParams, Parameter{
 				Name: v.Name,
 				Type: v.Type,
@@ -191,7 +195,7 @@ func (c *Context) FindConstructor(name string) *Value {
 	constructor := Function{
 		Signature: Signature{
 			Parameters: constructorParams,
-			ReturnType: *t,
+			ReturnType: t,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			values := make(map[string]*Value, len(constructorParams))
@@ -211,7 +215,7 @@ func (c *Context) FindConstructor(name string) *Value {
 	}
 
 	return &Value{
-		Type:  FunctionType(&constructor),
+		Type:  NewFunctionType(&constructor),
 		Value: constructor,
 	}
 }
