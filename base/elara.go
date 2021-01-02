@@ -15,7 +15,6 @@ import (
 
 func ExecuteFull(fileName string, scriptMode bool) {
 	loadStdLib()
-
 	_, input := loadFile(fileName)
 	start := time.Now()
 	_, lexTime, parseTime, execTime := Execute(&fileName, string(input), scriptMode)

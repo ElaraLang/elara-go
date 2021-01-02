@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/util"
 )
 
 type Interpreter struct {
@@ -17,9 +18,7 @@ func NewInterpreter(code []parser.Stmt) *Interpreter {
 	}
 }
 func NewEmptyInterpreter() *Interpreter {
-	return &Interpreter{
-		context: NewContext(),
-	}
+	return NewInterpreter([]parser.Stmt{})
 }
 
 func (s *Interpreter) ResetLines(lines *[]parser.Stmt) {
@@ -41,7 +40,7 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 				if isValue {
 					return
 				}
-				panic(r)
+				panic("Expression " + util.Stringify(line) + " panicked with" + util.Stringify(r))
 			}
 		}()
 		res := command.Exec(s.context)

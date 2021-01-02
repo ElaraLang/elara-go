@@ -1,5 +1,10 @@
 package interpreter
 
+import (
+	"github.com/ElaraLang/elara/parser"
+	"reflect"
+)
+
 type Type interface {
 	Name() string
 	//returns if *this* type accepts the other type
@@ -93,3 +98,35 @@ func (t *CollectionType) Accepts(other Type) bool {
 }
 
 //TODO mapType
+
+type EmptyType struct {
+	name string
+}
+
+func (t *EmptyType) Name() string {
+	return t.name
+}
+
+func (t *EmptyType) Accepts(other Type) bool {
+	if t == AnyType {
+		return true
+	}
+	return t == other
+}
+
+func NewEmptyType(name string) Type {
+	return &EmptyType{name: name}
+}
+
+func FromASTType(astType parser.Type, ctx *Context) Type {
+	switch t := astType.(type) {
+	case parser.ElementaryTypeContract:
+		found := ctx.FindType(t.Identifier)
+		if found != nil {
+			return found
+		}
+		return NewEmptyType(t.Identifier)
+	}
+	println("Cannot handle " + reflect.TypeOf(astType).Name())
+	return nil
+}

@@ -59,7 +59,7 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 		if f.name != nil {
 			name = *f.name
 		}
-		panic(fmt.Sprintf("Function '%s' did not return value of type %s, instead was %s", name, f.Signature.ReturnType.Name, value.Type.Name))
+		panic(fmt.Sprintf("Function '%s' did not return value of type %s, instead was %s", name, f.Signature.ReturnType.Name(), value.Type.Name()))
 	}
 	return value
 }

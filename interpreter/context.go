@@ -50,7 +50,7 @@ func NewContext() *Context {
 	c.DefineVariable("stdout", Variable{
 		Name:    "stdout",
 		Mutable: false,
-		Type:    *OutputType,
+		Type:    OutputType,
 		Value: &Value{
 			Type:  OutputType,
 			Value: nil,
@@ -61,7 +61,7 @@ func NewContext() *Context {
 		name: &inputFunctionName,
 		Signature: Signature{
 			Parameters: []Parameter{},
-			ReturnType: *StringType,
+			ReturnType: StringType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			var input string
@@ -85,6 +85,7 @@ func NewContext() *Context {
 			Value: inputFunction,
 		},
 	})
+	Init(c)
 	return c
 }
 

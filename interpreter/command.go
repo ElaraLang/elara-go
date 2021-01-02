@@ -17,14 +17,17 @@ type Command interface {
 type DefineVarCommand struct {
 	Name        string
 	Mutable     bool
-	Type        *parser.Type
+	Type        parser.Type
 	value       Command
-	runtimeType *Type
+	runtimeType Type
 }
 
-func (c *DefineVarCommand) getType(ctx *Context) *Type {
+func (c *DefineVarCommand) getType(ctx *Context) Type {
 	if c.runtimeType == nil {
-		c.runtimeType = FromASTType(*c.Type, ctx)
+		if c.Type == nil {
+			return nil
+		}
+		c.runtimeType = FromASTType(c.Type, ctx)
 	}
 	return c.runtimeType
 }
@@ -39,13 +42,17 @@ func (c *DefineVarCommand) Exec(ctx *Context) *Value {
 	}
 
 	variableType := c.getType(ctx)
-	if !variableType.Accepts(*value.Type) {
-		panic("Cannot use value of type " + value.Type.Name + " in place of " + variableType.Name + " for variable " + c.Name)
+	if variableType != nil {
+		if !variableType.Accepts(value.Type) {
+			panic("Cannot use value of type " + value.Type.Name() + " in place of " + variableType.Name() + " for variable " + c.Name)
+		}
+	} else {
+		variableType = value.Type
 	}
 	variable := Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
-		Type:    *variableType,
+		Type:    variableType,
 		Value:   value,
 	}
 
@@ -70,8 +77,8 @@ func (c *AssignmentCommand) Exec(ctx *Context) *Value {
 
 	value := c.value.Exec(ctx)
 
-	if !variable.Type.Accepts(*value.Type) {
-		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name + " to value " + *value.String() + " of type " + value.Type.Name)
+	if !variable.Type.Accepts(value.Type) {
+		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name() + " to value " + *value.String() + " of type " + value.Type.Name())
 	}
 
 	variable.Value = value
@@ -83,19 +90,20 @@ type VariableCommand struct {
 }
 
 func (c *VariableCommand) Exec(ctx *Context) *Value {
+	//panic("TODO VariableCommand")
 	if ctx.receiver != nil {
-		receiver := ctx.receiver
-		asInstance, isInstance := ctx.receiver.Value.(Instance)
-		if isInstance {
-			instanceVariable, exists := asInstance.Values[c.Variable]
-			if exists {
-				return instanceVariable
-			}
-		}
-		typeVariable, exists := receiver.Type.variables.m[c.Variable]
-		if exists {
-			return typeVariable.Value
-		}
+		//receiver := ctx.receiver
+		//asInstance, isInstance := ctx.receiver.Value.(Instance)
+		//if isInstance {
+		//	instanceVariable, exists := asInstance.Values[c.Variable]
+		//	if exists {
+		//		return instanceVariable
+		//	}
+		//}
+		//typeVariable, exists := receiver.Type.variables.m[c.Variable]
+		//if exists {
+		//	return typeVariable.Value
+		//}
 	}
 
 	param := ctx.FindParameter(c.Variable)
@@ -119,8 +127,9 @@ type InvocationCommand struct {
 }
 
 func (c *InvocationCommand) Exec(ctx *Context) *Value {
+	//panic("TODO InvocationCommand")
 	context, usingReceiver := c.Invoking.(*ContextCommand)
-
+	//
 	if !usingReceiver {
 		val := c.Invoking.Exec(ctx)
 		fun, ok := val.Value.(Function)
@@ -137,27 +146,31 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 
 	//ContextCommand seems to think it's a special case... because it is.
 	receiver := context.receiver.Exec(ctx)
-	value, ok := receiver.Type.variables.m[context.variable]
-	if !ok {
+	structType, isStruct := receiver.Type.(*StructType)
 
-		argTypes := make([]string, len(c.args))
-		for i, arg := range c.args {
-			argTypes[i] = arg.Exec(ctx).Type.Name
+	if isStruct {
+		value, ok := structType.Properties[context.variable]
+		if !ok {
+			argTypes := make([]string, len(c.args))
+			for i, arg := range c.args {
+				argTypes[i] = arg.Exec(ctx).Type.Name()
+			}
+			panic("No such function " + receiver.Type.Name() + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
 		}
-		panic("No such function " + receiver.Type.Name + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
-	}
-	function, ok := value.Value.Value.(Function)
-	if !ok {
-		panic("Cannot invoke non-function " + value.string())
-	}
-	exec := context.receiver.Exec(ctx)
+		function, ok := value.DefaultValue.Value.(Function)
+		if !ok {
+			panic("Cannot invoke non-function " + value.Name)
+		}
+		exec := context.receiver.Exec(ctx)
 
-	argValues := make([]*Value, len(c.args))
-	for i, arg := range c.args {
-		argValues[i] = arg.Exec(ctx)
+		argValues := make([]*Value, len(c.args))
+		for i, arg := range c.args {
+			argValues[i] = arg.Exec(ctx)
+		}
+		return function.Exec(ctx, exec, argValues)
 	}
-	return function.Exec(ctx, exec, argValues)
 
+	//TODO receivers
 }
 
 type AbstractCommand struct {
@@ -185,7 +198,7 @@ func (c *LiteralCommand) Exec(_ *Context) *Value {
 type FunctionLiteralCommand struct {
 	name       *string
 	parameters []parser.FunctionArgument
-	returnType parser.Type
+	returnType parser.Type //Can be nil - infer return type
 	body       Command
 }
 
@@ -195,23 +208,29 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 	for i, parameter := range c.parameters {
 		paramType := FromASTType(parameter.Type, ctx)
 		params[i] = Parameter{
-			Type: *paramType,
+			Type: paramType,
 			Name: parameter.Name,
 		}
 	}
 
-	returnType := FromASTType(c.returnType, ctx)
+	astReturnType := c.returnType
+	var returnType Type
+	if astReturnType == nil {
+		returnType = AnyType
+	} else {
+		returnType = FromASTType(c.returnType, ctx)
+	}
 
 	fun := Function{
 		name: c.name,
 		Signature: Signature{
 			Parameters: params,
-			ReturnType: *returnType,
+			ReturnType: returnType,
 		},
 		Body: c.body,
 	}
 
-	functionType := FunctionType(&fun)
+	functionType := NewFunctionType(&fun)
 
 	return &Value{
 		Type:  functionType,
@@ -250,25 +269,26 @@ type ContextCommand struct {
 }
 
 func (c *ContextCommand) Exec(ctx *Context) *Value {
-	receiver := c.receiver.Exec(ctx)
-	instance, isInstance := receiver.Value.(Instance)
-	if isInstance {
-		variable, ok := instance.Values[c.variable]
-		if !ok {
-			value, ok := receiver.Type.variables.m[c.variable]
-			if !ok {
-				panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
-			}
-			return value.Value
-		}
-		return variable
-	}
-	variable, ok := receiver.Type.variables.m[c.variable]
-	if !ok {
-		panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
-	}
-
-	return variable.Value
+	panic("TODO ContextCommand")
+	//receiver := c.receiver.Exec(ctx)
+	//instance, isInstance := receiver.Value.(Instance)
+	//if isInstance {
+	//	variable, ok := instance.Values[c.variable]
+	//	if !ok {
+	//		value, ok := receiver.Type.variables.m[c.variable]
+	//		if !ok {
+	//			panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
+	//		}
+	//		return value.Value
+	//	}
+	//	return variable
+	//}
+	//variable, ok := receiver.Type.variables.m[c.variable]
+	//if !ok {
+	//	panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
+	//}
+	//
+	//return variable.Value
 }
 
 type IfElseCommand struct {
@@ -362,27 +382,28 @@ type StructDefCommand struct {
 }
 
 func (c *StructDefCommand) Exec(ctx *Context) *Value {
-	variables := NewVariableMap()
-
-	for _, field := range c.fields {
-		var Type Type
-		if field.FieldType == nil {
-			Type = *AnyType
-		} else {
-			Type = *FromASTType(*field.FieldType, ctx)
-		}
-		variables.Set(field.Identifier, &Variable{
-			Name:    field.Identifier,
-			Mutable: field.Mutable,
-			Type:    Type,
-			Value:   nil,
-		})
-	}
-	ctx.types[c.name] = Type{
-		Name:      c.name,
-		variables: variables,
-	}
-	return nil
+	panic("TODO StructDefCommand")
+	//variables := NewVariableMap()
+	//
+	//for _, field := range c.fields {
+	//	var Type Type
+	//	if field.FieldType == nil {
+	//		Type = *AnyType
+	//	} else {
+	//		Type = *FromASTType(*field.FieldType, ctx)
+	//	}
+	//	variables.Set(field.Identifier, &Variable{
+	//		Name:    field.Identifier,
+	//		Mutable: field.Mutable,
+	//		Type:    Type,
+	//		Value:   nil,
+	//	})
+	//}
+	//ctx.types[c.name] = Type{
+	//	Name:      c.name,
+	//	variables: variables,
+	//}
+	//return nil
 }
 
 type ExtendCommand struct {
@@ -391,25 +412,27 @@ type ExtendCommand struct {
 }
 
 func (c *ExtendCommand) Exec(ctx *Context) *Value {
-	extending := ctx.FindType(c.Type)
-	if extending == nil {
-		panic("No such type " + c.Type)
-	}
-	for _, statement := range c.statements {
-		switch statement := statement.(type) {
-		case *DefineVarCommand:
-			defVar := statement
-			value := defVar.value.Exec(ctx)
-			variable := &Variable{
-				Name:    defVar.Name,
-				Mutable: defVar.Mutable,
-				Type:    *defVar.getType(ctx),
-				Value:   value,
-			}
-			extending.variables.Set(defVar.Name, variable)
-		}
-	}
-	return nil
+	panic("TODO ExtendCommand")
+	//extending := ctx.FindType(c.Type)
+	//if extending == nil {
+	//	panic("No such type " + c.Type)
+	//}
+	//for _, statement := range c.statements {
+	//	switch statement := statement.(type) {
+	//	case *DefineVarCommand:
+	//		//defVar := statement
+	//		//value := defVar.value.Exec(ctx)
+	//		//variable := &Variable{
+	//		//	Name:    defVar.Name,
+	//		//	Mutable: defVar.Mutable,
+	//		//	Type:    defVar.getType(ctx),
+	//		//	Value:   value,
+	//		//}
+	//
+	//		//extending.variables.Set(defVar.Name, variable)
+	//	}
+	//}
+	//return nil
 }
 
 type TypeCheckCommand struct {
@@ -423,7 +446,7 @@ func (c *TypeCheckCommand) Exec(ctx *Context) *Value {
 		panic("No such type " + util.Stringify(c.checkType))
 	}
 	res := c.expression.Exec(ctx)
-	is := res.Type.Accepts(*checkAgainst)
+	is := res.Type.Accepts(checkAgainst)
 	return BooleanValue(is)
 }
 
@@ -454,7 +477,7 @@ func ToCommand(statement parser.Stmt) Command {
 		return &DefineVarCommand{
 			Name:    t.Identifier,
 			Mutable: t.Mutable,
-			Type:    &t.Type,
+			Type:    t.Type,
 			value:   valueExpr,
 		}
 	case parser.ExpressionStmt:
