@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"context"
 	"fmt"
 	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
@@ -502,6 +501,34 @@ func (c *WhileCommand) Exec(ctx *Context) *Value {
 	return nil
 }
 
+type CollectionCommand struct {
+	Elements []Command
+}
+
+func (c *CollectionCommand) Exec(ctx *Context) *Value {
+	elements := make([]*Value, len(c.Elements))
+	for i, element := range c.Elements {
+		elements[i] = element.Exec(ctx)
+	}
+	//In a proper type system we might try and find a union of all elements, but this is dynamic, and I'm lazy
+	var collType Type
+	if len(elements) == 0 {
+		collType = AnyType
+	} else {
+		collType = elements[0].Type
+	}
+	collection := &Collection{
+		ElementType: collType,
+		Elements:    elements,
+	}
+	collectionType := NewCollectionType(collection)
+
+	return &Value{
+		Type:  collectionType,
+		Value: collection,
+	}
+}
+
 func ToCommand(statement parser.Stmt) Command {
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
@@ -751,8 +778,11 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 		return ExpressionToCommand(t.Group)
 
 	case parser.CollectionExpr:
-		//t.Elements
-		context.TODO()
+		elements := make([]Command, len(t.Elements))
+		for i, element := range t.Elements {
+			elements[i] = ExpressionToCommand(element)
+		}
+		return &CollectionCommand{Elements: elements}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

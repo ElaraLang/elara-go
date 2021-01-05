@@ -24,6 +24,10 @@ type BinaryTypeContract struct {
 	Rhs    Type
 }
 
+type CollectionTypeContract struct {
+	ElemType Type
+}
+
 func (p *Parser) typeContract() (contract Type) {
 	return p.contractualOr(false)
 }
@@ -65,7 +69,13 @@ func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
 func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 
 	if p.peek().TokenType == lexer.Identifier {
-		return ElementaryTypeContract{Identifier: string(p.advance().Text)}
+		name := string(p.advance().Text)
+		if p.peek().TokenType == lexer.LSquare {
+			p.advance()
+			p.consume(lexer.RSquare, "Expected ] after [ for collection type")
+			return CollectionTypeContract{ElemType: ElementaryTypeContract{Identifier: name}}
+		}
+		return ElementaryTypeContract{Identifier: name}
 	} else if p.check(lexer.LParen) {
 		isFunc := p.isFuncDef()
 		if isFunc {
@@ -112,3 +122,4 @@ func (t ElementaryTypeContract) typeOf() {}
 func (t BinaryTypeContract) typeOf()     {}
 func (t InvocableTypeContract) typeOf()  {}
 func (t DefinedTypeContract) typeOf()    {}
+func (t CollectionTypeContract) typeOf() {}

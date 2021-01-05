@@ -25,6 +25,9 @@ loopIndexed(2, (Int n) => {
     print("Count: " + n)
 })
 
-let a = 3
-let b => "haha"
-print(b())
+
+let hm(Int[] c) => {
+    print(c.size)
+}
+let c = [1, 2, 3]
+hm(c)

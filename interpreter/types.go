@@ -74,23 +74,6 @@ func (t *FunctionType) Accepts(other Type) bool {
 	return t.Signature.Accepts(&otherFunc.Signature, false)
 }
 
-type CollectionType struct {
-	ElementType Type
-}
-
-func (t *CollectionType) Name() string {
-	return t.ElementType.Name() + "[]" //Eg String[]
-}
-
-func (t *CollectionType) Accepts(other Type) bool {
-	otherColl, ok := other.(*CollectionType)
-	if !ok {
-		return false
-	}
-
-	return t.ElementType.Accepts(otherColl.ElementType)
-}
-
 //TODO mapType
 
 type EmptyType struct {
@@ -142,6 +125,12 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 			ReturnType: returned,
 		}
 		return NewSignatureFunctionType(signature)
+
+	case parser.CollectionTypeContract:
+		elemType := FromASTType(t.ElemType, ctx)
+		return &CollectionType{
+			ElementType: elemType,
+		}
 	}
 	println("Cannot handle " + reflect.TypeOf(astType).Name())
 	return nil

@@ -69,6 +69,42 @@ func Init(context *Context) {
 			Value: stringPlus,
 		},
 	})
+
+	anyPlusName := "plus"
+	anyPlus := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: AnyType,
+				},
+				{
+					Name: "other",
+					Type: StringType,
+				}},
+			ReturnType: StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			this := ctx.FindParameter("this")
+			otherParam := ctx.FindParameter("other")
+			concatenated := util.Stringify(this.Value) + otherParam.Value.(string)
+			return &Value{
+				Type:  StringType,
+				Value: concatenated,
+			}
+		}),
+		name: &anyPlusName,
+	}
+	anyPlusType := NewFunctionType(anyPlus)
+	context.DefineVariable(anyPlusName, Variable{
+		Name:    anyPlusName,
+		Mutable: false,
+		Type:    anyPlusType,
+		Value: &Value{
+			Type:  anyPlusType,
+			Value: anyPlus,
+		},
+	})
 	//	"to-int": {
 	//		Signature: Signature{
 	//			Parameters: []Parameter{},

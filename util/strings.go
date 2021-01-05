@@ -11,8 +11,11 @@ func NillableStringify(nillableStr *string, defaultStr string) string {
 	}
 	return *nillableStr
 }
+
 func Stringify(s interface{}) string {
 	switch t := s.(type) {
+	case Stringable:
+		return t.String()
 	case string:
 		return t
 	case int:
@@ -26,4 +29,8 @@ func Stringify(s interface{}) string {
 	}
 
 	return fmt.Sprintf("%s: %s", reflect.TypeOf(s), s)
+}
+
+type Stringable interface {
+	String() string
 }
