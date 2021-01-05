@@ -332,7 +332,7 @@ func Init(context *Context) {
 		},
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			parameter := ctx.FindParameter("value")
-			fmt.Printf(util.Stringify(parameter.Value))
+			fmt.Printf("%s", util.Stringify(parameter.Value))
 			return UnitValue()
 		}),
 		name: &outputWriteName,
