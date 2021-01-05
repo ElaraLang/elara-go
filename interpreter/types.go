@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"fmt"
 	"github.com/ElaraLang/elara/parser"
 	"reflect"
 )
@@ -52,6 +53,9 @@ type FunctionType struct {
 func NewFunctionType(function *Function) *FunctionType {
 	return &FunctionType{Signature: function.Signature}
 }
+func NewSignatureFunctionType(signature Signature) *FunctionType {
+	return &FunctionType{Signature: signature}
+}
 
 func (t *FunctionType) Name() string {
 	return t.Signature.String()
@@ -67,7 +71,7 @@ func (t *FunctionType) Accepts(other Type) bool {
 	if !ok {
 		return false
 	}
-	return t.Signature.Accepts(&otherFunc.Signature, true)
+	return t.Signature.Accepts(&otherFunc.Signature, false)
 }
 
 type CollectionType struct {
@@ -116,6 +120,23 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 			return found
 		}
 		return NewEmptyType(t.Identifier)
+
+	case parser.InvocableTypeContract:
+		returned := FromASTType(t.ReturnType, ctx)
+		args := make([]Parameter, len(t.Args))
+		for i, arg := range t.Args {
+			argType := FromASTType(arg, ctx)
+			args[i] = Parameter{
+				Name: fmt.Sprintf("arg%d", i),
+				Type: argType,
+			}
+		}
+
+		signature := Signature{
+			Parameters: args,
+			ReturnType: returned,
+		}
+		return NewSignatureFunctionType(signature)
 	}
 	println("Cannot handle " + reflect.TypeOf(astType).Name())
 	return nil
