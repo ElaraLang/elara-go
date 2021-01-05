@@ -31,8 +31,10 @@ func (c *DefineVarCommand) getType(ctx *Context) Type {
 	}
 	return c.runtimeType
 }
+
 func (c *DefineVarCommand) Exec(ctx *Context) *Value {
-	if ctx.FindVariableMaxDepth(c.Name, 1) != nil {
+	foundVar, _ := ctx.FindVariableMaxDepth(c.Name, 1)
+	if foundVar != nil {
 		panic("Variable named " + c.Name + " already exists")
 	}
 	value := c.value.Exec(ctx)

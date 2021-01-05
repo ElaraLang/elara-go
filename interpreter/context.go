@@ -13,8 +13,9 @@ type Context struct {
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
 
-	types  map[string]Type
-	parent *Context
+	types           map[string]Type
+	parent          *Context
+	isFunctionScope bool
 }
 
 var globalContext = &Context{
@@ -24,7 +25,8 @@ var globalContext = &Context{
 	parameters:  map[string]*Value{},
 	contextPath: map[string][]*Context{},
 
-	types: map[string]Type{},
+	types:           map[string]Type{},
+	isFunctionScope: false,
 }
 
 func (c *Context) Init(namespace string) {
@@ -37,12 +39,13 @@ func (c *Context) Init(namespace string) {
 
 func NewContext() *Context {
 	c := &Context{
-		variables:   map[string][]*Variable{},
-		parameters:  map[string]*Value{},
-		namespace:   "",
-		name:        "",
-		contextPath: map[string][]*Context{},
-		types:       map[string]Type{},
+		variables:       map[string][]*Variable{},
+		parameters:      map[string]*Value{},
+		namespace:       "",
+		name:            "",
+		contextPath:     map[string][]*Context{},
+		types:           map[string]Type{},
+		isFunctionScope: false,
 	}
 	c.DefineVariable("stdout", Variable{
 		Name:    "stdout",
@@ -130,22 +133,14 @@ func (c *Context) FindFunction(name string, signature *Signature) *Function {
 	return nil
 }
 func (c *Context) FindVariable(name string) *Variable {
-	return c.FindVariableMaxDepth(name, 0)
+	variable, _ := c.FindVariableMaxDepth(name, -1)
+	return variable
 }
 
-func (c *Context) FindVariableMaxDepth(name string, maxDepth int) *Variable {
+func (c *Context) FindVariableMaxDepth(name string, maxDepth int) (*Variable, int) {
 	vars := c.variables[name]
 	if vars != nil {
-		return vars[len(vars)-1]
-	}
-
-	for _, contexts := range c.contextPath {
-		for _, context := range contexts {
-			v := context.FindVariable(name)
-			if v != nil {
-				return v
-			}
-		}
+		return vars[len(vars)-1], 0
 	}
 
 	i := 0
@@ -153,17 +148,30 @@ func (c *Context) FindVariableMaxDepth(name string, maxDepth int) *Variable {
 		if c.parent == nil {
 			break
 		}
-		parentVar := c.parent.FindVariableMaxDepth(name, maxDepth)
+		parentVar, depth := c.parent.FindVariableMaxDepth(name, maxDepth-i)
 		if parentVar != nil {
-			return parentVar
+			if maxDepth == -1 || !c.parent.isFunctionScope && i+depth <= maxDepth {
+				return parentVar, i + depth
+			} else {
+				return nil, i + depth
+			}
 		}
 		i++
 		if i >= maxDepth {
 			break
 		}
 	}
-	//I'm pretty sure this has a bug in regards to maxDepth, but oh well
-	return nil
+
+	for _, contexts := range c.contextPath {
+		for _, context := range contexts {
+			v, _ := context.FindVariableMaxDepth(name, maxDepth-i)
+			if v != nil {
+				return v, 0 //0 for a variable from an import?
+			}
+		}
+	}
+
+	return nil, -1
 }
 
 func (c *Context) DefineParameter(name string, value *Value) {
@@ -203,6 +211,7 @@ func (c *Context) EnterScope(name string) *Context {
 	scope.namespace = c.name
 	scope.name = name
 	scope.contextPath = c.contextPath
+	scope.isFunctionScope = true
 	return scope
 }
 
@@ -287,12 +296,13 @@ func (c *Context) Clone() *Context {
 		parentClone = c.parent.Clone()
 	}
 	return &Context{
-		variables:   c.variables,
-		parameters:  c.parameters,
-		namespace:   c.namespace,
-		name:        c.name,
-		contextPath: c.contextPath,
-		types:       c.types,
-		parent:      parentClone,
+		variables:       c.variables,
+		parameters:      c.parameters,
+		namespace:       c.namespace,
+		name:            c.name,
+		contextPath:     c.contextPath,
+		types:           c.types,
+		parent:          parentClone,
+		isFunctionScope: c.isFunctionScope,
 	}
 }
