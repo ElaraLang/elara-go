@@ -1,18 +1,7 @@
-namespace test/lol
+namespace lol/lol
 import elara/std
 
-let recursiveLoop(Int current, Int total, (Int) => Unit fun) => {
-    if current == total {
-           return
-    }
-    fun(current)
-    recursiveLoop(current + 1, total, fun)
-}
-
-let loop(Int times, (Int) => Unit fun) => {
-    recursiveLoop(0, times, fun)
-}
-
-loop(5, (Int i) => { print("Hi " + i) })
-
-let list = [1, 2, 3]
+let a = 3
+let b => "haha"
+b()
+print(b() + 3)

@@ -30,7 +30,6 @@ func Execute(fileName *string, code string, scriptMode bool) (results []*interpr
 
 	start = time.Now()
 	evaluator := interpreter.NewInterpreter(parseRes)
-	interpreter.Init()
 
 	results = evaluator.Exec(scriptMode)
 	execTime = time.Since(start)

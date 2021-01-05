@@ -1,6 +1,6 @@
 package interpreter
 
 type Instance struct {
-	Type   *Type
+	Type   Type
 	Values map[string]*Value
 }

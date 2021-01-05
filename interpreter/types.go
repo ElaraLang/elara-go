@@ -1,151 +1,122 @@
 package interpreter
 
 import (
-	"fmt"
 	"github.com/ElaraLang/elara/parser"
 	"reflect"
-	"strings"
 )
 
-type Type struct {
-	Name      string
-	variables *VariableMap
+type Type interface {
+	Name() string
+	//returns if *this* type accepts the other type
+	Accepts(otherType Type) bool
 }
 
-func (t *Type) Accepts(other Type) bool {
-	if &other == t {
-		return true
+type StructType struct {
+	TypeName   string
+	Properties map[string]Property
+}
+
+func (t *StructType) Name() string {
+	return t.TypeName
+}
+
+func (t *StructType) Accepts(otherType Type) bool {
+	elem, ok := otherType.(*StructType)
+	if !ok {
+		return false
 	}
-	for i := range t.variables.m {
-		fun1 := t.variables.m[i]
-		fun2 := other.variables.m[i]
-		if fun1 == fun2 {
-			continue
+	for s, property := range t.Properties {
+		other, exists := elem.Properties[s]
+		if !exists {
+			return false
 		}
-		if !fun1.Equals(*fun2) {
+		if !property.Type.Accepts(other.Type) {
 			return false
 		}
 	}
 	return true
 }
 
-func EmptyType(name string) *Type {
-	return &Type{
-		Name:      name,
-		variables: NewVariableMap(),
-	}
-}
-func SimpleType(name string, functions VariableMap) *Type {
-	return &Type{
-		Name:      name,
-		variables: &functions,
-	}
+type Property struct {
+	Name string
+	Type Type
+	//bitmask (base/modifiers.go)
+	Modifiers    uint
+	DefaultValue *Value
 }
 
-func AliasType(other Type) *Type {
-	return &Type{
-		Name:      other.Name,
-		variables: other.variables,
-	}
+type FunctionType struct {
+	Signature Signature
 }
 
-func CompoundType(a Type, b Type) *Type {
-	functionCompound := NewVariableMap()
-	for name, function := range a.variables.m {
-		functionCompound.Set(name, function)
-	}
-	for name, function := range b.variables.m {
-		functionCompound.Set(name, function)
-	}
-
-	return &Type{
-		Name:      fmt.Sprintf("%sAnd%s", a.Name, b.Name),
-		variables: functionCompound,
-	}
+func NewFunctionType(function *Function) *FunctionType {
+	return &FunctionType{Signature: function.Signature}
 }
 
-func UnionType(a Type, b Type) *Type {
-	panic("TODO")
+func (t *FunctionType) Name() string {
+	return t.Signature.String()
 }
 
-func FunctionType(function *Function) *Type {
-	//Build the type name based on signature
-	var parameters string
-	if len(function.Signature.Parameters) == 0 {
-		parameters = "()"
-	} else {
-		paramTypes := make([]string, len(function.Signature.Parameters))
-		for i, param := range function.Signature.Parameters {
-			paramTypes[i] = param.Type.Name
-		}
-		parameters = "(" + strings.Join(paramTypes, ", ") + ")"
+/*
+Function acceptance is defined by having the same number of parameters,
+with all of A's parameters accepting the corresponding parameters for B
+and A's return type accepting B's return type
+*/
+func (t *FunctionType) Accepts(other Type) bool {
+	otherFunc, ok := other.(*FunctionType)
+	if !ok {
+		return false
 	}
-
-	functionName := parameters + " => " + function.Signature.ReturnType.Name
-
-	t := &Type{
-		Name: functionName,
-	}
-
-	t.variables = NewVariableMap()
-	t.variables.Set(functionName, &Variable{
-		Name:    "value",
-		Mutable: false,
-		Type:    *t,
-		Value: &Value{
-			Type:  t,
-			Value: function,
-		},
-	})
-
-	return t
+	return t.Signature.Accepts(&otherFunc.Signature, true)
 }
 
-func FromASTType(ast parser.Type, ctx *Context) *Type {
-	if ast == nil {
-		return AnyType
+type CollectionType struct {
+	ElementType Type
+}
+
+func (t *CollectionType) Name() string {
+	return t.ElementType.Name() + "[]" //Eg String[]
+}
+
+func (t *CollectionType) Accepts(other Type) bool {
+	otherColl, ok := other.(*CollectionType)
+	if !ok {
+		return false
 	}
-	switch t := ast.(type) {
+
+	return t.ElementType.Accepts(otherColl.ElementType)
+}
+
+//TODO mapType
+
+type EmptyType struct {
+	name string
+}
+
+func (t *EmptyType) Name() string {
+	return t.name
+}
+
+func (t *EmptyType) Accepts(other Type) bool {
+	if t == AnyType {
+		return true
+	}
+	return t == other
+}
+
+func NewEmptyType(name string) Type {
+	return &EmptyType{name: name}
+}
+
+func FromASTType(astType parser.Type, ctx *Context) Type {
+	switch t := astType.(type) {
 	case parser.ElementaryTypeContract:
-		identifier := t.Identifier
-		builtIn := BuiltInTypeByName(identifier)
-		if builtIn != nil {
-			return builtIn
+		found := ctx.FindType(t.Identifier)
+		if found != nil {
+			return found
 		}
-		defined, isDefined := ctx.types[identifier]
-		if isDefined {
-			return &defined
-		}
-		panic("No such type " + identifier)
-
-	case parser.InvocableTypeContract:
-		params := make([]string, len(t.Args))
-		for i, r := range t.Args {
-			params[i] = FromASTType(r, ctx).Name
-		}
-		functionName := strings.Join(params, ", ") + " => " + FromASTType(t.ReturnType, ctx).Name
-		return &Type{
-			Name:      functionName,
-			variables: NewVariableMap(),
-		} //We really need a better way of doing this
+		return NewEmptyType(t.Identifier)
 	}
-
-	panic("Could not handle " + reflect.TypeOf(ast).Name())
-}
-
-type VariableMap struct {
-	m    map[string]*Variable
-	keys []string
-}
-
-func NewVariableMap() *VariableMap {
-	return &VariableMap{
-		m:    map[string]*Variable{},
-		keys: []string{},
-	}
-}
-
-func (n *VariableMap) Set(k string, v *Variable) {
-	n.m[k] = v
-	n.keys = append(n.keys, k)
+	println("Cannot handle " + reflect.TypeOf(astType).Name())
+	return nil
 }
