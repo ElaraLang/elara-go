@@ -134,7 +134,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 	}
 	if !usingReceiver {
 		val := c.Invoking.Exec(ctx)
-		fun, ok := val.Value.(Function)
+		fun, ok := val.Value.(*Function)
 		if !ok {
 			panic("Cannot invoke non-value")
 		}
@@ -251,7 +251,7 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 		returnType = FromASTType(c.returnType, c.currentContext)
 	}
 
-	fun := Function{
+	fun := &Function{
 		name: c.name,
 		Signature: Signature{
 			Parameters: params,
@@ -261,7 +261,7 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 		context: c.currentContext,
 	}
 
-	functionType := NewFunctionType(&fun)
+	functionType := NewFunctionType(fun)
 
 	return &Value{
 		Type:  functionType,
@@ -300,8 +300,17 @@ type ContextCommand struct {
 }
 
 func (c *ContextCommand) Exec(ctx *Context) *Value {
-	panic("TODO ContextCommand")
-	//receiver := c.receiver.Exec(ctx)
+	receiver := c.receiver.Exec(ctx)
+	collection, isCollection := receiver.Value.(*Collection)
+	if !isCollection {
+		panic("Unsupported receiver " + util.Stringify(receiver))
+	}
+	switch c.variable {
+	case "size":
+		return IntValue(int64(len(collection.Elements)))
+	default:
+		panic("Unknown property" + c.variable)
+	}
 	//instance, isInstance := receiver.Value.(Instance)
 	//if isInstance {
 	//	variable, ok := instance.Values[c.variable]
@@ -527,6 +536,23 @@ func (c *CollectionCommand) Exec(ctx *Context) *Value {
 		Type:  collectionType,
 		Value: collection,
 	}
+}
+
+type AccessCommand struct {
+	checking Command
+	index    Command
+}
+
+func (c *AccessCommand) Exec(ctx *Context) *Value {
+	coll, isColl := c.checking.Exec(ctx).Value.(*Collection)
+	if !isColl {
+		panic("Indexed access not supported for non-collection type")
+	}
+	index, isInt := c.index.Exec(ctx).Value.(int64)
+	if !isInt {
+		panic("Index was not an integer")
+	}
+	return coll.Elements[index]
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -783,6 +809,12 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			elements[i] = ExpressionToCommand(element)
 		}
 		return &CollectionCommand{Elements: elements}
+
+	case parser.AccessExpr:
+		return &AccessCommand{
+			checking: ExpressionToCommand(t.Expr),
+			index:    ExpressionToCommand(t.Index),
+		}
 	}
 
 	panic("Could not handle " + reflect.TypeOf(expr).Name())

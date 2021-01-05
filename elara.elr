@@ -17,17 +17,14 @@ let loop(Int times, () => Unit fun) => {
     recursiveLoop(0, times, (Int _) => { fun() })
 }
 
-loop(5, () => {
-    print("Hi")
-})
-
-loopIndexed(2, (Int n) => {
-    print("Count: " + n)
-})
-
-
-let hm(Int[] c) => {
-    print(c.size)
+let forEach(Any[] col, (Any) => Unit fun) => {
+    loopIndexed(col.size, (Int index) => {
+        fun(col[index])
+    })
 }
-let c = [1, 2, 3]
-hm(c)
+
+
+let c = [1, 2, "lol", 3.5]
+c.forEach((value) => {
+    print(value + " wow!")
+})
