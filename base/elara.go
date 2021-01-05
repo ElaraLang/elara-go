@@ -83,7 +83,7 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 	if info.IsDir() {
 		return nil
 	}
-	if filepath.Ext(path) != ".el" {
+	if filepath.Ext(path) != ".elr" {
 		return nil
 	}
 	_, content := loadFile(path)
