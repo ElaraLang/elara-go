@@ -188,7 +188,11 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 	}
 	receiverFunction := ctx.FindFunction(context.variable, receiverSignature)
 	if receiverFunction == nil {
-		panic("Unknown function " + receiverType.Name() + "::" + context.variable)
+		paramTypes := make([]string, 0)
+		for _, value := range argValues {
+			paramTypes = append(paramTypes, value.Type.Name())
+		}
+		panic("Unknown function " + receiverType.Name() + "::" + context.variable + "(" + strings.Join(paramTypes, ",") + ")")
 	}
 	argValuesAndSelf := []*Value{receiver}
 	argValuesAndSelf = append(argValuesAndSelf, argValues...)

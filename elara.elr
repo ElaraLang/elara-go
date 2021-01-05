@@ -4,4 +4,4 @@ import elara/std
 let a = 3
 let b => "haha"
 b()
-print(b())
+print(b() + 3)
