@@ -44,7 +44,7 @@ func Init(context *Context) {
 				},
 				{
 					Name: "other",
-					Type: StringType,
+					Type: AnyType,
 				}},
 			ReturnType: StringType,
 		},
