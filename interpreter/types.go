@@ -67,17 +67,7 @@ func (t *FunctionType) Accepts(other Type) bool {
 	if !ok {
 		return false
 	}
-
-	if len(t.Signature.Parameters) != len(otherFunc.Signature.Parameters) {
-		return false
-	}
-	for i, parameter := range t.Signature.Parameters {
-		otherParam := otherFunc.Signature.Parameters[i]
-		if !parameter.Type.Accepts(otherParam.Type) {
-			return false
-		}
-	}
-	return t.Signature.ReturnType.Accepts(otherFunc.Signature.ReturnType)
+	return t.Signature.Accepts(&otherFunc.Signature, true)
 }
 
 type CollectionType struct {

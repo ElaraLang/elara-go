@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"context"
+	"fmt"
 	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
 	"github.com/ElaraLang/elara/util"
@@ -91,20 +92,20 @@ type VariableCommand struct {
 
 func (c *VariableCommand) Exec(ctx *Context) *Value {
 	//panic("TODO VariableCommand")
-	if ctx.receiver != nil {
-		//receiver := ctx.receiver
-		//asInstance, isInstance := ctx.receiver.Value.(Instance)
-		//if isInstance {
-		//	instanceVariable, exists := asInstance.Values[c.Variable]
-		//	if exists {
-		//		return instanceVariable
-		//	}
-		//}
-		//typeVariable, exists := receiver.Type.variables.m[c.Variable]
-		//if exists {
-		//	return typeVariable.Value
-		//}
-	}
+	//if ctx.receiver != nil {
+	//receiver := ctx.receiver
+	//asInstance, isInstance := ctx.receiver.Value.(Instance)
+	//if isInstance {
+	//	instanceVariable, exists := asInstance.Values[c.Variable]
+	//	if exists {
+	//		return instanceVariable
+	//	}
+	//}
+	//typeVariable, exists := receiver.Type.variables.m[c.Variable]
+	//if exists {
+	//	return typeVariable.Value
+	//}
+	//}
 
 	param := ctx.FindParameter(c.Variable)
 	if param == nil {
@@ -127,9 +128,11 @@ type InvocationCommand struct {
 }
 
 func (c *InvocationCommand) Exec(ctx *Context) *Value {
-	//panic("TODO InvocationCommand")
 	context, usingReceiver := c.Invoking.(*ContextCommand)
-	//
+	argValues := make([]*Value, len(c.args))
+	for i, arg := range c.args {
+		argValues[i] = arg.Exec(ctx)
+	}
 	if !usingReceiver {
 		val := c.Invoking.Exec(ctx)
 		fun, ok := val.Value.(Function)
@@ -137,11 +140,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 			panic("Cannot invoke non-value")
 		}
 
-		argValues := make([]*Value, len(c.args))
-		for i, arg := range c.args {
-			argValues[i] = arg.Exec(ctx)
-		}
-		return fun.Exec(ctx, nil, argValues)
+		return fun.Exec(ctx, argValues)
 	}
 
 	//ContextCommand seems to think it's a special case... because it is.
@@ -161,16 +160,39 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 		if !ok {
 			panic("Cannot invoke non-function " + value.Name)
 		}
-		exec := context.receiver.Exec(ctx)
+		this := context.receiver.Exec(ctx)
 
 		argValues := make([]*Value, len(c.args))
+		argValues = append(argValues, this)
 		for i, arg := range c.args {
 			argValues[i] = arg.Exec(ctx)
 		}
-		return function.Exec(ctx, exec, argValues)
+		return function.Exec(ctx, argValues)
 	}
 
-	//TODO receivers
+	//Look for a receiver
+	receiverType := receiver.Type
+	parameters := []Parameter{{
+		Name: "this",
+		Type: receiverType,
+	}}
+	for i, value := range argValues {
+		parameters = append(parameters, Parameter{
+			Name: fmt.Sprintf("<param%d>", i),
+			Type: value.Type,
+		})
+	}
+	receiverSignature := &Signature{
+		Parameters: parameters,
+		ReturnType: AnyType, //can't infer this rn
+	}
+	receiverFunction := ctx.FindFunction(context.variable, receiverSignature)
+	if receiverFunction == nil {
+		panic("Unknown function " + receiverType.Name() + "::" + context.variable)
+	}
+	argValuesAndSelf := []*Value{receiver}
+	argValuesAndSelf = append(argValuesAndSelf, argValues...)
+	return receiverFunction.Exec(ctx, argValuesAndSelf)
 }
 
 type AbstractCommand struct {

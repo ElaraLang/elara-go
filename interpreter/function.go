@@ -19,7 +19,7 @@ func (f *Function) String() string {
 	return name + f.Signature.String()
 }
 
-func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val *Value) {
+func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	if len(parameters) != len(f.Signature.Parameters) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
 	}
@@ -35,8 +35,6 @@ func (f *Function) Exec(ctx *Context, receiver *Value, parameters []*Value) (val
 
 		scope.DefineParameter(expectedParameter.Name, paramValue)
 	}
-
-	scope.receiver = receiver
 
 	defer func() {
 		s := recover()
@@ -75,6 +73,22 @@ func (s *Signature) String() string {
 		paramNames[i] = s.Parameters[i].Type.Name()
 	}
 	return fmt.Sprintf("(%s) => %s", strings.Join(paramNames, ", "), s.ReturnType.Name())
+}
+
+func (s *Signature) Accepts(other *Signature, compareReturnTypes bool) bool {
+	if len(s.Parameters) != len(other.Parameters) {
+		return false
+	}
+	for i, parameter := range s.Parameters {
+		otherParam := other.Parameters[i]
+		if !parameter.Type.Accepts(otherParam.Type) {
+			return false
+		}
+	}
+	if compareReturnTypes {
+		return s.ReturnType.Accepts(other.ReturnType)
+	}
+	return true
 }
 
 type Parameter struct {

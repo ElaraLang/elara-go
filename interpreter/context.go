@@ -7,7 +7,6 @@ import (
 type Context struct {
 	variables  map[string][]*Variable
 	parameters map[string]*Value
-	receiver   *Value
 	namespace  string
 	name       string //The optional name of the context - may be empty
 
@@ -23,7 +22,6 @@ var globalContext = &Context{
 	name:        "__global__",
 	variables:   map[string][]*Variable{},
 	parameters:  map[string]*Value{},
-	receiver:    nil,
 	contextPath: map[string][]*Context{},
 
 	types: map[string]Type{},
@@ -41,7 +39,6 @@ func NewContext() *Context {
 	c := &Context{
 		variables:   map[string][]*Variable{},
 		parameters:  map[string]*Value{},
-		receiver:    nil,
 		namespace:   "",
 		name:        "",
 		contextPath: map[string][]*Context{},
@@ -96,6 +93,42 @@ func (c *Context) DefineVariable(name string, value Variable) {
 	c.variables[name] = vars
 }
 
+func (c *Context) FindFunction(name string, signature *Signature) *Function {
+	vars := c.variables[name]
+	if vars != nil {
+		matching := make([]*Variable, 0)
+		for _, variable := range vars {
+			asFunction, isFunction := variable.Value.Value.(*Function)
+			if isFunction {
+				if asFunction.Signature.Accepts(signature, false) {
+					matching = append(matching, variable)
+				}
+			}
+		}
+		if len(matching) > 1 {
+			_ = fmt.Errorf("multiple matching functions with name %s and signature %s", name, signature.String())
+		}
+		if len(matching) != 0 {
+			return matching[0].Value.Value.(*Function)
+		}
+	}
+
+	if c.parent != nil {
+		parFound := c.parent.FindFunction(name, signature)
+		if parFound != nil {
+			return parFound
+		}
+	}
+	for _, contexts := range c.contextPath {
+		for _, context := range contexts {
+			v := context.FindFunction(name, signature)
+			if v != nil {
+				return v
+			}
+		}
+	}
+	return nil
+}
 func (c *Context) FindVariable(name string) *Variable {
 	return c.FindVariableMaxDepth(name, 0)
 }
@@ -134,7 +167,6 @@ func (c *Context) FindVariableMaxDepth(name string, maxDepth int) *Variable {
 }
 
 func (c *Context) DefineParameter(name string, value *Value) {
-
 	c.parameters[name] = value
 }
 

@@ -1,6 +1,7 @@
 package interpreter
 
 import (
+	"fmt"
 	"github.com/ElaraLang/elara/util"
 )
 
@@ -28,16 +29,46 @@ func BuiltInTypeByName(name string) Type {
 	return types[name]
 }
 
-var isInitialized = false
-
 func Init(context *Context) {
-	if isInitialized {
-		return
-	}
-	isInitialized = true
 	for s, t := range types {
 		context.types[s] = t
 	}
+
+	stringPlusName := "plus"
+	stringPlus := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: StringType,
+				},
+				{
+					Name: "other",
+					Type: StringType,
+				}},
+			ReturnType: StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			this := ctx.FindParameter("this")
+			otherParam := ctx.FindParameter("other")
+			concatenated := this.Value.(string) + util.Stringify(otherParam.Value)
+			return &Value{
+				Type:  StringType,
+				Value: concatenated,
+			}
+		}),
+		name: &stringPlusName,
+	}
+	stringPlusType := NewFunctionType(stringPlus)
+	context.DefineVariable(stringPlusName, Variable{
+		Name:    stringPlusName,
+		Mutable: false,
+		Type:    stringPlusType,
+		Value: &Value{
+			Type:  stringPlusType,
+			Value: stringPlus,
+		},
+	})
 	//StringType.variables = convert(map[string]Function{
 	//	"plus": {
 	//		Signature: Signature{
@@ -284,53 +315,65 @@ func Init(context *Context) {
 	//	"add":  floatAdd,
 	//})
 	//
-	//printlnName := "write"
-	//OutputType.variables = convert(map[string]Function{
-	//	printlnName: {
-	//		Signature: Signature{
-	//			Parameters: []Parameter{
-	//				{
-	//					Name: "value",
-	//					Type: *AnyType,
-	//				},
-	//			},
-	//			ReturnType: *UnitType,
-	//		},
-	//		Body: NewAbstractCommand(func(ctx *Context) *Value {
-	//			parameter := ctx.FindParameter("value")
-	//			fmt.Printf(util.Stringify(parameter.Value))
-	//			return UnitValue()
-	//		}),
-	//		name: &printlnName,
-	//	},
-	//})
+	outputWriteName := "write"
+	outputWrite := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: OutputType,
+				},
+				{
+					Name: "value",
+					Type: AnyType,
+				},
+			},
+			ReturnType: UnitType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			parameter := ctx.FindParameter("value")
+			fmt.Printf(util.Stringify(parameter.Value))
+			return UnitValue()
+		}),
+		name: &outputWriteName,
+	}
+	outputWriteType := NewFunctionType(stringPlus)
+	context.DefineVariable(outputWriteName, Variable{
+		Name:    outputWriteName,
+		Mutable: false,
+		Type:    outputWriteType,
+		Value: &Value{
+			Type:  outputWriteType,
+			Value: outputWrite,
+		},
+	})
 }
 
-func intAdd(ctx *Context) *Value {
-	parameter := ctx.FindParameter("value")
-	asInt, isInt := parameter.Value.(int64)
-	if isInt {
-		result := ctx.receiver.Value.(int64) + asInt
-		return &Value{
-			Type:  IntType,
-			Value: result,
-		}
-	} else {
-		asFloat, isFloat := parameter.Value.(float64)
-		if isFloat {
-			result := float64(ctx.receiver.Value.(int64)) + asFloat
-			return &Value{
-				Type:  FloatType,
-				Value: result,
-			}
-		} else {
-			//TODO
-			//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
-			result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
-			return &Value{
-				Type:  StringType,
-				Value: result,
-			}
-		}
-	}
-}
+//func intAdd(ctx *Context) *Value {
+//	parameter := ctx.FindParameter("value")
+//	asInt, isInt := parameter.Value.(int64)
+//	if isInt {
+//		result := ctx.receiver.Value.(int64) + asInt
+//		return &Value{
+//			Type:  IntType,
+//			Value: result,
+//		}
+//	} else {
+//		asFloat, isFloat := parameter.Value.(float64)
+//		if isFloat {
+//			result := float64(ctx.receiver.Value.(int64)) + asFloat
+//			return &Value{
+//				Type:  FloatType,
+//				Value: result,
+//			}
+//		} else {
+//			//TODO
+//			//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
+//			result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
+//			return &Value{
+//				Type:  StringType,
+//				Value: result,
+//			}
+//		}
+//	}
+//}
