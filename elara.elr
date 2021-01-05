@@ -1,30 +1,6 @@
 namespace test/lol
 import elara/std
 
-let recursiveLoop(Int current, Int total, (Int) => Unit fun) => {
-    if current == total {
-           return
-    }
-    fun(current)
-    recursiveLoop(current + 1, total, fun)
-}
-
-let loopIndexed(Int times, (Int) => Unit fun) => {
-    recursiveLoop(0, times, fun)
-}
-
-let loop(Int times, () => Unit fun) => {
-    recursiveLoop(0, times, (Int _) => { fun() })
-}
-
-let forEach(Any[] col, (Any) => Unit fun) => {
-    loopIndexed(col.size, (Int index) => {
-        fun(col[index])
-    })
-}
-
-
 let c = [1, 2, "lol", 3.5]
-c.forEach((value) => {
-    print(value + " wow!")
-})
+
+print(c.toString())

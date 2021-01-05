@@ -44,7 +44,7 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		scope.DefineParameter(expectedParameter.Name, paramValue)
 	}
 
-	defer func() {
+	defer func() { //Catch returned values
 		s := recover()
 		if s != nil {
 			_, is := s.(*Value)
