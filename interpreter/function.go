@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"github.com/ElaraLang/elara/util"
 	"strings"
 )
 
@@ -9,6 +10,7 @@ type Function struct {
 	Signature Signature
 	Body      Command
 	name      *string
+	context   *Context
 }
 
 func (f *Function) String() string {
@@ -20,11 +22,17 @@ func (f *Function) String() string {
 }
 
 func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
+	context := ctx
+	if f.context != nil {
+		//The cached context has highest priority for things like variables, but we set the parent to ensure that we can correctly inherit things like imports
+		context = f.context.Clone()
+		context.parent = ctx
+	}
 	if len(parameters) != len(f.Signature.Parameters) {
-		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", *f.name, len(f.Signature.Parameters), len(parameters)))
+		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", util.NillableStringify(f.name, "<anonymous>"), len(f.Signature.Parameters), len(parameters)))
 	}
 
-	scope := ctx.EnterScope(f.String())
+	scope := context.EnterScope(f.String())
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]

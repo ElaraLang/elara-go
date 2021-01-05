@@ -5,6 +5,12 @@ import (
 	"reflect"
 )
 
+func NillableStringify(nillableStr *string, defaultStr string) string {
+	if nillableStr == nil {
+		return defaultStr
+	}
+	return *nillableStr
+}
 func Stringify(s interface{}) string {
 	switch t := s.(type) {
 	case string:

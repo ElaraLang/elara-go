@@ -8,7 +8,6 @@ import (
 var AnyType = NewEmptyType("Any")
 var UnitType = NewEmptyType("Unit")
 
-var IntType = NewEmptyType("Int")
 var FloatType = NewEmptyType("Float")
 var BooleanType = NewEmptyType("Boolean")
 var StringType = NewEmptyType("String")
@@ -33,6 +32,7 @@ func Init(context *Context) {
 	for s, t := range types {
 		context.types[s] = t
 	}
+	InitInts(context)
 
 	stringPlusName := "plus"
 	stringPlus := &Function{
@@ -69,26 +69,6 @@ func Init(context *Context) {
 			Value: stringPlus,
 		},
 	})
-	//StringType.variables = convert(map[string]Function{
-	//	"plus": {
-	//		Signature: Signature{
-	//			Parameters: []Parameter{
-	//				{
-	//					Name: "value",
-	//					Type: *StringType,
-	//				},
-	//			},
-	//			ReturnType: *StringType,
-	//		},
-	//		Body: NewAbstractCommand(func(ctx *Context) *Value {
-	//			parameter := ctx.FindParameter("value")
-	//			concatenated := ctx.receiver.Value.(string) + util.Stringify(parameter.Value)
-	//			return &Value{
-	//				Type:  StringType,
-	//				Value: concatenated,
-	//			}
-	//		}),
-	//	},
 	//	"to-int": {
 	//		Signature: Signature{
 	//			Parameters: []Parameter{},
@@ -188,6 +168,45 @@ func Init(context *Context) {
 	//		ReturnType: *IntType,
 	//	},
 	//	Body: NewAbstractCommand(intAdd),
+	//}
+	//floatAdd := Function{
+	//	Signature: Signature{
+	//		Parameters: []Parameter{
+	//			{
+	//				Name: "value",
+	//				Type: *IntType,
+	//			},
+	//		},
+	//		ReturnType: *FloatType,
+	//	},
+	//	Body: NewAbstractCommand(func(ctx *Context) *Value {
+	//		parameter := ctx.FindParameter("value")
+	//		asInt, isInt := parameter.Value.(int64)
+	//		if isInt {
+	//			result := ctx.receiver.Value.(float64) + float64(asInt)
+	//			return &Value{
+	//				Type:  FloatType,
+	//				Value: result,
+	//			}
+	//		} else {
+	//			asFloat, isFloat := parameter.Value.(float64)
+	//			if isFloat {
+	//				result := ctx.receiver.Value.(float64) + asFloat
+	//				return &Value{
+	//					Type:  FloatType,
+	//					Value: result,
+	//				}
+	//			} else {
+	//				//TODO
+	//				//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
+	//				result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
+	//				return &Value{
+	//					Type:  StringType,
+	//					Value: result,
+	//				}
+	//			}
+	//		}
+	//	}),
 	//}
 	//floatAdd := Function{
 	//	Signature: Signature{
@@ -345,6 +364,39 @@ func Init(context *Context) {
 		Value: &Value{
 			Type:  outputWriteType,
 			Value: outputWrite,
+		},
+	})
+
+	anyEqualsName := "equals"
+	anyEquals := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: AnyType,
+				},
+				{
+					Name: "other",
+					Type: AnyType,
+				},
+			},
+			ReturnType: BooleanType,
+		},
+		name: &anyEqualsName,
+		Body: NewAbstractCommand(func(c *Context) *Value {
+			this := c.FindParameter("this")
+			other := c.FindParameter("other")
+			return BooleanValue(this.Value == other.Value)
+		}),
+	}
+	anyEqualsType := NewFunctionType(anyEquals)
+	context.DefineVariable(anyEqualsName, Variable{
+		Name:    anyEqualsName,
+		Mutable: false,
+		Type:    anyEqualsType,
+		Value: &Value{
+			Type:  anyEqualsType,
+			Value: anyEquals,
 		},
 	})
 }

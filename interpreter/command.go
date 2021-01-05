@@ -226,13 +226,18 @@ type FunctionLiteralCommand struct {
 	parameters []parser.FunctionArgument
 	returnType parser.Type //Can be nil - infer return type
 	body       Command
+
+	currentContext *Context
 }
 
 func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
+	if c.currentContext == nil {
+		c.currentContext = ctx.Clone() //Function literals take a snapshot of their current context to avoid scoping issues
+	}
 	params := make([]Parameter, len(c.parameters))
 
 	for i, parameter := range c.parameters {
-		paramType := FromASTType(parameter.Type, ctx)
+		paramType := FromASTType(parameter.Type, c.currentContext)
 		params[i] = Parameter{
 			Type: paramType,
 			Name: parameter.Name,
@@ -244,7 +249,7 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 	if astReturnType == nil {
 		returnType = AnyType
 	} else {
-		returnType = FromASTType(c.returnType, ctx)
+		returnType = FromASTType(c.returnType, c.currentContext)
 	}
 
 	fun := Function{
@@ -253,7 +258,8 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 			Parameters: params,
 			ReturnType: returnType,
 		},
-		Body: c.body,
+		Body:    c.body,
+		context: c.currentContext,
 	}
 
 	functionType := NewFunctionType(&fun)

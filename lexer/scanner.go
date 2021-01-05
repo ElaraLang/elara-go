@@ -80,17 +80,6 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 		return Colon, []rune{ch}, s.line, s.col
 	}
 
-	if ch == '_' {
-		next := s.peek()
-		if next == eof || IsWhitespace(next) {
-			defer func() {
-				s.col++
-			}()
-			return Underscore, []rune{ch}, s.line, s.col
-		}
-		s.unread()
-	}
-
 	if isAngleBracket(ch) {
 		s.unread()
 		bracket, t := s.readAngleBracket()

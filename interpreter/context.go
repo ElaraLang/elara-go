@@ -2,10 +2,11 @@ package interpreter
 
 import (
 	"fmt"
+	"github.com/huandu/go-clone"
 )
 
 type Context struct {
-	variables  map[string][]*Variable
+	variables  map[string][]Variable
 	parameters map[string]*Value
 	namespace  string
 	name       string //The optional name of the context - may be empty
@@ -20,7 +21,7 @@ type Context struct {
 var globalContext = &Context{
 	namespace:   "__global__",
 	name:        "__global__",
-	variables:   map[string][]*Variable{},
+	variables:   map[string][]Variable{},
 	parameters:  map[string]*Value{},
 	contextPath: map[string][]*Context{},
 
@@ -37,7 +38,7 @@ func (c *Context) Init(namespace string) {
 
 func NewContext() *Context {
 	c := &Context{
-		variables:   map[string][]*Variable{},
+		variables:   map[string][]Variable{},
 		parameters:  map[string]*Value{},
 		namespace:   "",
 		name:        "",
@@ -89,14 +90,14 @@ func NewContext() *Context {
 func (c *Context) DefineVariable(name string, value Variable) {
 
 	vars := c.variables[name]
-	vars = append(vars, &value)
+	vars = append(vars, value)
 	c.variables[name] = vars
 }
 
 func (c *Context) FindFunction(name string, signature *Signature) *Function {
 	vars := c.variables[name]
 	if vars != nil {
-		matching := make([]*Variable, 0)
+		matching := make([]Variable, 0)
 		for _, variable := range vars {
 			asFunction, isFunction := variable.Value.Value.(*Function)
 			if isFunction {
@@ -136,7 +137,7 @@ func (c *Context) FindVariable(name string) *Variable {
 func (c *Context) FindVariableMaxDepth(name string, maxDepth int) *Variable {
 	vars := c.variables[name]
 	if vars != nil {
-		return vars[len(vars)-1]
+		return &vars[len(vars)-1]
 	}
 
 	for _, contexts := range c.contextPath {
@@ -202,6 +203,7 @@ func (c *Context) EnterScope(name string) *Context {
 	scope.parent = c
 	scope.namespace = c.name
 	scope.name = name
+	scope.contextPath = c.contextPath
 	return scope
 }
 
@@ -278,4 +280,20 @@ func (c *Context) string() string {
 	}
 
 	return s
+}
+
+func (c *Context) Clone() *Context {
+	var parentClone *Context = nil
+	if c.parent != nil {
+		parentClone = c.parent.Clone()
+	}
+	return &Context{
+		variables:   clone.Clone(c.variables).(map[string][]Variable),
+		parameters:  clone.Clone(c.parameters).(map[string]*Value),
+		namespace:   c.namespace,
+		name:        c.name,
+		contextPath: c.contextPath,
+		types:       c.types,
+		parent:      parentClone,
+	}
 }

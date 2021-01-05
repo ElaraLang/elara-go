@@ -9,14 +9,22 @@ let recursiveLoop(Int current, Int total, (Int) => Unit fun) => {
     recursiveLoop(current + 1, total, fun)
 }
 
-let loop(Int times, (Int) => Unit fun) => {
+let loopIndexed(Int times, (Int) => Unit fun) => {
     recursiveLoop(0, times, fun)
 }
 
-loop(5, (Int i) => { print("Hi " + i) })
+let loop(Int times, () => Unit fun) => {
+    recursiveLoop(0, times, (Int _) => { fun() })
+}
 
-let list = [1, 2, 3]
+loop(5, () => {
+    print("Hi")
+})
+
+loopIndexed(2, (Int n) => {
+    print("Count: " + n)
+})
+
 let a = 3
 let b => "haha"
-b()
 print(b())

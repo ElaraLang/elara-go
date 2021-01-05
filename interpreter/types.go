@@ -102,8 +102,13 @@ func (t *EmptyType) Name() string {
 }
 
 func (t *EmptyType) Accepts(other Type) bool {
-	if t == AnyType {
+	//This is really trying to patch a deeper problem - this function relies on there only ever being 1 pointer to a type.
+	if t.name == AnyType.Name() { //Hacky but functional
 		return true
+	}
+	asEmpty, isEmpty := other.(*EmptyType)
+	if isEmpty {
+		return t.name == asEmpty.name
 	}
 	return t == other
 }
