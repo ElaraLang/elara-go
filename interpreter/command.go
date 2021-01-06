@@ -743,6 +743,11 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 				}
 				return BooleanValue(!asBool)
 			})
+
+		case lexer.Mod:
+			return &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "mod"},
+				args: []Command{rhsCmd},
+			}
 		}
 	case parser.FuncDefExpr:
 		return &FunctionLiteralCommand{

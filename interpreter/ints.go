@@ -3,8 +3,7 @@ package interpreter
 var IntType = NewEmptyType("Int")
 
 func InitInts(ctx *Context) {
-	intAddName := "plus"
-	intAdd := &Function{
+	define(ctx, "plus", &Function{
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
@@ -18,28 +17,15 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		name: &intAddName,
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
 			return IntValue(this + value)
 		}),
-	}
-	intAddType := NewFunctionType(intAdd)
-
-	ctx.DefineVariable(intAddName, Variable{
-		Name:    intAddName,
-		Mutable: false,
-		Type:    intAddType,
-		Value: &Value{
-			Type:  intAddType,
-			Value: intAdd,
-		},
 	})
 
-	intMinusName := "minus"
-	intMinus := &Function{
+	define(ctx, "minus", &Function{
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
@@ -53,28 +39,15 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		name: &intAddName,
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
 			return IntValue(this - value)
 		}),
-	}
-	intMinusType := NewFunctionType(intAdd)
-
-	ctx.DefineVariable(intMinusName, Variable{
-		Name:    intMinusName,
-		Mutable: false,
-		Type:    intMinusType,
-		Value: &Value{
-			Type:  intMinusType,
-			Value: intMinus,
-		},
 	})
 
-	intTimesName := "times"
-	intTimes := &Function{
+	define(ctx, "times", &Function{
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
@@ -88,23 +61,69 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		name: &intTimesName,
 		Body: NewAbstractCommand(func(ctx *Context) *Value {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
 			return IntValue(this * value)
 		}),
-	}
-	intTimesType := NewFunctionType(intTimes)
+	})
 
-	ctx.DefineVariable(intTimesName, Variable{
-		Name:    intTimesName,
+	define(ctx, "divide", &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: IntType,
+				},
+				{
+					Name: "value",
+					Type: IntType,
+				},
+			},
+			ReturnType: IntType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			this := ctx.FindParameter("this").Value.(int64)
+			value := ctx.FindParameter("value").Value.(int64)
+
+			return IntValue(this / value)
+		}),
+	})
+
+	define(ctx, "mod", &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: IntType,
+				},
+				{
+					Name: "value",
+					Type: IntType,
+				},
+			},
+			ReturnType: IntType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			this := ctx.FindParameter("this").Value.(int64)
+			value := ctx.FindParameter("value").Value.(int64)
+
+			return IntValue(this % value)
+		}),
+	})
+}
+
+func define(ctx *Context, name string, function *Function) {
+	function.name = &name
+	funcType := NewFunctionType(function)
+	ctx.DefineVariable(name, Variable{
+		Name:    name,
 		Mutable: false,
-		Type:    intTimesType,
+		Type:    funcType,
 		Value: &Value{
-			Type:  intTimesType,
-			Value: intTimes,
+			Type:  funcType,
+			Value: function,
 		},
 	})
 }
