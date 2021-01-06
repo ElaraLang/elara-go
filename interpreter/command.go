@@ -51,7 +51,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) ReturnedValue {
 	} else {
 		variableType = value.Type
 	}
-	variable := Variable{
+	variable := &Variable{
 		Name:    c.Name,
 		Mutable: c.Mutable,
 		Type:    variableType,
@@ -157,7 +157,7 @@ func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 			}
 			panic("No such function " + receiver.Type.Name() + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
 		}
-		function, ok := value.DefaultValue.Value.(Function)
+		function, ok := value.DefaultValue.Value.(*Function)
 		if !ok {
 			panic("Cannot invoke non-function " + value.Name)
 		}
@@ -233,7 +233,9 @@ type FunctionLiteralCommand struct {
 
 func (c *FunctionLiteralCommand) Exec(ctx *Context) ReturnedValue {
 	if c.currentContext == nil {
-		c.currentContext = ctx.Clone() //Function literals take a snapshot of their current context to avoid scoping issues
+		c.currentContext = ctx.Clone()
+		//Function literals take a snapshot of their current context to avoid scoping issues
+		//This one will be cached forever, so we don't need to cleanup
 	}
 	params := make([]Parameter, len(c.parameters))
 

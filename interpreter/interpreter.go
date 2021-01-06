@@ -13,7 +13,7 @@ type Interpreter struct {
 func NewInterpreter(code []parser.Stmt) *Interpreter {
 	return &Interpreter{
 		lines:   code,
-		context: NewContext(),
+		context: NewContext(true),
 	}
 }
 func NewEmptyInterpreter() *Interpreter {

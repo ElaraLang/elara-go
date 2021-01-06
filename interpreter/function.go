@@ -26,6 +26,9 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	if f.context != nil {
 		//The cached context has highest priority for things like variables, but we set the parent to ensure that we can correctly inherit things like imports
 		context = f.context.Clone()
+		defer func() {
+			context.Cleanup()
+		}()
 		context.parent = ctx
 	}
 	if len(parameters) != len(f.Signature.Parameters) {
@@ -33,6 +36,9 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	}
 
 	scope := context.EnterScope(f.String())
+	defer func() {
+		scope.Cleanup()
+	}()
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]

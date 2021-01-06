@@ -117,7 +117,7 @@ func InitInts(ctx *Context) {
 func define(ctx *Context, name string, function *Function) {
 	function.name = &name
 	funcType := NewFunctionType(function)
-	ctx.DefineVariable(name, Variable{
+	ctx.DefineVariable(name, &Variable{
 		Name:    name,
 		Mutable: false,
 		Type:    funcType,

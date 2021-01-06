@@ -13,20 +13,19 @@ var BooleanType = NewEmptyType("Boolean")
 var StringType = NewEmptyType("String")
 var OutputType = NewEmptyType("Output")
 
-var types = map[string]Type{
-	"Any":  AnyType,
-	"Unit": UnitType,
-
-	"Int":     IntType,
-	"Float":   FloatType,
-	"Boolean": BooleanType,
-	"String":  StringType,
-	"Output":  OutputType,
+var types = []Type{
+	AnyType,
+	UnitType,
+	IntType,
+	FloatType,
+	BooleanType,
+	StringType,
+	OutputType,
 }
 
 func Init(context *Context) {
-	for s, t := range types {
-		context.types[s] = t
+	for _, t := range types {
+		context.types[t.Name()] = t
 	}
 	InitInts(context)
 
@@ -56,7 +55,7 @@ func Init(context *Context) {
 		name: &stringPlusName,
 	}
 	stringPlusType := NewFunctionType(stringPlus)
-	context.DefineVariable(stringPlusName, Variable{
+	context.DefineVariable(stringPlusName, &Variable{
 		Name:    stringPlusName,
 		Mutable: false,
 		Type:    stringPlusType,
@@ -92,7 +91,7 @@ func Init(context *Context) {
 		name: &anyPlusName,
 	}
 	anyPlusType := NewFunctionType(anyPlus)
-	context.DefineVariable(anyPlusName, Variable{
+	context.DefineVariable(anyPlusName, &Variable{
 		Name:    anyPlusName,
 		Mutable: false,
 		Type:    anyPlusType,
@@ -141,7 +140,7 @@ func Init(context *Context) {
 		name: &colPlusName,
 	}
 	colPlusType := NewFunctionType(colPlus)
-	context.DefineVariable(colPlusName, Variable{
+	context.DefineVariable(colPlusName, &Variable{
 		Name:    colPlusName,
 		Mutable: false,
 		Type:    colPlusType,
@@ -439,7 +438,7 @@ func Init(context *Context) {
 		name: &outputWriteName,
 	}
 	outputWriteType := NewFunctionType(stringPlus)
-	context.DefineVariable(outputWriteName, Variable{
+	context.DefineVariable(outputWriteName, &Variable{
 		Name:    outputWriteName,
 		Mutable: false,
 		Type:    outputWriteType,
@@ -472,7 +471,7 @@ func Init(context *Context) {
 		}),
 	}
 	anyEqualsType := NewFunctionType(anyEquals)
-	context.DefineVariable(anyEqualsName, Variable{
+	context.DefineVariable(anyEqualsName, &Variable{
 		Name:    anyEqualsName,
 		Mutable: false,
 		Type:    anyEqualsType,

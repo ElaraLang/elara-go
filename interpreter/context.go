@@ -38,92 +38,9 @@ func (c *Context) Init(namespace string) {
 	globalContext.contextPath[c.namespace] = append(globalContext.contextPath[c.namespace], c)
 }
 
-func NewContext() *Context {
-	c := &Context{
-		variables:       map[string][]*Variable{},
-		parameters:      map[string]*Value{},
-		namespace:       "",
-		name:            "",
-		contextPath:     map[string][]*Context{},
-		types:           map[string]Type{},
-		isFunctionScope: false,
-	}
-	c.DefineVariable("stdout", Variable{
-		Name:    "stdout",
-		Mutable: false,
-		Type:    OutputType,
-		Value: &Value{
-			Type:  OutputType,
-			Value: nil,
-		},
-	})
-	inputFunctionName := "input"
-	inputFunction := Function{
-		name: &inputFunctionName,
-		Signature: Signature{
-			Parameters: []Parameter{},
-			ReturnType: StringType,
-		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			var input string
-			_, err := fmt.Scanln(&input)
-			if err != nil {
-				panic(err)
-			}
-
-			return NonReturningValue(&Value{Value: input, Type: StringType})
-		}),
-	}
-
-	inputContract := NewFunctionType(&inputFunction)
-
-	c.DefineVariable(inputFunctionName, Variable{
-		Name:    inputFunctionName,
-		Mutable: false,
-		Type:    inputContract,
-		Value: &Value{
-			Type:  inputContract,
-			Value: inputFunction,
-		},
-	})
-
-	emptyName := "empty"
-	emptyFun := &Function{
-		name: &emptyName,
-		Signature: Signature{
-			Parameters: []Parameter{},
-			ReturnType: NewCollectionTypeOf(AnyType),
-		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			return NonReturningValue(&Value{
-				Type: NewCollectionTypeOf(AnyType),
-				Value: &Collection{
-					ElementType: AnyType,
-					Elements:    []*Value{},
-				},
-			})
-		}),
-	}
-	emptyContract := NewFunctionType(emptyFun)
-
-	c.DefineVariable(emptyName, Variable{
-		Name:    emptyName,
-		Mutable: false,
-		Type:    emptyContract,
-		Value: &Value{
-			Type:  emptyContract,
-			Value: emptyFun,
-		},
-	})
-
-	Init(c)
-	return c
-}
-
-func (c *Context) DefineVariable(name string, value Variable) {
-
+func (c *Context) DefineVariable(name string, value *Variable) {
 	vars := c.variables[name]
-	vars = append(vars, &value)
+	vars = append(vars, value)
 	c.variables[name] = vars
 }
 
@@ -237,7 +154,7 @@ func (c *Context) FindType(name string) Type {
 }
 
 func (c *Context) EnterScope(name string) *Context {
-	scope := NewContext()
+	scope := NewContext(false)
 	scope.parent = c
 	scope.namespace = c.name
 	scope.name = name
@@ -318,23 +235,6 @@ func (c *Context) string() string {
 	}
 
 	return s
-}
-
-func (c *Context) Clone() *Context {
-	var parentClone *Context = nil
-	if c.parent != nil {
-		parentClone = c.parent.Clone()
-	}
-	return &Context{
-		variables:       c.variables,
-		parameters:      c.parameters,
-		namespace:       c.namespace,
-		name:            c.name,
-		contextPath:     c.contextPath,
-		types:           c.types,
-		parent:          parentClone,
-		isFunctionScope: c.isFunctionScope,
-	}
 }
 
 func (c *Context) Stringify(value *Value) string {
