@@ -32,7 +32,7 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", util.NillableStringify(f.name, "<anonymous>"), len(f.Signature.Parameters), len(parameters)))
 	}
 
-	scope := context.EnterScope(f.String())
+	scope := context.EnterScope(*f.name)
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
