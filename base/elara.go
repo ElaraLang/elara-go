@@ -14,7 +14,7 @@ import (
 )
 
 func ExecuteFull(fileName string, scriptMode bool) {
-	loadStdLib()
+	LoadStdLib()
 	_, input := loadFile(fileName)
 	start := time.Now()
 	_, lexTime, parseTime, execTime := Execute(&fileName, string(input), scriptMode)
@@ -24,7 +24,7 @@ func ExecuteFull(fileName string, scriptMode bool) {
 	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
 }
 
-func loadStdLib() {
+func LoadStdLib() {
 	usr, err := user.Current()
 	if err != nil {
 		panic(err)

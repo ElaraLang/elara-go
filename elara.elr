@@ -2,13 +2,9 @@ namespace test/lol
 import elara/std
 
 let c = [1, 2, 3, 4]
-
 let plus1(Int i) => { i + 1 }
-
 let times3(Int i) => { i * 3 }
-
-let isEven(Int i) => { i % 2 == 0}
-
+let isEven(Int i) => { i % 2 == 0 }
 map(c, plus1)
 c.map(times3)
 c.filter(isEven)
