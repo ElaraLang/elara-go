@@ -46,12 +46,8 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 		res := command.Exec(s.context)
 		values[i] = res
 		if scriptMode {
-			formatted := res.String()
-			if formatted == nil {
-				fmt.Println("<no value>")
-			} else {
-				fmt.Println(*formatted)
-			}
+			formatted := s.context.Stringify(res)
+			fmt.Println(formatted)
 		}
 	}
 	return values

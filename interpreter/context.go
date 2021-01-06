@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"github.com/ElaraLang/elara/util"
 )
 
 type Context struct {
@@ -334,5 +335,25 @@ func (c *Context) Clone() *Context {
 		types:           c.types,
 		parent:          parentClone,
 		isFunctionScope: c.isFunctionScope,
+	}
+}
+
+func (c *Context) Stringify(value *Value) string {
+	if value == nil {
+		return "<empty value>"
+	}
+	toString := c.FindFunction("toString", &Signature{
+		Parameters: []Parameter{
+			{Name: "this",
+				Type: value.Type,
+			},
+		},
+		ReturnType: StringType,
+	})
+	if toString != nil {
+		asString := toString.Exec(c, []*Value{value})
+		return asString.Value.(string)
+	} else {
+		return util.Stringify(value.Value)
 	}
 }
