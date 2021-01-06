@@ -13,8 +13,10 @@ type Type interface {
 }
 
 type StructType struct {
-	TypeName   string
-	Properties map[string]Property
+	TypeName          string
+	Properties        []Property
+	propertyPositions map[string]int
+	constructor       *Value //*Function of the constructor
 }
 
 func (t *StructType) Name() string {
@@ -22,20 +24,28 @@ func (t *StructType) Name() string {
 }
 
 func (t *StructType) Accepts(otherType Type) bool {
-	elem, ok := otherType.(*StructType)
+	otherStruct, ok := otherType.(*StructType)
 	if !ok {
 		return false
 	}
-	for s, property := range t.Properties {
-		other, exists := elem.Properties[s]
+	for _, property := range t.Properties {
+		byName, exists := otherStruct.GetProperty(property.Name)
 		if !exists {
-			return false
+			return false //Must have all of the properties
 		}
-		if !property.Type.Accepts(other.Type) {
-			return false
+		if !property.Type.Accepts(byName.Type) {
+			return false //And the types must be acceptable
 		}
 	}
 	return true
+}
+
+func (t *StructType) GetProperty(identifier string) (Property, bool) {
+	i, present := t.propertyPositions[identifier]
+	if !present {
+		return Property{}, false
+	}
+	return t.Properties[i], true
 }
 
 type Property struct {

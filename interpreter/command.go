@@ -11,7 +11,7 @@ import (
 )
 
 type Command interface {
-	Exec(ctx *Context) ReturnedValue
+	Exec(ctx *Context) *ReturnedValue
 }
 
 type DefineVarCommand struct {
@@ -32,7 +32,7 @@ func (c *DefineVarCommand) getType(ctx *Context) Type {
 	return c.runtimeType
 }
 
-func (c *DefineVarCommand) Exec(ctx *Context) ReturnedValue {
+func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
 	var value *Value
 	foundVar, _ := ctx.FindVariableMaxDepth(c.Name, 1)
 	if foundVar != nil {
@@ -43,7 +43,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) ReturnedValue {
 			if valueIsFunction && !asFunction.Signature.Accepts(&valueAsFunction.Signature, false) {
 				//We'll allow it because the functions have different arity
 			} else {
-				panic("Variable named " + c.Name + " already exists")
+				panic("Variable named " + c.Name + " already exists with the current signature")
 			}
 		} else {
 			panic("Variable named " + c.Name + " already exists")
@@ -81,7 +81,7 @@ type AssignmentCommand struct {
 	value Command
 }
 
-func (c *AssignmentCommand) Exec(ctx *Context) ReturnedValue {
+func (c *AssignmentCommand) Exec(ctx *Context) *ReturnedValue {
 	variable := ctx.FindVariable(c.Name)
 	if variable == nil {
 		panic("No such variable " + c.Name)
@@ -109,7 +109,7 @@ func (c *VariableCommand) findVariable(ctx *Context) *Variable {
 	variable := ctx.FindVariable(c.Variable)
 	return variable
 }
-func (c *VariableCommand) Exec(ctx *Context) ReturnedValue {
+func (c *VariableCommand) Exec(ctx *Context) *ReturnedValue {
 	paramIndex := -1
 	fun := ctx.function
 	if fun != nil {
@@ -175,7 +175,7 @@ func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, 
 
 	return receiverFunction
 }
-func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
+func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 	context, usingReceiver := c.Invoking.(*ContextCommand)
 
 	argValues := make([]*Value, len(c.args))
@@ -226,26 +226,21 @@ func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 	structType, isStruct := receiver.Type.(*StructType)
 
 	if isStruct {
-		value, ok := structType.Properties[context.variable]
-		if !ok {
-			argTypes := make([]string, len(c.args))
-			for i, arg := range c.args {
-				argTypes[i] = arg.Exec(ctx).Unwrap().Type.Name()
+		value, ok := structType.GetProperty(context.variable)
+		if ok {
+			function, ok := value.DefaultValue.Value.(*Function)
+			if !ok {
+				panic("Cannot invoke non-function " + value.Name)
 			}
-			panic("No such function " + receiver.Type.Name() + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
-		}
-		function, ok := value.DefaultValue.Value.(*Function)
-		if !ok {
-			panic("Cannot invoke non-function " + value.Name)
-		}
-		this := context.receiver.Exec(ctx).Unwrap()
+			this := context.receiver.Exec(ctx).Unwrap()
 
-		argValues := make([]*Value, len(c.args))
-		argValues = append(argValues, this)
-		for i, arg := range c.args {
-			argValues[i] = arg.Exec(ctx).Unwrap()
+			argValues := make([]*Value, len(c.args))
+			argValues = append(argValues, this)
+			for i, arg := range c.args {
+				argValues[i] = arg.Exec(ctx).Unwrap()
+			}
+			return NonReturningValue(function.Exec(ctx, argValues))
 		}
-		return NonReturningValue(function.Exec(ctx, argValues))
 	}
 
 	//Look for a receiver
@@ -257,14 +252,14 @@ func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 }
 
 type AbstractCommand struct {
-	content func(ctx *Context) ReturnedValue
+	content func(ctx *Context) *ReturnedValue
 }
 
-func (c *AbstractCommand) Exec(ctx *Context) ReturnedValue {
+func (c *AbstractCommand) Exec(ctx *Context) *ReturnedValue {
 	return c.content(ctx)
 }
 
-func NewAbstractCommand(content func(ctx *Context) ReturnedValue) *AbstractCommand {
+func NewAbstractCommand(content func(ctx *Context) *ReturnedValue) *AbstractCommand {
 	return &AbstractCommand{
 		content: content,
 	}
@@ -274,7 +269,7 @@ type LiteralCommand struct {
 	value Value
 }
 
-func (c *LiteralCommand) Exec(_ *Context) ReturnedValue {
+func (c *LiteralCommand) Exec(_ *Context) *ReturnedValue {
 	return NonReturningValue(&c.value)
 }
 
@@ -287,7 +282,7 @@ type FunctionLiteralCommand struct {
 	currentContext *Context
 }
 
-func (c *FunctionLiteralCommand) Exec(ctx *Context) ReturnedValue {
+func (c *FunctionLiteralCommand) Exec(ctx *Context) *ReturnedValue {
 	if c.currentContext == nil {
 		c.currentContext = ctx.Clone()
 		//Function literals take a snapshot of their current context to avoid scoping issues
@@ -332,11 +327,11 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) ReturnedValue {
 
 type BinaryOperatorCommand struct {
 	lhs Command
-	op  func(ctx *Context, lhs *Value, rhs *Value) ReturnedValue
+	op  func(ctx *Context, lhs *Value, rhs *Value) *ReturnedValue
 	rhs Command
 }
 
-func (c *BinaryOperatorCommand) Exec(ctx *Context) ReturnedValue {
+func (c *BinaryOperatorCommand) Exec(ctx *Context) *ReturnedValue {
 	lhs := c.lhs.Exec(ctx).Unwrap()
 	rhs := c.rhs.Exec(ctx).Unwrap()
 
@@ -347,8 +342,8 @@ type BlockCommand struct {
 	lines []Command
 }
 
-func (c *BlockCommand) Exec(ctx *Context) ReturnedValue {
-	var last ReturnedValue
+func (c *BlockCommand) Exec(ctx *Context) *ReturnedValue {
+	var last *ReturnedValue
 	for _, line := range c.lines {
 		val := line.Exec(ctx)
 		if val.IsReturning {
@@ -364,18 +359,26 @@ type ContextCommand struct {
 	variable string
 }
 
-func (c *ContextCommand) Exec(ctx *Context) ReturnedValue {
+func (c *ContextCommand) Exec(ctx *Context) *ReturnedValue {
 	receiver := c.receiver.Exec(ctx).Unwrap()
-	collection, isCollection := receiver.Value.(*Collection)
-	if !isCollection {
+	switch val := receiver.Value.(type) {
+	case *Collection:
+		{
+			switch c.variable {
+			case "size":
+				return NonReturningValue(IntValue(int64(len(val.Elements))))
+			default:
+				panic("Unknown property" + c.variable)
+			}
+		}
+	case *Instance:
+		{
+			return NonReturningValue(val.Values[c.variable])
+		}
+	default:
 		panic("Unsupported receiver " + util.Stringify(receiver))
 	}
-	switch c.variable {
-	case "size":
-		return NonReturningValue(IntValue(int64(len(collection.Elements))))
-	default:
-		panic("Unknown property" + c.variable)
-	}
+
 	//instance, isInstance := receiver.Value.(Instance)
 	//if isInstance {
 	//	variable, ok := instance.Values[c.variable]
@@ -402,7 +405,7 @@ type IfElseCommand struct {
 	elseBranch Command
 }
 
-func (c *IfElseCommand) Exec(ctx *Context) ReturnedValue {
+func (c *IfElseCommand) Exec(ctx *Context) *ReturnedValue {
 	condition := c.condition.Exec(ctx)
 	value, ok := condition.Unwrap().Value.(bool)
 	if !ok {
@@ -426,7 +429,7 @@ type IfElseExpressionCommand struct {
 	elseResult Command
 }
 
-func (c *IfElseExpressionCommand) Exec(ctx *Context) ReturnedValue {
+func (c *IfElseExpressionCommand) Exec(ctx *Context) *ReturnedValue {
 	condition := c.condition.Exec(ctx)
 	value, ok := condition.Unwrap().Value.(bool)
 	if !ok {
@@ -454,7 +457,7 @@ type ReturnCommand struct {
 	returning Command
 }
 
-func (c *ReturnCommand) Exec(ctx *Context) ReturnedValue {
+func (c *ReturnCommand) Exec(ctx *Context) *ReturnedValue {
 	if c.returning == nil {
 		return ReturningValue(UnitValue())
 	}
@@ -465,7 +468,7 @@ type NamespaceCommand struct {
 	namespace string
 }
 
-func (c *NamespaceCommand) Exec(ctx *Context) ReturnedValue {
+func (c *NamespaceCommand) Exec(ctx *Context) *ReturnedValue {
 	ctx.Init(c.namespace)
 	return NilValue()
 }
@@ -474,7 +477,7 @@ type ImportCommand struct {
 	imports []string
 }
 
-func (c *ImportCommand) Exec(ctx *Context) ReturnedValue {
+func (c *ImportCommand) Exec(ctx *Context) *ReturnedValue {
 	for _, s := range c.imports {
 		ctx.Import(s)
 	}
@@ -486,29 +489,44 @@ type StructDefCommand struct {
 	fields []parser.StructField
 }
 
-func (c *StructDefCommand) Exec(ctx *Context) ReturnedValue {
-	panic("TODO StructDefCommand")
-	//variables := NewVariableMap()
-	//
-	//for _, field := range c.fields {
-	//	var Type Type
-	//	if field.FieldType == nil {
-	//		Type = *AnyType
-	//	} else {
-	//		Type = *FromASTType(*field.FieldType, ctx)
-	//	}
-	//	variables.Set(field.Identifier, &Variable{
-	//		Name:    field.Identifier,
-	//		Mutable: field.Mutable,
-	//		Type:    Type,
-	//		Value:   nil,
-	//	})
-	//}
-	//ctx.types[c.name] = Type{
-	//	Name:      c.name,
-	//	variables: variables,
-	//}
-	//return nil
+func (c *StructDefCommand) Exec(ctx *Context) *ReturnedValue {
+
+	properties := make([]Property, len(c.fields))
+	propertyPositions := map[string]int{}
+
+	for i, field := range c.fields {
+		var Type Type
+		if field.FieldType == nil {
+			Type = AnyType
+		} else {
+			Type = FromASTType(*field.FieldType, ctx)
+		}
+
+		var defaultValue *Value
+		if field.Default != nil {
+			defaultValue = ExpressionToCommand(field.Default).Exec(ctx).Unwrap()
+		}
+
+		modifiers := uint(0)
+		if field.Mutable {
+			modifiers |= Mut
+		}
+		properties[i] = Property{
+			Name:         field.Identifier,
+			Modifiers:    modifiers,
+			Type:         Type,
+			DefaultValue: defaultValue,
+		}
+		propertyPositions[field.Identifier] = i
+	}
+
+	ctx.types[c.name] = &StructType{
+		TypeName:          c.name,
+		Properties:        properties,
+		propertyPositions: propertyPositions,
+	}
+
+	return NilValue()
 }
 
 type ExtendCommand struct {
@@ -516,7 +534,7 @@ type ExtendCommand struct {
 	statements []Command
 }
 
-func (c *ExtendCommand) Exec(ctx *Context) ReturnedValue {
+func (c *ExtendCommand) Exec(ctx *Context) *ReturnedValue {
 	panic("TODO ExtendCommand")
 	//extending := ctx.FindType(c.Type)
 	//if extending == nil {
@@ -545,7 +563,7 @@ type TypeCheckCommand struct {
 	checkType  parser.Type
 }
 
-func (c *TypeCheckCommand) Exec(ctx *Context) ReturnedValue {
+func (c *TypeCheckCommand) Exec(ctx *Context) *ReturnedValue {
 	checkAgainst := FromASTType(c.checkType, ctx)
 	if checkAgainst == nil {
 		panic("No such type " + util.Stringify(c.checkType))
@@ -560,7 +578,7 @@ type WhileCommand struct {
 	body      Command
 }
 
-func (c *WhileCommand) Exec(ctx *Context) ReturnedValue {
+func (c *WhileCommand) Exec(ctx *Context) *ReturnedValue {
 	for {
 		val := c.condition.Exec(ctx)
 		condition, ok := val.Unwrap().Value.(bool)
@@ -579,7 +597,7 @@ type CollectionCommand struct {
 	Elements []Command
 }
 
-func (c *CollectionCommand) Exec(ctx *Context) ReturnedValue {
+func (c *CollectionCommand) Exec(ctx *Context) *ReturnedValue {
 	elements := make([]*Value, len(c.Elements))
 	for i, element := range c.Elements {
 		elements[i] = element.Exec(ctx).Unwrap()
@@ -608,7 +626,7 @@ type AccessCommand struct {
 	index    Command
 }
 
-func (c *AccessCommand) Exec(ctx *Context) ReturnedValue {
+func (c *AccessCommand) Exec(ctx *Context) *ReturnedValue {
 	coll, isColl := c.checking.Exec(ctx).Unwrap().Value.(*Collection)
 	if !isColl {
 		panic("Indexed access not supported for non-collection type")
@@ -793,7 +811,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 				args: []Command{rhsCmd},
 			}
 		case lexer.NotEquals:
-			return NewAbstractCommand(func(ctx *Context) ReturnedValue {
+			return NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 				command := &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "equals"},
 					args: []Command{rhsCmd},
 				}

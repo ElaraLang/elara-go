@@ -44,7 +44,7 @@ func Init(context *Context) {
 				}},
 			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0)
 			otherParam := ctx.FindParameter(1)
 			concatenated := this.Value.(string) + util.Stringify(otherParam.Value)
@@ -81,7 +81,7 @@ func Init(context *Context) {
 				}},
 			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0)
 			otherParam := ctx.FindParameter(1)
 
@@ -104,6 +104,22 @@ func Init(context *Context) {
 		},
 	})
 
+	define(context, "toString", &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: AnyType,
+				},
+			},
+			ReturnType: StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			this := ctx.FindParameter(0)
+			return NonReturningValue(StringValue(ctx.Stringify(this)))
+		}),
+	})
+
 	colPlusName := "plus"
 	colPlus := &Function{
 		Signature: Signature{
@@ -120,7 +136,7 @@ func Init(context *Context) {
 			},
 			ReturnType: NewCollectionTypeOf(AnyType),
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0).Value.(*Collection)
 			other := ctx.FindParameter(1).Value.(*Collection)
 
@@ -434,7 +450,7 @@ func Init(context *Context) {
 			},
 			ReturnType: UnitType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			value := ctx.FindParameter(1)
 			asString := ctx.Stringify(value)
 			fmt.Printf("%s", asString)
@@ -470,7 +486,7 @@ func Init(context *Context) {
 			ReturnType: BooleanType,
 		},
 		name: &anyEqualsName,
-		Body: NewAbstractCommand(func(c *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(c *Context) *ReturnedValue {
 			this := c.FindParameter(0)
 			other := c.FindParameter(1)
 			return NonReturningValue(BooleanValue(this.Value == other.Value))

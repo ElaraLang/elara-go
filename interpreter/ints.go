@@ -18,7 +18,7 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0).Value.(int64)
 			value := ctx.FindParameter(1).Value.(int64)
 
@@ -42,7 +42,7 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0).Value.(int64)
 			value := ctx.FindParameter(1).Value.(int64)
 
@@ -65,7 +65,7 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0).Value.(int64)
 			value := ctx.FindParameter(1).Value.(int64)
 
@@ -88,7 +88,7 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0).Value.(int64)
 			value := ctx.FindParameter(1).Value.(int64)
 
@@ -111,7 +111,7 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0).Value.(int64)
 			value := ctx.FindParameter(1).Value.(int64)
 

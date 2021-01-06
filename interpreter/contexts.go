@@ -75,7 +75,7 @@ func NewContext(init bool) *Context {
 			Parameters: []Parameter{},
 			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			var input string
 			_, err := fmt.Scanln(&input)
 			if err != nil {
@@ -105,7 +105,7 @@ func NewContext(init bool) *Context {
 			Parameters: []Parameter{},
 			ReturnType: NewCollectionTypeOf(AnyType),
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			return NonReturningValue(&Value{
 				Type: NewCollectionTypeOf(AnyType),
 				Value: &Collection{

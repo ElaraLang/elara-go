@@ -7,6 +7,19 @@ let plus1(Int i) => { i + 1 }
 let times3(Int i) => { i * 3 }
 let isEven(Int i) => { i % 2 == 0 }
 
-c.map(plus1).filter(isEven).forEach(print)
+struct Person {
+    String name
+    Int age
+}
 
-print(c * 3)
+let daveFactory = () => { Person("Dave", 50) }
+
+let produceDaves(Int amount) => {
+    let factories = [daveFactory] * amount
+    factories.map(run)
+}
+
+let daves = produceDaves(50)
+
+print(daves)
+print("50 daves coming right up!")

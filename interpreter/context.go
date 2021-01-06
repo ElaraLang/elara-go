@@ -171,6 +171,10 @@ func (c *Context) FindConstructor(name string) *Value {
 	if !isStruct {
 		panic("Cannot construct non struct type")
 	}
+	if asStruct.constructor != nil {
+		return asStruct.constructor
+	}
+
 	constructorParams := make([]Parameter, 0)
 	i := uint(0)
 	for _, v := range asStruct.Properties {
@@ -184,20 +188,20 @@ func (c *Context) FindConstructor(name string) *Value {
 		i++
 	}
 
-	constructor := Function{
+	constructor := &Function{
 		Signature: Signature{
 			Parameters: constructorParams,
 			ReturnType: t,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			values := make(map[string]*Value, len(constructorParams))
 			for _, param := range constructorParams {
 				values[param.Name] = ctx.FindParameter(param.Position)
 			}
 			return NonReturningValue(&Value{
 				Type: t,
-				Value: Instance{
-					Type:   t,
+				Value: &Instance{
+					Type:   asStruct,
 					Values: values,
 				},
 			})
@@ -205,10 +209,12 @@ func (c *Context) FindConstructor(name string) *Value {
 		name: &name,
 	}
 
-	return &Value{
-		Type:  NewFunctionType(&constructor),
+	constructorVal := &Value{
+		Type:  NewFunctionType(constructor),
 		Value: constructor,
 	}
+	asStruct.constructor = constructorVal
+	return constructorVal
 }
 
 func (c *Context) Import(namespace string) {
@@ -242,18 +248,18 @@ func (c *Context) Stringify(value *Value) string {
 	if value == nil {
 		return "<empty value>"
 	}
-	toString := c.FindFunction("toString", &Signature{
-		Parameters: []Parameter{
-			{Name: "this",
-				Type: value.Type,
-			},
-		},
-		ReturnType: StringType,
-	})
-	if toString != nil {
-		asString := toString.Exec(c, []*Value{value})
-		return asString.Value.(string)
-	} else {
-		return util.Stringify(value.Value)
-	}
+	//toString := c.FindFunction("toString", &Signature{
+	//	Parameters: []Parameter{
+	//		{Name: "this",
+	//			Type: value.Type,
+	//		},
+	//	},
+	//	ReturnType: StringType,
+	//})
+	//if toString != nil {
+	//	asString := toString.Exec(c, []*Value{value})
+	//	return asString.Value.(string)
+	//} else {
+	return util.Stringify(value.Value)
+	//}
 }

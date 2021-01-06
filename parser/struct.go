@@ -6,7 +6,7 @@ type StructField struct {
 	Mutable    bool
 	Identifier string
 	FieldType  *Type
-	Default    *Expr
+	Default    Expr
 }
 
 func (p *Parser) structFields() (fields []StructField) {
@@ -64,6 +64,6 @@ func (p *Parser) structField() (field *StructField) {
 		Mutable:    mutable,
 		Identifier: identifier,
 		FieldType:  &typ,
-		Default:    &def,
+		Default:    def,
 	}
 }
