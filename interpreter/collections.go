@@ -30,6 +30,11 @@ func NewCollectionType(collection *Collection) Type {
 		collection.ElementType,
 	}
 }
+func NewCollectionTypeOf(elemType Type) Type {
+	return &CollectionType{
+		elemType,
+	}
+}
 
 func (t *Collection) String() string {
 	elemStrings := make([]string, len(t.Elements))

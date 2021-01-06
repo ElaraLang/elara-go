@@ -24,10 +24,6 @@ var types = map[string]Type{
 	"Output":  OutputType,
 }
 
-func BuiltInTypeByName(name string) Type {
-	return types[name]
-}
-
 func Init(context *Context) {
 	for s, t := range types {
 		context.types[s] = t
@@ -103,6 +99,55 @@ func Init(context *Context) {
 		Value: &Value{
 			Type:  anyPlusType,
 			Value: anyPlus,
+		},
+	})
+
+	colPlusName := "plus"
+	colPlus := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: NewCollectionTypeOf(AnyType),
+				},
+				{
+					Name: "other",
+					Type: NewCollectionTypeOf(AnyType),
+				},
+			},
+			ReturnType: NewCollectionTypeOf(AnyType),
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			this := ctx.FindParameter("this").Value.(*Collection)
+			other := ctx.FindParameter("other").Value.(*Collection)
+
+			elems := make([]*Value, len(this.Elements)+len(other.Elements))
+			for i, element := range this.Elements {
+				elems[i] = element
+			}
+			for i, element := range other.Elements {
+				elems[i+len(this.Elements)] = element
+			}
+
+			newCol := &Collection{
+				ElementType: this.ElementType,
+				Elements:    elems,
+			}
+			return &Value{
+				Type:  NewCollectionType(newCol),
+				Value: newCol,
+			}
+		}),
+		name: &colPlusName,
+	}
+	colPlusType := NewFunctionType(colPlus)
+	context.DefineVariable(colPlusName, Variable{
+		Name:    colPlusName,
+		Mutable: false,
+		Type:    colPlusType,
+		Value: &Value{
+			Type:  colPlusType,
+			Value: colPlus,
 		},
 	})
 	//	"to-int": {
