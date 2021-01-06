@@ -38,7 +38,7 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		expectedParameter := f.Signature.Parameters[i]
 
 		if !expectedParameter.Type.Accepts(paramValue.Type) {
-			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, *paramValue.String()))
+			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, paramValue.String()))
 		}
 
 		scope.DefineParameter(expectedParameter.Position, paramValue.Copy()) //Passing by value

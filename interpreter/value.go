@@ -42,12 +42,12 @@ func (r ReturnedValue) Unwrap() *Value {
 	}
 	return r.Value
 }
-func (v *Value) String() *string {
+func (v *Value) String() string {
 	if v == nil {
-		return nil
+		return ""
 	}
 	formatted := fmt.Sprintf("%s (%s)", util.Stringify(v.Value), v.Type.Name())
-	return &formatted
+	return formatted
 }
 
 func (v *Value) Copy() *Value {

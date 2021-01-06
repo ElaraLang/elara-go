@@ -39,7 +39,7 @@ func NewCollectionTypeOf(elemType Type) Type {
 func (t *Collection) String() string {
 	elemStrings := make([]string, len(t.Elements))
 	for i, element := range t.Elements {
-		elemStrings[i] = *element.String()
+		elemStrings[i] = element.String()
 	}
 	return "[" + strings.Join(elemStrings, ", ") + "]"
 }

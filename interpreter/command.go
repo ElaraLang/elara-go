@@ -80,7 +80,7 @@ func (c *AssignmentCommand) Exec(ctx *Context) ReturnedValue {
 	value := c.value.Exec(ctx).Unwrap()
 
 	if !variable.Type.Accepts(value.Type) {
-		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name() + " to value " + *value.String() + " of type " + value.Type.Name())
+		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name() + " to value " + value.String() + " of type " + value.Type.Name())
 	}
 
 	variable.Value = value
@@ -91,6 +91,10 @@ type VariableCommand struct {
 	Variable string
 }
 
+func (c *VariableCommand) findVariable(ctx *Context) *Variable {
+	variable := ctx.FindVariable(c.Variable)
+	return variable
+}
 func (c *VariableCommand) Exec(ctx *Context) ReturnedValue {
 	paramIndex := -1
 	fun := ctx.function
@@ -108,40 +112,100 @@ func (c *VariableCommand) Exec(ctx *Context) ReturnedValue {
 			return NonReturningValue(param)
 		}
 	}
-	variable := ctx.FindVariable(c.Variable)
-	if variable == nil {
-		constructor := ctx.FindConstructor(c.Variable)
-		if constructor == nil {
-			panic("No such variable or parameter or constructor " + c.Variable)
-		}
-		return NonReturningValue(constructor)
+	variable := c.findVariable(ctx)
+	if variable != nil {
+		return NonReturningValue(variable.Value)
 	}
-	return NonReturningValue(variable.Value)
+
+	constructor := ctx.FindConstructor(c.Variable)
+	if constructor == nil {
+		panic("No such variable or parameter or constructor " + c.Variable)
+	}
+	return NonReturningValue(constructor)
 }
 
 type InvocationCommand struct {
 	Invoking Command
 	args     []Command
+
+	cachedFun *Function
 }
 
+func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, argValues []*Value, functionName string) *Function {
+	receiverType := receiver.Type
+	parameters := []Parameter{{
+		Name: "this",
+		Type: receiverType,
+	}}
+	for i, value := range argValues {
+		parameters = append(parameters, Parameter{
+			Name: fmt.Sprintf("<param%d>", i),
+			Type: value.Type,
+		})
+	}
+	receiverSignature := &Signature{
+		Parameters: parameters,
+		ReturnType: AnyType, //can't infer this rn
+	}
+	receiverFunction := ctx.FindFunction(functionName, receiverSignature)
+	if receiverFunction == nil {
+		paramTypes := make([]string, 0)
+		for _, value := range argValues {
+			paramTypes = append(paramTypes, value.Type.Name())
+		}
+		panic("Unknown function " + receiverType.Name() + "::" + functionName + "(" + strings.Join(paramTypes, ",") + ")")
+	}
+
+	return receiverFunction
+}
 func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 	context, usingReceiver := c.Invoking.(*ContextCommand)
+
 	argValues := make([]*Value, len(c.args))
 	for i, arg := range c.args {
 		argValues[i] = arg.Exec(ctx).Unwrap()
 	}
+
 	if !usingReceiver {
+		if c.cachedFun != nil {
+			return NonReturningValue(c.cachedFun.Exec(ctx, argValues)) //Avoid unnecessary lookup
+		}
 		val := c.Invoking.Exec(ctx).Unwrap()
 		fun, ok := val.Value.(*Function)
 		if !ok {
 			panic("Cannot invoke non-value")
+		}
+		switch t := c.Invoking.(type) {
+		case *VariableCommand:
+			variable := t.findVariable(ctx)
+			if variable != nil && !variable.Mutable {
+				c.cachedFun = fun
+			}
 		}
 
 		return NonReturningValue(fun.Exec(ctx, argValues))
 	}
 
 	//ContextCommand seems to think it's a special case... because it is.
-	receiver := context.receiver.Exec(ctx).Unwrap()
+	var receiver *Value
+
+	if c.cachedFun == nil {
+		switch t := context.receiver.(type) {
+		case *VariableCommand:
+			variable := t.findVariable(ctx)
+			if variable != nil && !variable.Mutable {
+				receiver = variable.Value
+				c.cachedFun = c.findReceiverFunction(ctx, receiver, argValues, context.variable)
+			}
+		}
+	}
+	receiver = context.receiver.Exec(ctx).Unwrap()
+
+	if c.cachedFun != nil {
+		argValuesAndSelf := []*Value{receiver}
+		argValuesAndSelf = append(argValuesAndSelf, argValues...)
+		return NonReturningValue(c.cachedFun.Exec(ctx, argValuesAndSelf))
+	}
 	structType, isStruct := receiver.Type.(*StructType)
 
 	if isStruct {
@@ -168,29 +232,8 @@ func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 	}
 
 	//Look for a receiver
-	receiverType := receiver.Type
-	parameters := []Parameter{{
-		Name: "this",
-		Type: receiverType,
-	}}
-	for i, value := range argValues {
-		parameters = append(parameters, Parameter{
-			Name: fmt.Sprintf("<param%d>", i),
-			Type: value.Type,
-		})
-	}
-	receiverSignature := &Signature{
-		Parameters: parameters,
-		ReturnType: AnyType, //can't infer this rn
-	}
-	receiverFunction := ctx.FindFunction(context.variable, receiverSignature)
-	if receiverFunction == nil {
-		paramTypes := make([]string, 0)
-		for _, value := range argValues {
-			paramTypes = append(paramTypes, value.Type.Name())
-		}
-		panic("Unknown function " + receiverType.Name() + "::" + context.variable + "(" + strings.Join(paramTypes, ",") + ")")
-	}
+
+	receiverFunction := c.findReceiverFunction(ctx, receiver, argValues, context.variable)
 	argValuesAndSelf := []*Value{receiver}
 	argValuesAndSelf = append(argValuesAndSelf, argValues...)
 	return NonReturningValue(receiverFunction.Exec(ctx, argValuesAndSelf))
