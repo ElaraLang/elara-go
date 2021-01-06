@@ -3,6 +3,7 @@ package util
 import (
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 func NillableStringify(nillableStr *string, defaultStr string) string {
@@ -19,13 +20,13 @@ func Stringify(s interface{}) string {
 	case string:
 		return t
 	case int:
-		return fmt.Sprintf("%d", t)
+		return strconv.Itoa(t)
 	case int64:
-		return fmt.Sprintf("%d", t)
+		return strconv.FormatInt(t, 10)
 	case float64:
-		return fmt.Sprintf("%g", t)
+		return strconv.FormatFloat(t, 'f', 'g', 64)
 	case bool:
-		return fmt.Sprintf("%t", t)
+		return strconv.FormatBool(t)
 	}
 
 	return fmt.Sprintf("%s: %s", reflect.TypeOf(s), s)
