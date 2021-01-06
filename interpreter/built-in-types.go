@@ -44,14 +44,14 @@ func Init(context *Context) {
 				}},
 			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this")
 			otherParam := ctx.FindParameter("other")
 			concatenated := this.Value.(string) + util.Stringify(otherParam.Value)
-			return &Value{
+			return NonReturningValue(&Value{
 				Type:  StringType,
 				Value: concatenated,
-			}
+			})
 		}),
 		name: &stringPlusName,
 	}
@@ -80,14 +80,14 @@ func Init(context *Context) {
 				}},
 			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this")
 			otherParam := ctx.FindParameter("other")
 			concatenated := util.Stringify(this.Value) + otherParam.Value.(string)
-			return &Value{
+			return NonReturningValue(&Value{
 				Type:  StringType,
 				Value: concatenated,
-			}
+			})
 		}),
 		name: &anyPlusName,
 	}
@@ -117,7 +117,7 @@ func Init(context *Context) {
 			},
 			ReturnType: NewCollectionTypeOf(AnyType),
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this").Value.(*Collection)
 			other := ctx.FindParameter("other").Value.(*Collection)
 
@@ -133,10 +133,10 @@ func Init(context *Context) {
 				ElementType: this.ElementType,
 				Elements:    elems,
 			}
-			return &Value{
+			return NonReturningValue(&Value{
 				Type:  NewCollectionType(newCol),
 				Value: newCol,
-			}
+			})
 		}),
 		name: &colPlusName,
 	}
@@ -156,7 +156,7 @@ func Init(context *Context) {
 	//			ReturnType: *IntType,
 	//		},
 	//		Body: NewAbstractCommand(func(ctx *Context) *Value {
-	//			value, err := strconv.ParseInt(ctx.receiver.Value.(string), 10, 64)
+	//			value, err := strconv.ParseInt(ctx.receiver.Value.(String), 10, 64)
 	//			if err != nil {
 	//				panic(err)
 	//			}
@@ -178,7 +178,7 @@ func Init(context *Context) {
 	//		},
 	//		Body: NewAbstractCommand(func(ctx *Context) *Value {
 	//			parameter := ctx.FindParameter("value")
-	//			eq := ctx.receiver.Value.(string) == parameter.Value
+	//			eq := ctx.receiver.Value.(String) == parameter.Value
 	//			return &Value{
 	//				Type:  BooleanType,
 	//				Value: eq,
@@ -187,7 +187,7 @@ func Init(context *Context) {
 	//	},
 	//})
 	//
-	//BooleanType.variables = convert(map[string]Function{
+	//BooleanType.variables = convert(map[String]Function{
 	//	"and": {
 	//		Signature: Signature{
 	//			Parameters: []Parameter{
@@ -329,7 +329,7 @@ func Init(context *Context) {
 	//	}),
 	//}
 	//
-	//IntType.variables = convert(map[string]Function{
+	//IntType.variables = convert(map[String]Function{
 	//	"plus": intAdd,
 	//	"add":  intAdd,
 	//	"minus": {
@@ -410,7 +410,7 @@ func Init(context *Context) {
 	//	},
 	//})
 	//
-	//FloatType.variables = convert(map[string]Function{
+	//FloatType.variables = convert(map[String]Function{
 	//	"plus": floatAdd,
 	//	"add":  floatAdd,
 	//})
@@ -430,11 +430,11 @@ func Init(context *Context) {
 			},
 			ReturnType: UnitType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			parameter := ctx.FindParameter("value")
 			asString := ctx.Stringify(parameter)
 			fmt.Printf("%s", asString)
-			return UnitValue()
+			return NonReturningValue(UnitValue())
 		}),
 		name: &outputWriteName,
 	}
@@ -465,10 +465,10 @@ func Init(context *Context) {
 			ReturnType: BooleanType,
 		},
 		name: &anyEqualsName,
-		Body: NewAbstractCommand(func(c *Context) *Value {
+		Body: NewAbstractCommand(func(c *Context) ReturnedValue {
 			this := c.FindParameter("this")
 			other := c.FindParameter("other")
-			return BooleanValue(this.Value == other.Value)
+			return NonReturningValue(BooleanValue(this.Value == other.Value))
 		}),
 	}
 	anyEqualsType := NewFunctionType(anyEquals)

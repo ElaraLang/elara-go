@@ -11,7 +11,7 @@ import (
 )
 
 type Command interface {
-	Exec(ctx *Context) *Value
+	Exec(ctx *Context) ReturnedValue
 }
 
 type DefineVarCommand struct {
@@ -32,12 +32,12 @@ func (c *DefineVarCommand) getType(ctx *Context) Type {
 	return c.runtimeType
 }
 
-func (c *DefineVarCommand) Exec(ctx *Context) *Value {
+func (c *DefineVarCommand) Exec(ctx *Context) ReturnedValue {
 	foundVar, _ := ctx.FindVariableMaxDepth(c.Name, 1)
 	if foundVar != nil {
 		panic("Variable named " + c.Name + " already exists")
 	}
-	value := c.value.Exec(ctx)
+	value := c.value.Exec(ctx).Unwrap()
 
 	if value == nil {
 		panic("Command " + reflect.TypeOf(c.value).Name() + " returned nil")
@@ -59,7 +59,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) *Value {
 	}
 
 	ctx.DefineVariable(c.Name, variable)
-	return nil
+	return NilValue()
 }
 
 type AssignmentCommand struct {
@@ -67,7 +67,7 @@ type AssignmentCommand struct {
 	value Command
 }
 
-func (c *AssignmentCommand) Exec(ctx *Context) *Value {
+func (c *AssignmentCommand) Exec(ctx *Context) ReturnedValue {
 	variable := ctx.FindVariable(c.Name)
 	if variable == nil {
 		panic("No such variable " + c.Name)
@@ -77,21 +77,21 @@ func (c *AssignmentCommand) Exec(ctx *Context) *Value {
 		panic("Cannot reassign immutable variable " + c.Name)
 	}
 
-	value := c.value.Exec(ctx)
+	value := c.value.Exec(ctx).Unwrap()
 
 	if !variable.Type.Accepts(value.Type) {
 		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name() + " to value " + *value.String() + " of type " + value.Type.Name())
 	}
 
 	variable.Value = value
-	return nil
+	return NilValue()
 }
 
 type VariableCommand struct {
 	Variable string
 }
 
-func (c *VariableCommand) Exec(ctx *Context) *Value {
+func (c *VariableCommand) Exec(ctx *Context) ReturnedValue {
 	//panic("TODO VariableCommand")
 	//if ctx.receiver != nil {
 	//receiver := ctx.receiver
@@ -116,11 +116,11 @@ func (c *VariableCommand) Exec(ctx *Context) *Value {
 			if constructor == nil {
 				panic("No such variable or parameter or constructor " + c.Variable)
 			}
-			return constructor
+			return NonReturningValue(constructor)
 		}
-		return variable.Value
+		return NonReturningValue(variable.Value)
 	}
-	return param
+	return NonReturningValue(param)
 }
 
 type InvocationCommand struct {
@@ -128,24 +128,24 @@ type InvocationCommand struct {
 	args     []Command
 }
 
-func (c *InvocationCommand) Exec(ctx *Context) *Value {
+func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 	context, usingReceiver := c.Invoking.(*ContextCommand)
 	argValues := make([]*Value, len(c.args))
 	for i, arg := range c.args {
-		argValues[i] = arg.Exec(ctx)
+		argValues[i] = arg.Exec(ctx).Unwrap()
 	}
 	if !usingReceiver {
-		val := c.Invoking.Exec(ctx)
+		val := c.Invoking.Exec(ctx).Unwrap()
 		fun, ok := val.Value.(*Function)
 		if !ok {
 			panic("Cannot invoke non-value")
 		}
 
-		return fun.Exec(ctx, argValues)
+		return NonReturningValue(fun.Exec(ctx, argValues))
 	}
 
 	//ContextCommand seems to think it's a special case... because it is.
-	receiver := context.receiver.Exec(ctx)
+	receiver := context.receiver.Exec(ctx).Unwrap()
 	structType, isStruct := receiver.Type.(*StructType)
 
 	if isStruct {
@@ -153,7 +153,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 		if !ok {
 			argTypes := make([]string, len(c.args))
 			for i, arg := range c.args {
-				argTypes[i] = arg.Exec(ctx).Type.Name()
+				argTypes[i] = arg.Exec(ctx).Unwrap().Type.Name()
 			}
 			panic("No such function " + receiver.Type.Name() + "::" + context.variable + "(" + strings.Join(argTypes, ", ") + ")")
 		}
@@ -161,14 +161,14 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 		if !ok {
 			panic("Cannot invoke non-function " + value.Name)
 		}
-		this := context.receiver.Exec(ctx)
+		this := context.receiver.Exec(ctx).Unwrap()
 
 		argValues := make([]*Value, len(c.args))
 		argValues = append(argValues, this)
 		for i, arg := range c.args {
-			argValues[i] = arg.Exec(ctx)
+			argValues[i] = arg.Exec(ctx).Unwrap()
 		}
-		return function.Exec(ctx, argValues)
+		return NonReturningValue(function.Exec(ctx, argValues))
 	}
 
 	//Look for a receiver
@@ -197,18 +197,18 @@ func (c *InvocationCommand) Exec(ctx *Context) *Value {
 	}
 	argValuesAndSelf := []*Value{receiver}
 	argValuesAndSelf = append(argValuesAndSelf, argValues...)
-	return receiverFunction.Exec(ctx, argValuesAndSelf)
+	return NonReturningValue(receiverFunction.Exec(ctx, argValuesAndSelf))
 }
 
 type AbstractCommand struct {
-	content func(ctx *Context) *Value
+	content func(ctx *Context) ReturnedValue
 }
 
-func (c *AbstractCommand) Exec(ctx *Context) *Value {
+func (c *AbstractCommand) Exec(ctx *Context) ReturnedValue {
 	return c.content(ctx)
 }
 
-func NewAbstractCommand(content func(ctx *Context) *Value) *AbstractCommand {
+func NewAbstractCommand(content func(ctx *Context) ReturnedValue) *AbstractCommand {
 	return &AbstractCommand{
 		content: content,
 	}
@@ -218,8 +218,8 @@ type LiteralCommand struct {
 	value Value
 }
 
-func (c *LiteralCommand) Exec(_ *Context) *Value {
-	return &c.value
+func (c *LiteralCommand) Exec(_ *Context) ReturnedValue {
+	return NonReturningValue(&c.value)
 }
 
 type FunctionLiteralCommand struct {
@@ -231,7 +231,7 @@ type FunctionLiteralCommand struct {
 	currentContext *Context
 }
 
-func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
+func (c *FunctionLiteralCommand) Exec(ctx *Context) ReturnedValue {
 	if c.currentContext == nil {
 		c.currentContext = ctx.Clone() //Function literals take a snapshot of their current context to avoid scoping issues
 	}
@@ -265,21 +265,21 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) *Value {
 
 	functionType := NewFunctionType(fun)
 
-	return &Value{
+	return NonReturningValue(&Value{
 		Type:  functionType,
 		Value: fun,
-	}
+	})
 }
 
 type BinaryOperatorCommand struct {
 	lhs Command
-	op  func(ctx *Context, lhs *Value, rhs *Value) *Value
+	op  func(ctx *Context, lhs *Value, rhs *Value) ReturnedValue
 	rhs Command
 }
 
-func (c *BinaryOperatorCommand) Exec(ctx *Context) *Value {
-	lhs := c.lhs.Exec(ctx)
-	rhs := c.rhs.Exec(ctx)
+func (c *BinaryOperatorCommand) Exec(ctx *Context) ReturnedValue {
+	lhs := c.lhs.Exec(ctx).Unwrap()
+	rhs := c.rhs.Exec(ctx).Unwrap()
 
 	return c.op(ctx, lhs, rhs)
 }
@@ -288,10 +288,14 @@ type BlockCommand struct {
 	lines []Command
 }
 
-func (c *BlockCommand) Exec(ctx *Context) *Value {
-	var last *Value
+func (c *BlockCommand) Exec(ctx *Context) ReturnedValue {
+	var last ReturnedValue
 	for _, line := range c.lines {
-		last = line.Exec(ctx)
+		val := line.Exec(ctx)
+		if val.IsReturning {
+			return val
+		}
+		last = val
 	}
 	return last
 }
@@ -301,15 +305,15 @@ type ContextCommand struct {
 	variable string
 }
 
-func (c *ContextCommand) Exec(ctx *Context) *Value {
-	receiver := c.receiver.Exec(ctx)
+func (c *ContextCommand) Exec(ctx *Context) ReturnedValue {
+	receiver := c.receiver.Exec(ctx).Unwrap()
 	collection, isCollection := receiver.Value.(*Collection)
 	if !isCollection {
 		panic("Unsupported receiver " + util.Stringify(receiver))
 	}
 	switch c.variable {
 	case "size":
-		return IntValue(int64(len(collection.Elements)))
+		return NonReturningValue(IntValue(int64(len(collection.Elements))))
 	default:
 		panic("Unknown property" + c.variable)
 	}
@@ -339,9 +343,9 @@ type IfElseCommand struct {
 	elseBranch Command
 }
 
-func (c *IfElseCommand) Exec(ctx *Context) *Value {
+func (c *IfElseCommand) Exec(ctx *Context) ReturnedValue {
 	condition := c.condition.Exec(ctx)
-	value, ok := condition.Value.(bool)
+	value, ok := condition.Unwrap().Value.(bool)
 	if !ok {
 		panic("If statements requires boolean value")
 	}
@@ -351,7 +355,7 @@ func (c *IfElseCommand) Exec(ctx *Context) *Value {
 	} else if c.elseBranch != nil {
 		return c.elseBranch.Exec(ctx)
 	} else {
-		return nil
+		return NilValue()
 	}
 }
 
@@ -363,9 +367,9 @@ type IfElseExpressionCommand struct {
 	elseResult Command
 }
 
-func (c *IfElseExpressionCommand) Exec(ctx *Context) *Value {
+func (c *IfElseExpressionCommand) Exec(ctx *Context) ReturnedValue {
 	condition := c.condition.Exec(ctx)
-	value, ok := condition.Value.(bool)
+	value, ok := condition.Unwrap().Value.(bool)
 	if !ok {
 		panic("If statements requires boolean value")
 	}
@@ -391,31 +395,31 @@ type ReturnCommand struct {
 	returning Command
 }
 
-func (c *ReturnCommand) Exec(ctx *Context) *Value {
+func (c *ReturnCommand) Exec(ctx *Context) ReturnedValue {
 	if c.returning == nil {
-		panic(UnitValue())
+		return ReturningValue(UnitValue())
 	}
-	panic(c.returning.Exec(ctx))
+	return ReturningValue(c.returning.Exec(ctx).Unwrap())
 }
 
 type NamespaceCommand struct {
 	namespace string
 }
 
-func (c *NamespaceCommand) Exec(ctx *Context) *Value {
+func (c *NamespaceCommand) Exec(ctx *Context) ReturnedValue {
 	ctx.Init(c.namespace)
-	return nil
+	return NilValue()
 }
 
 type ImportCommand struct {
 	imports []string
 }
 
-func (c *ImportCommand) Exec(ctx *Context) *Value {
+func (c *ImportCommand) Exec(ctx *Context) ReturnedValue {
 	for _, s := range c.imports {
 		ctx.Import(s)
 	}
-	return nil
+	return NilValue()
 }
 
 type StructDefCommand struct {
@@ -423,7 +427,7 @@ type StructDefCommand struct {
 	fields []parser.StructField
 }
 
-func (c *StructDefCommand) Exec(ctx *Context) *Value {
+func (c *StructDefCommand) Exec(ctx *Context) ReturnedValue {
 	panic("TODO StructDefCommand")
 	//variables := NewVariableMap()
 	//
@@ -453,7 +457,7 @@ type ExtendCommand struct {
 	statements []Command
 }
 
-func (c *ExtendCommand) Exec(ctx *Context) *Value {
+func (c *ExtendCommand) Exec(ctx *Context) ReturnedValue {
 	panic("TODO ExtendCommand")
 	//extending := ctx.FindType(c.Type)
 	//if extending == nil {
@@ -482,14 +486,14 @@ type TypeCheckCommand struct {
 	checkType  parser.Type
 }
 
-func (c *TypeCheckCommand) Exec(ctx *Context) *Value {
+func (c *TypeCheckCommand) Exec(ctx *Context) ReturnedValue {
 	checkAgainst := FromASTType(c.checkType, ctx)
 	if checkAgainst == nil {
 		panic("No such type " + util.Stringify(c.checkType))
 	}
-	res := c.expression.Exec(ctx)
+	res := c.expression.Exec(ctx).Unwrap()
 	is := res.Type.Accepts(checkAgainst)
-	return BooleanValue(is)
+	return NonReturningValue(BooleanValue(is))
 }
 
 type WhileCommand struct {
@@ -497,10 +501,10 @@ type WhileCommand struct {
 	body      Command
 }
 
-func (c *WhileCommand) Exec(ctx *Context) *Value {
+func (c *WhileCommand) Exec(ctx *Context) ReturnedValue {
 	for {
 		val := c.condition.Exec(ctx)
-		condition, ok := val.Value.(bool)
+		condition, ok := val.Unwrap().Value.(bool)
 		if !ok {
 			panic("If statements requires boolean condition")
 		}
@@ -509,17 +513,17 @@ func (c *WhileCommand) Exec(ctx *Context) *Value {
 		}
 		c.body.Exec(ctx)
 	}
-	return nil
+	return NilValue()
 }
 
 type CollectionCommand struct {
 	Elements []Command
 }
 
-func (c *CollectionCommand) Exec(ctx *Context) *Value {
+func (c *CollectionCommand) Exec(ctx *Context) ReturnedValue {
 	elements := make([]*Value, len(c.Elements))
 	for i, element := range c.Elements {
-		elements[i] = element.Exec(ctx)
+		elements[i] = element.Exec(ctx).Unwrap()
 	}
 	//In a proper type system we might try and find a union of all elements, but this is dynamic, and I'm lazy
 	var collType Type
@@ -534,10 +538,10 @@ func (c *CollectionCommand) Exec(ctx *Context) *Value {
 	}
 	collectionType := NewCollectionType(collection)
 
-	return &Value{
+	return NonReturningValue(&Value{
 		Type:  collectionType,
 		Value: collection,
-	}
+	})
 }
 
 type AccessCommand struct {
@@ -545,16 +549,16 @@ type AccessCommand struct {
 	index    Command
 }
 
-func (c *AccessCommand) Exec(ctx *Context) *Value {
-	coll, isColl := c.checking.Exec(ctx).Value.(*Collection)
+func (c *AccessCommand) Exec(ctx *Context) ReturnedValue {
+	coll, isColl := c.checking.Exec(ctx).Unwrap().Value.(*Collection)
 	if !isColl {
 		panic("Indexed access not supported for non-collection type")
 	}
-	index, isInt := c.index.Exec(ctx).Value.(int64)
+	index, isInt := c.index.Exec(ctx).Unwrap().Value.(int64)
 	if !isInt {
 		panic("Index was not an integer")
 	}
-	return coll.Elements[index]
+	return NonReturningValue(coll.Elements[index])
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -730,18 +734,18 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 				args: []Command{rhsCmd},
 			}
 		case lexer.NotEquals:
-			return NewAbstractCommand(func(ctx *Context) *Value {
+			return NewAbstractCommand(func(ctx *Context) ReturnedValue {
 				command := &InvocationCommand{Invoking: &ContextCommand{receiver: lhsCmd, variable: "equals"},
 					args: []Command{rhsCmd},
 				}
 
-				val := command.Exec(ctx)
+				val := command.Exec(ctx).Unwrap()
 
 				asBool, ok := (*val).Value.(bool)
 				if !ok {
 					panic("equals function did not return bool")
 				}
-				return BooleanValue(!asBool)
+				return NonReturningValue(BooleanValue(!asBool))
 			})
 
 		case lexer.Mod:

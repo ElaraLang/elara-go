@@ -3,7 +3,6 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/parser"
-	"github.com/ElaraLang/elara/util"
 )
 
 type Interpreter struct {
@@ -32,18 +31,7 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 		line := s.lines[i]
 		command := ToCommand(line)
 
-		//Ignore any top level returns
-		defer func() {
-			r := recover()
-			if r != nil {
-				_, isValue := r.(*Value)
-				if isValue {
-					return
-				}
-				panic("Expression " + util.Stringify(line) + " panicked with" + util.Stringify(r))
-			}
-		}()
-		res := command.Exec(s.context)
+		res := command.Exec(s.context).Unwrap()
 		values[i] = res
 		if scriptMode {
 			formatted := s.context.Stringify(res)

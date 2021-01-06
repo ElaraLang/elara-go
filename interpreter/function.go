@@ -44,19 +44,7 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		scope.DefineParameter(expectedParameter.Name, paramValue)
 	}
 
-	defer func() { //Catch returned values
-		s := recover()
-		if s != nil {
-			_, is := s.(*Value)
-			if is {
-				val = s.(*Value)
-			} else {
-				panic(s)
-			}
-		}
-	}()
-
-	value := f.Body.Exec(scope)
+	value := f.Body.Exec(scope).Value
 	if value == nil {
 		value = UnitValue()
 	}

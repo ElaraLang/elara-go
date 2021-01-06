@@ -64,14 +64,14 @@ func NewContext() *Context {
 			Parameters: []Parameter{},
 			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			var input string
 			_, err := fmt.Scanln(&input)
 			if err != nil {
 				panic(err)
 			}
 
-			return &Value{Value: input, Type: StringType}
+			return NonReturningValue(&Value{Value: input, Type: StringType})
 		}),
 	}
 
@@ -94,14 +94,14 @@ func NewContext() *Context {
 			Parameters: []Parameter{},
 			ReturnType: NewCollectionTypeOf(AnyType),
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
-			return &Value{
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
+			return NonReturningValue(&Value{
 				Type: NewCollectionTypeOf(AnyType),
 				Value: &Collection{
 					ElementType: AnyType,
 					Elements:    []*Value{},
 				},
-			}
+			})
 		}),
 	}
 	emptyContract := NewFunctionType(emptyFun)
@@ -271,19 +271,18 @@ func (c *Context) FindConstructor(name string) *Value {
 			Parameters: constructorParams,
 			ReturnType: t,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			values := make(map[string]*Value, len(constructorParams))
 			for _, param := range constructorParams {
 				values[param.Name] = ctx.FindParameter(param.Name)
 			}
-			return &Value{
+			return NonReturningValue(&Value{
 				Type: t,
 				Value: Instance{
 					Type:   t,
 					Values: values,
 				},
-			}
-
+			})
 		}),
 		name: &name,
 	}
@@ -313,7 +312,7 @@ func (c *Context) string() string {
 	for key, values := range c.variables {
 		s += fmt.Sprintf("%s = [\n", key)
 		for _, val := range values {
-			s += fmt.Sprintf("%s \n", val.string())
+			s += fmt.Sprintf("%s \n", val.String())
 		}
 		s += "]\n"
 	}

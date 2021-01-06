@@ -9,7 +9,7 @@ type Variable struct {
 	Value   *Value
 }
 
-func (v Variable) string() string {
+func (v Variable) String() string {
 	return fmt.Sprintf("Variable { Name: %s, mutable: %T, type: %s, Value: %s", v.Name, v.Mutable, v.Type, v.Value)
 }
 

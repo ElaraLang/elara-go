@@ -17,11 +17,11 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
-			return IntValue(this + value)
+			return NonReturningValue(IntValue(this + value))
 		}),
 	})
 
@@ -39,11 +39,11 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
-			return IntValue(this - value)
+			return NonReturningValue(IntValue(this - value))
 		}),
 	})
 
@@ -61,11 +61,11 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
-			return IntValue(this * value)
+			return NonReturningValue(IntValue(this * value))
 		}),
 	})
 
@@ -83,11 +83,11 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
-			return IntValue(this / value)
+			return NonReturningValue(IntValue(this / value))
 		}),
 	})
 
@@ -105,11 +105,11 @@ func InitInts(ctx *Context) {
 			},
 			ReturnType: IntType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
+		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
-			return IntValue(this % value)
+			return NonReturningValue(IntValue(this % value))
 		}),
 	})
 }
