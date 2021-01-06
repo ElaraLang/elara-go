@@ -21,5 +21,4 @@ let produceDaves(Int amount) => {
 
 let daves = produceDaves(50)
 
-print(daves)
 print("50 daves coming right up!")

@@ -20,6 +20,8 @@ type DefineVarCommand struct {
 	Type        parser.Type
 	value       Command
 	runtimeType Type
+
+	hashedName uint64
 }
 
 func (c *DefineVarCommand) getType(ctx *Context) Type {
@@ -33,8 +35,11 @@ func (c *DefineVarCommand) getType(ctx *Context) Type {
 }
 
 func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
+	if c.hashedName == 0 {
+		c.hashedName = util.Hash(c.Name)
+	}
 	var value *Value
-	foundVar, _ := ctx.FindVariableMaxDepth(c.Name, 1)
+	foundVar, _ := ctx.FindVariableMaxDepth(c.hashedName, 1)
 	if foundVar != nil {
 		asFunction, isFunction := foundVar.Value.Value.(*Function)
 		if isFunction {
@@ -72,17 +77,22 @@ func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
 		Value:   value,
 	}
 
-	ctx.DefineVariable(c.Name, variable)
+	ctx.DefineVariable(variable)
 	return NilValue()
 }
 
 type AssignmentCommand struct {
 	Name  string
 	value Command
+
+	hashedName uint64
 }
 
 func (c *AssignmentCommand) Exec(ctx *Context) *ReturnedValue {
-	variable := ctx.FindVariable(c.Name)
+	if c.hashedName == 0 {
+		c.hashedName = util.Hash(c.Name)
+	}
+	variable := ctx.FindVariable(c.hashedName)
 	if variable == nil {
 		panic("No such variable " + c.Name)
 	}
@@ -103,13 +113,24 @@ func (c *AssignmentCommand) Exec(ctx *Context) *ReturnedValue {
 
 type VariableCommand struct {
 	Variable string
+
+	hash      uint64
+	cachedVar *Value
 }
 
 func (c *VariableCommand) findVariable(ctx *Context) *Variable {
-	variable := ctx.FindVariable(c.Variable)
+	if c.hash == 0 {
+		c.hash = util.Hash(c.Variable)
+	}
+
+	variable := ctx.FindVariable(c.hash)
 	return variable
 }
+
 func (c *VariableCommand) Exec(ctx *Context) *ReturnedValue {
+	if c.cachedVar != nil {
+		return NonReturningValue(c.cachedVar)
+	}
 	paramIndex := -1
 	fun := ctx.function
 	if fun != nil {
@@ -138,6 +159,7 @@ func (c *VariableCommand) Exec(ctx *Context) *ReturnedValue {
 		}
 		panic("No such variable or parameter or constructor " + c.Variable)
 	}
+	c.cachedVar = constructor
 	return NonReturningValue(constructor)
 }
 
@@ -148,7 +170,7 @@ type InvocationCommand struct {
 	cachedFun *Function
 }
 
-func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, argValues []*Value, functionName string) *Function {
+func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, argValues []*Value, functionName string, nameHash uint64) *Function {
 	receiverType := receiver.Type
 	parameters := []Parameter{{
 		Name: "this",
@@ -164,7 +186,7 @@ func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, 
 		Parameters: parameters,
 		ReturnType: AnyType, //can't infer this rn
 	}
-	receiverFunction := ctx.FindFunction(functionName, receiverSignature)
+	receiverFunction := ctx.FindFunction(nameHash, receiverSignature)
 	if receiverFunction == nil {
 		paramTypes := make([]string, 0)
 		for _, value := range argValues {
@@ -212,7 +234,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 			variable := t.findVariable(ctx)
 			if variable != nil && !variable.Mutable {
 				receiver = variable.Value
-				c.cachedFun = c.findReceiverFunction(ctx, receiver, argValues, context.variable)
+				c.cachedFun = c.findReceiverFunction(ctx, receiver, argValues, context.variable, context.hash())
 			}
 		}
 	}
@@ -245,7 +267,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 
 	//Look for a receiver
 
-	receiverFunction := c.findReceiverFunction(ctx, receiver, argValues, context.variable)
+	receiverFunction := c.findReceiverFunction(ctx, receiver, argValues, context.variable, context.hash())
 	argValuesAndSelf := []*Value{receiver}
 	argValuesAndSelf = append(argValuesAndSelf, argValues...)
 	return NonReturningValue(receiverFunction.Exec(ctx, argValuesAndSelf))
@@ -266,11 +288,11 @@ func NewAbstractCommand(content func(ctx *Context) *ReturnedValue) *AbstractComm
 }
 
 type LiteralCommand struct {
-	value Value
+	value *Value
 }
 
 func (c *LiteralCommand) Exec(_ *Context) *ReturnedValue {
-	return NonReturningValue(&c.value)
+	return NonReturningValue(c.value)
 }
 
 type FunctionLiteralCommand struct {
@@ -339,12 +361,13 @@ func (c *BinaryOperatorCommand) Exec(ctx *Context) *ReturnedValue {
 }
 
 type BlockCommand struct {
-	lines []Command
+	lines []*Command
 }
 
 func (c *BlockCommand) Exec(ctx *Context) *ReturnedValue {
 	var last *ReturnedValue
-	for _, line := range c.lines {
+	for _, lineRef := range c.lines {
+		line := *lineRef
 		val := line.Exec(ctx)
 		if val.IsReturning {
 			return val
@@ -355,11 +378,21 @@ func (c *BlockCommand) Exec(ctx *Context) *ReturnedValue {
 }
 
 type ContextCommand struct {
-	receiver Command
-	variable string
+	receiver       Command
+	variable       string
+	hashedVariable uint64
 }
 
+func (c *ContextCommand) hash() uint64 {
+	if c.hashedVariable == 0 {
+		c.hashedVariable = util.Hash(c.variable)
+	}
+	return c.hashedVariable
+}
 func (c *ContextCommand) Exec(ctx *Context) *ReturnedValue {
+	if c.hashedVariable == 0 {
+		c.hashedVariable = util.Hash(c.variable)
+	}
 	receiver := c.receiver.Exec(ctx).Unwrap()
 	switch val := receiver.Value.(type) {
 	case *Collection:
@@ -652,10 +685,11 @@ func ToCommand(statement parser.Stmt) Command {
 		return ExpressionToCommand(t.Expr)
 
 	case parser.BlockStmt:
-		commands := make([]Command, len(t.Stmts))
+		commands := make([]*Command, len(t.Stmts))
 		for i, stmt := range t.Stmts {
-			commands[i] = ToCommand(stmt)
-			_, isReturn := commands[i].(*ReturnCommand)
+			cmd := ToCommand(stmt)
+			commands[i] = &cmd
+			_, isReturn := cmd.(*ReturnCommand)
 			//Small optimisation, it's not worth transforming anything that won't ever be reached
 			if isReturn {
 				return &BlockCommand{lines: commands[:i+1]}
@@ -750,34 +784,21 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 
 	case parser.StringLiteralExpr:
 		str := t.Value
-		value := Value{
-			Type:  StringType,
-			Value: str,
-		}
+		value := StringValue(str)
 		return &LiteralCommand{value: value}
 
 	case parser.IntegerLiteralExpr:
 		integer := t.Value
-		value := Value{
-			Type:  IntType,
-			Value: integer,
-		}
+		value := IntValue(integer)
 		return &LiteralCommand{value: value}
 	case parser.FloatLiteralExpr:
 		float := t.Value
-		value := Value{
-			Type:  FloatType,
-			Value: float,
-		}
+		value := FloatValue(float)
 		return &LiteralCommand{value: value}
 	case parser.BooleanLiteralExpr:
 		boolean := t.Value
-		value := Value{
-			Type:  BooleanType,
-			Value: boolean,
-		}
+		value := BooleanValue(boolean)
 		return &LiteralCommand{value: value}
-
 	case parser.BinaryExpr:
 		lhs := t.Lhs
 		lhsCmd := ExpressionToCommand(lhs)
@@ -844,6 +865,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 		return &ContextCommand{
 			contextCmd,
 			varName,
+			util.Hash(varName),
 		}
 
 	case parser.AssignmentExpr:

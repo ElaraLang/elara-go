@@ -8,7 +8,7 @@ import (
 var contextPool = sync.Pool{
 	New: func() interface{} {
 		return &Context{
-			variables:   map[string][]*Variable{},
+			variables:   map[uint64][]*Variable{},
 			parameters:  []*Value{},
 			namespace:   "",
 			name:        "",
@@ -43,7 +43,7 @@ func (c *Context) Cleanup() {
 	for s := range c.variables {
 		delete(c.variables, s)
 	}
-	c.variables = map[string][]*Variable{}
+	c.variables = map[uint64][]*Variable{}
 	c.parameters = []*Value{}
 
 	c.namespace = ""
@@ -59,7 +59,7 @@ func NewContext(init bool) *Context {
 	if !init {
 		return c
 	}
-	c.DefineVariable("stdout", &Variable{
+	c.DefineVariable(&Variable{
 		Name:    "stdout",
 		Mutable: false,
 		Type:    OutputType,
@@ -88,7 +88,7 @@ func NewContext(init bool) *Context {
 
 	inputContract := NewFunctionType(&inputFunction)
 
-	c.DefineVariable(inputFunctionName, &Variable{
+	c.DefineVariable(&Variable{
 		Name:    inputFunctionName,
 		Mutable: false,
 		Type:    inputContract,
@@ -117,7 +117,7 @@ func NewContext(init bool) *Context {
 	}
 	emptyContract := NewFunctionType(emptyFun)
 
-	c.DefineVariable(emptyName, &Variable{
+	c.DefineVariable(&Variable{
 		Name:    emptyName,
 		Mutable: false,
 		Type:    emptyContract,

@@ -56,7 +56,7 @@ func Init(context *Context) {
 		name: &stringPlusName,
 	}
 	stringPlusType := NewFunctionType(stringPlus)
-	context.DefineVariable(stringPlusName, &Variable{
+	context.DefineVariable(&Variable{
 		Name:    stringPlusName,
 		Mutable: false,
 		Type:    stringPlusType,
@@ -94,7 +94,7 @@ func Init(context *Context) {
 		name: &anyPlusName,
 	}
 	anyPlusType := NewFunctionType(anyPlus)
-	context.DefineVariable(anyPlusName, &Variable{
+	context.DefineVariable(&Variable{
 		Name:    anyPlusName,
 		Mutable: false,
 		Type:    anyPlusType,
@@ -160,7 +160,7 @@ func Init(context *Context) {
 		name: &colPlusName,
 	}
 	colPlusType := NewFunctionType(colPlus)
-	context.DefineVariable(colPlusName, &Variable{
+	context.DefineVariable(&Variable{
 		Name:    colPlusName,
 		Mutable: false,
 		Type:    colPlusType,
@@ -168,6 +168,48 @@ func Init(context *Context) {
 			Type:  colPlusType,
 			Value: colPlus,
 		},
+	})
+
+	define(context, "times", &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: NewCollectionTypeOf(AnyType),
+				},
+				{
+					Name:     "other",
+					Type:     IntType,
+					Position: 1,
+				},
+			},
+			ReturnType: NewCollectionTypeOf(AnyType),
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			thisParam := ctx.FindParameter(0)
+			this := thisParam.Value.(*Collection)
+			amount := ctx.FindParameter(1).Value.(int64)
+			if amount == 1 {
+				return NonReturningValue(thisParam)
+			}
+
+			currentElemLength := len(this.Elements)
+			newSize := int64(currentElemLength) * amount
+			newColl := make([]*Value, newSize)
+			for i := int64(0); i < newSize; i++ {
+				index := i % amount
+				if currentElemLength == 1 {
+					index = 0
+				}
+				newColl[i] = this.Elements[index]
+			}
+
+			collection := &Collection{
+				ElementType: this.ElementType,
+				Elements:    newColl,
+			}
+			return NonReturningValue(NewValue(NewCollectionType(collection), collection))
+		}),
 	})
 	//	"to-int": {
 	//		Signature: Signature{
@@ -459,7 +501,7 @@ func Init(context *Context) {
 		name: &outputWriteName,
 	}
 	outputWriteType := NewFunctionType(stringPlus)
-	context.DefineVariable(outputWriteName, &Variable{
+	context.DefineVariable(&Variable{
 		Name:    outputWriteName,
 		Mutable: false,
 		Type:    outputWriteType,
@@ -493,7 +535,7 @@ func Init(context *Context) {
 		}),
 	}
 	anyEqualsType := NewFunctionType(anyEquals)
-	context.DefineVariable(anyEqualsName, &Variable{
+	context.DefineVariable(&Variable{
 		Name:    anyEqualsName,
 		Mutable: false,
 		Type:    anyEqualsType,

@@ -2,6 +2,7 @@ package util
 
 import (
 	"fmt"
+	"hash/fnv"
 	"reflect"
 	"strconv"
 )
@@ -36,4 +37,10 @@ func Stringify(s interface{}) string {
 
 type Stringable interface {
 	String() string
+}
+
+func Hash(s string) uint64 {
+	h := fnv.New64a()
+	h.Write([]byte(s))
+	return h.Sum64()
 }

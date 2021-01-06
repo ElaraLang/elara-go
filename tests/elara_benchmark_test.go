@@ -21,8 +21,7 @@ let produceDaves(Int amount) => {
     factories.map(run)
 }
 
-let daves = produceDaves(50)
-print("50 daves coming right up!")
+let daves = produceDaves(2147483647)
 	`
 	base.LoadStdLib()
 	for i := 0; i < b.N; i++ {

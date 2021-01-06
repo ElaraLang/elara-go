@@ -14,9 +14,9 @@ type Type interface {
 
 type StructType struct {
 	TypeName          string
-	Properties        []Property
-	propertyPositions map[string]int
-	constructor       *Value //*Function of the constructor
+	Properties        []Property     //This preserves ordering of properties
+	propertyPositions map[string]int //And this guarantees constant lookup still
+	constructor       *Value         //*Function of the constructor
 }
 
 func (t *StructType) Name() string {

@@ -3,10 +3,11 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/util"
+	"math"
 )
 
 type Context struct {
-	variables  map[string][]*Variable
+	variables  map[uint64][]*Variable
 	parameters []*Value
 	namespace  string
 	name       string //The optional name of the context - may be empty
@@ -22,7 +23,7 @@ type Context struct {
 var globalContext = &Context{
 	namespace:   "__global__",
 	name:        "__global__",
-	variables:   map[string][]*Variable{},
+	variables:   map[uint64][]*Variable{},
 	parameters:  []*Value{},
 	contextPath: map[string][]*Context{},
 
@@ -38,14 +39,18 @@ func (c *Context) Init(namespace string) {
 	globalContext.contextPath[c.namespace] = append(globalContext.contextPath[c.namespace], c)
 }
 
-func (c *Context) DefineVariable(name string, value *Variable) {
-	vars := c.variables[name]
+func (c *Context) DefineVariableWithHash(hash uint64, value *Variable) {
+	vars := c.variables[hash]
 	vars = append(vars, value)
-	c.variables[name] = vars
+	c.variables[hash] = vars
+}
+func (c *Context) DefineVariable(value *Variable) {
+	hash := util.Hash(value.Name)
+	c.DefineVariableWithHash(hash, value)
 }
 
-func (c *Context) FindFunction(name string, signature *Signature) *Function {
-	vars := c.variables[name]
+func (c *Context) FindFunction(hash uint64, signature *Signature) *Function {
+	vars := c.variables[hash]
 	if vars != nil {
 		matching := make([]*Variable, 0)
 		for _, variable := range vars {
@@ -57,7 +62,7 @@ func (c *Context) FindFunction(name string, signature *Signature) *Function {
 			}
 		}
 		if len(matching) > 1 {
-			_ = fmt.Errorf("multiple matching functions with name %s and signature %s", name, signature.String())
+			_ = fmt.Errorf("multiple matching functions with name %s and signature %s", matching[0].Name, signature.String())
 		}
 		if len(matching) != 0 {
 			return matching[0].Value.Value.(*Function)
@@ -65,14 +70,14 @@ func (c *Context) FindFunction(name string, signature *Signature) *Function {
 	}
 
 	if c.parent != nil {
-		parFound := c.parent.FindFunction(name, signature)
+		parFound := c.parent.FindFunction(hash, signature)
 		if parFound != nil {
 			return parFound
 		}
 	}
 	for _, contexts := range c.contextPath {
 		for _, context := range contexts {
-			v := context.FindFunction(name, signature)
+			v := context.FindFunction(hash, signature)
 			if v != nil {
 				return v
 			}
@@ -80,13 +85,14 @@ func (c *Context) FindFunction(name string, signature *Signature) *Function {
 	}
 	return nil
 }
-func (c *Context) FindVariable(name string) *Variable {
-	variable, _ := c.FindVariableMaxDepth(name, -1)
+func (c *Context) FindVariable(hash uint64) *Variable {
+	variable, _ := c.FindVariableMaxDepth(hash, -1)
 	return variable
 }
 
-func (c *Context) FindVariableMaxDepth(name string, maxDepth int) (*Variable, int) {
-	vars := c.variables[name]
+//TODO this needs optimising, it's a MASSIVE hotspot
+func (c *Context) FindVariableMaxDepth(hash uint64, maxDepth int) (*Variable, int) {
+	vars := c.variables[hash]
 	if vars != nil {
 		return vars[len(vars)-1], 0
 	}
@@ -96,9 +102,9 @@ func (c *Context) FindVariableMaxDepth(name string, maxDepth int) (*Variable, in
 		if c.parent == nil {
 			break
 		}
-		parentVar, depth := c.parent.FindVariableMaxDepth(name, maxDepth-i)
+		parentVar, depth := c.parent.FindVariableMaxDepth(hash, int(math.Max(float64(maxDepth-i), -1)))
 		if parentVar != nil {
-			if maxDepth == -1 || c.parent.function == nil && i+depth <= maxDepth {
+			if maxDepth < 0 || c.parent.function == nil && i+depth <= maxDepth {
 				return parentVar, i + depth
 			} else {
 				return nil, i + depth
@@ -112,9 +118,9 @@ func (c *Context) FindVariableMaxDepth(name string, maxDepth int) (*Variable, in
 
 	for _, contexts := range c.contextPath {
 		for _, context := range contexts {
-			v, _ := context.FindVariableMaxDepth(name, maxDepth-i)
+			v, _ := context.FindVariableMaxDepth(hash, maxDepth-i)
 			if v != nil {
-				return v, 0 //0 for a variable from an import?
+				return v, i //0 for a variable from an import?
 			}
 		}
 	}
