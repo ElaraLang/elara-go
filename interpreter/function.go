@@ -26,9 +26,6 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	if f.context != nil {
 		//The cached context has highest priority for things like variables, but we set the parent to ensure that we can correctly inherit things like imports
 		context = f.context.Clone()
-		defer func() {
-			context.Cleanup()
-		}()
 		context.parent = ctx
 	}
 	if len(parameters) != len(f.Signature.Parameters) {
@@ -36,9 +33,6 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	}
 
 	scope := context.EnterScope(f.String())
-	defer func() {
-		scope.Cleanup()
-	}()
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
@@ -47,10 +41,11 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, *paramValue.String()))
 		}
 
-		scope.DefineParameter(expectedParameter.Name, paramValue)
+		scope.DefineParameter(expectedParameter.Name, paramValue.Copy())
 	}
 
 	value := f.Body.Exec(scope).Value
+	scope.Cleanup() //Exit out of the scope
 	if value == nil {
 		value = UnitValue()
 	}

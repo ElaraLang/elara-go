@@ -21,7 +21,8 @@ func InitInts(ctx *Context) {
 			this := ctx.FindParameter("this").Value.(int64)
 			value := ctx.FindParameter("value").Value.(int64)
 
-			return NonReturningValue(IntValue(this + value))
+			returningValue := NonReturningValue(IntValue(this + value))
+			return returningValue
 		}),
 	})
 

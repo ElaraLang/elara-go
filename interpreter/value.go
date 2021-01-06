@@ -50,10 +50,14 @@ func (v *Value) String() *string {
 	return &formatted
 }
 
-var unitValue = &Value{
-	Type:  UnitType,
-	Value: "Unit",
+func (v *Value) Copy() *Value {
+	if v == nil {
+		return nil
+	}
+	return NewValue(v.Type, v.Value)
 }
+
+var unitValue = NewValue(UnitType, nil)
 
 func UnitValue() *Value {
 	return unitValue

@@ -15,7 +15,8 @@ import (
 
 func ExecuteFull(fileName string, scriptMode bool) {
 	LoadStdLib()
-	_, input := loadFile(fileName)
+
+	input := loadFile(fileName)
 	start := time.Now()
 	_, lexTime, parseTime, execTime := Execute(&fileName, string(input), scriptMode)
 
@@ -86,17 +87,17 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 	if filepath.Ext(path) != ".elr" {
 		return nil
 	}
-	_, content := loadFile(path)
+	content := loadFile(path)
 	Execute(&path, string(content), false)
 	return nil
 }
 
-func loadFile(fileName string) (string, []byte) {
+func loadFile(fileName string) []byte {
 
 	input, err := ioutil.ReadFile(fileName)
 
 	if err != nil {
 		panic(err)
 	}
-	return fileName, input
+	return input
 }

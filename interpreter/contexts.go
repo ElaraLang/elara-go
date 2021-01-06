@@ -39,8 +39,19 @@ func (c *Context) Clone() *Context {
 
 func (c *Context) Cleanup() {
 	c.isFunctionScope = false
-	c.variables = map[string][]*Variable{}
-	c.parameters = map[string]*Value{}
+
+	for s := range c.variables {
+		vars := c.variables[s]
+		for _, v := range vars {
+			v.Value.Cleanup()
+		}
+		delete(c.variables, s)
+	}
+	for k, v := range c.parameters {
+		v.Cleanup()
+		delete(c.parameters, k)
+	}
+
 	c.namespace = ""
 	c.name = ""
 	c.contextPath = map[string][]*Context{}
