@@ -72,4 +72,39 @@ func InitInts(ctx *Context) {
 			Value: intMinus,
 		},
 	})
+
+	intTimesName := "times"
+	intTimes := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: IntType,
+				},
+				{
+					Name: "value",
+					Type: IntType,
+				},
+			},
+			ReturnType: IntType,
+		},
+		name: &intTimesName,
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			this := ctx.FindParameter("this").Value.(int64)
+			value := ctx.FindParameter("value").Value.(int64)
+
+			return IntValue(this * value)
+		}),
+	}
+	intTimesType := NewFunctionType(intTimes)
+
+	ctx.DefineVariable(intTimesName, Variable{
+		Name:    intTimesName,
+		Mutable: false,
+		Type:    intTimesType,
+		Value: &Value{
+			Type:  intTimesType,
+			Value: intTimes,
+		},
+	})
 }
