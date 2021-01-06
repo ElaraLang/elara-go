@@ -41,17 +41,9 @@ func (c *Context) Cleanup() {
 	c.function = nil
 
 	for s := range c.variables {
-		vars := c.variables[s]
-		for _, v := range vars {
-			v.Value.Cleanup()
-		}
 		delete(c.variables, s)
 	}
-	for _, v := range c.parameters {
-		if v != nil {
-			v.Cleanup()
-		}
-	}
+	c.variables = map[string][]*Variable{}
 	c.parameters = []*Value{}
 
 	c.namespace = ""

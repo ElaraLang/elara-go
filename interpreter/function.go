@@ -32,7 +32,13 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", util.NillableStringify(f.name, "<anonymous>"), len(f.Signature.Parameters), len(parameters)))
 	}
 
-	scope := context.EnterScope(*f.name, f, uint(len(f.Signature.Parameters)))
+	var name string
+	if f.name == nil {
+		name = f.String()
+	} else {
+		name = *f.name
+	}
+	scope := context.EnterScope(name, f, uint(len(f.Signature.Parameters)))
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
@@ -40,7 +46,10 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		if !expectedParameter.Type.Accepts(paramValue.Type) {
 			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, paramValue.String()))
 		}
-
+		//
+		//if paramValue.Value == nil {
+		//	panic("Value must not be nil")
+		//}
 		scope.DefineParameter(expectedParameter.Position, paramValue.Copy()) //Passing by value
 	}
 

@@ -1,30 +1,10 @@
 package interpreter
 
-import (
-	"sync"
-)
-
-var valuePool = sync.Pool{
-	New: func() interface{} {
-		return &Value{
-			Type:  nil,
-			Value: nil,
-		}
-	},
-}
-
 func NewValue(valueType Type, value interface{}) *Value {
-	v := valuePool.Get().(*Value)
-	v.Type = valueType
-	v.Value = value
-
-	return v
-}
-
-func (v *Value) Cleanup() {
-	v.Value = nil
-	v.Type = nil
-	valuePool.Put(v)
+	return &Value{
+		Type:  valueType,
+		Value: value,
+	}
 }
 
 func IntValue(int int64) *Value {

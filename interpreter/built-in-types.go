@@ -84,7 +84,8 @@ func Init(context *Context) {
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			this := ctx.FindParameter(0)
 			otherParam := ctx.FindParameter(1)
-			concatenated := util.Stringify(this.Value) + otherParam.Value.(string)
+
+			concatenated := ctx.Stringify(this) + otherParam.Value.(string)
 			return NonReturningValue(&Value{
 				Type:  StringType,
 				Value: concatenated,

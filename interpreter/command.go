@@ -119,6 +119,9 @@ func (c *VariableCommand) Exec(ctx *Context) ReturnedValue {
 
 	constructor := ctx.FindConstructor(c.Variable)
 	if constructor == nil {
+		if ctx.function != nil && ctx.function.context != nil {
+			return c.Exec(ctx.function.context)
+		}
 		panic("No such variable or parameter or constructor " + c.Variable)
 	}
 	return NonReturningValue(constructor)
@@ -163,7 +166,7 @@ func (c *InvocationCommand) Exec(ctx *Context) ReturnedValue {
 
 	argValues := make([]*Value, len(c.args))
 	for i, arg := range c.args {
-		argValues[i] = arg.Exec(ctx).Unwrap()
+		argValues[i] = arg.Exec(ctx).UnwrapNotNil()
 	}
 
 	if !usingReceiver {

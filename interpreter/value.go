@@ -42,6 +42,15 @@ func (r ReturnedValue) Unwrap() *Value {
 	}
 	return r.Value
 }
+func (r ReturnedValue) UnwrapNotNil() *Value {
+	if r.IsReturning {
+		panic("Value should return")
+	}
+	if r.Value == nil {
+		panic("Value must not be nil")
+	}
+	return r.Value
+}
 func (v *Value) String() string {
 	if v == nil {
 		return ""

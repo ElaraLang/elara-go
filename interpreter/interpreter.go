@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/parser"
+	"reflect"
 )
 
 type Interpreter struct {
@@ -33,7 +34,7 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 		res := command.Exec(s.context).Unwrap()
 		values[i] = res
 		if scriptMode {
-			formatted := s.context.Stringify(res)
+			formatted := s.context.Stringify(res) + " " + reflect.TypeOf(res).String()
 			fmt.Println(formatted)
 		}
 	}
