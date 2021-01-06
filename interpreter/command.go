@@ -33,11 +33,25 @@ func (c *DefineVarCommand) getType(ctx *Context) Type {
 }
 
 func (c *DefineVarCommand) Exec(ctx *Context) ReturnedValue {
+	var value *Value
 	foundVar, _ := ctx.FindVariableMaxDepth(c.Name, 1)
 	if foundVar != nil {
-		panic("Variable named " + c.Name + " already exists")
+		asFunction, isFunction := foundVar.Value.Value.(*Function)
+		if isFunction {
+			value = c.value.Exec(ctx).Unwrap()
+			valueAsFunction, valueIsFunction := value.Value.(*Function)
+			if valueIsFunction && !asFunction.Signature.Accepts(&valueAsFunction.Signature, false) {
+				//We'll allow it because the functions have different arity
+			} else {
+				panic("Variable named " + c.Name + " already exists")
+			}
+		} else {
+			panic("Variable named " + c.Name + " already exists")
+		}
 	}
-	value := c.value.Exec(ctx).Unwrap()
+	if value == nil {
+		value = c.value.Exec(ctx).Unwrap()
+	}
 
 	if value == nil {
 		panic("Command " + reflect.TypeOf(c.value).Name() + " returned nil")

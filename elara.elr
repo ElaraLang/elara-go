@@ -7,5 +7,6 @@ let plus1(Int i) => { i + 1 }
 let times3(Int i) => { i * 3 }
 let isEven(Int i) => { i % 2 == 0 }
 
-c.map(plus1)
-    .forEach(print)
+c.map(plus1).filter(isEven).forEach(print)
+
+print(c * 3)
