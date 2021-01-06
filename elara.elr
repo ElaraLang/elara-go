@@ -1,6 +1,7 @@
 namespace test/lol
 import elara/std
 
-let c = [1, 2, "lol", 3.5]
+let c = [1, 2, 3, 4]
 
-print([1] + [3, 2])
+
+print(c.map((Any i) => { i + 1 }))

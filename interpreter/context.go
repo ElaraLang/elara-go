@@ -85,6 +85,36 @@ func NewContext() *Context {
 			Value: inputFunction,
 		},
 	})
+
+	emptyName := "empty"
+	emptyFun := &Function{
+		name: &emptyName,
+		Signature: Signature{
+			Parameters: []Parameter{},
+			ReturnType: NewCollectionTypeOf(AnyType),
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *Value {
+			return &Value{
+				Type: NewCollectionTypeOf(AnyType),
+				Value: &Collection{
+					ElementType: AnyType,
+					Elements:    []*Value{},
+				},
+			}
+		}),
+	}
+	emptyContract := NewFunctionType(emptyFun)
+
+	c.DefineVariable(emptyName, Variable{
+		Name:    emptyName,
+		Mutable: false,
+		Type:    emptyContract,
+		Value: &Value{
+			Type:  emptyContract,
+			Value: emptyFun,
+		},
+	})
+
 	Init(c)
 	return c
 }
