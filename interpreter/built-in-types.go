@@ -38,14 +38,15 @@ func Init(context *Context) {
 					Type: StringType,
 				},
 				{
-					Name: "other",
-					Type: AnyType,
+					Name:     "other",
+					Type:     AnyType,
+					Position: 1,
 				}},
 			ReturnType: StringType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this")
-			otherParam := ctx.FindParameter("other")
+			this := ctx.FindParameter(0)
+			otherParam := ctx.FindParameter(1)
 			concatenated := this.Value.(string) + util.Stringify(otherParam.Value)
 			return NonReturningValue(&Value{
 				Type:  StringType,
@@ -74,14 +75,15 @@ func Init(context *Context) {
 					Type: AnyType,
 				},
 				{
-					Name: "other",
-					Type: StringType,
+					Name:     "other",
+					Type:     StringType,
+					Position: 1,
 				}},
 			ReturnType: StringType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this")
-			otherParam := ctx.FindParameter("other")
+			this := ctx.FindParameter(0)
+			otherParam := ctx.FindParameter(1)
 			concatenated := util.Stringify(this.Value) + otherParam.Value.(string)
 			return NonReturningValue(&Value{
 				Type:  StringType,
@@ -110,15 +112,16 @@ func Init(context *Context) {
 					Type: NewCollectionTypeOf(AnyType),
 				},
 				{
-					Name: "other",
-					Type: NewCollectionTypeOf(AnyType),
+					Name:     "other",
+					Type:     NewCollectionTypeOf(AnyType),
+					Position: 1,
 				},
 			},
 			ReturnType: NewCollectionTypeOf(AnyType),
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this").Value.(*Collection)
-			other := ctx.FindParameter("other").Value.(*Collection)
+			this := ctx.FindParameter(0).Value.(*Collection)
+			other := ctx.FindParameter(1).Value.(*Collection)
 
 			elems := make([]*Value, len(this.Elements)+len(other.Elements))
 			for i, element := range this.Elements {
@@ -423,15 +426,16 @@ func Init(context *Context) {
 					Type: OutputType,
 				},
 				{
-					Name: "value",
-					Type: AnyType,
+					Name:     "value",
+					Type:     AnyType,
+					Position: 1,
 				},
 			},
 			ReturnType: UnitType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			parameter := ctx.FindParameter("value")
-			asString := ctx.Stringify(parameter)
+			value := ctx.FindParameter(1)
+			asString := ctx.Stringify(value)
 			fmt.Printf("%s", asString)
 			return NonReturningValue(UnitValue())
 		}),
@@ -457,16 +461,17 @@ func Init(context *Context) {
 					Type: AnyType,
 				},
 				{
-					Name: "other",
-					Type: AnyType,
+					Name:     "other",
+					Type:     AnyType,
+					Position: 1,
 				},
 			},
 			ReturnType: BooleanType,
 		},
 		name: &anyEqualsName,
 		Body: NewAbstractCommand(func(c *Context) ReturnedValue {
-			this := c.FindParameter("this")
-			other := c.FindParameter("other")
+			this := c.FindParameter(0)
+			other := c.FindParameter(1)
 			return NonReturningValue(BooleanValue(this.Value == other.Value))
 		}),
 	}

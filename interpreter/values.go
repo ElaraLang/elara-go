@@ -1,6 +1,8 @@
 package interpreter
 
-import "sync"
+import (
+	"sync"
+)
 
 var valuePool = sync.Pool{
 	New: func() interface{} {

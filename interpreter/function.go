@@ -32,7 +32,7 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 		panic(fmt.Sprintf("Illegal number of arguments for function %s. Expected %d, received %d", util.NillableStringify(f.name, "<anonymous>"), len(f.Signature.Parameters), len(parameters)))
 	}
 
-	scope := context.EnterScope(*f.name)
+	scope := context.EnterScope(*f.name, f, uint(len(f.Signature.Parameters)))
 
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
@@ -41,11 +41,11 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, *paramValue.String()))
 		}
 
-		scope.DefineParameter(expectedParameter.Name, paramValue.Copy())
+		scope.DefineParameter(expectedParameter.Position, paramValue.Copy()) //Passing by value
 	}
 
-	value := f.Body.Exec(scope).Value
-	scope.Cleanup() //Exit out of the scope
+	value := f.Body.Exec(scope).Value //Can't unwrap because it might have returned from the function
+	scope.Cleanup()                   //Exit out of the scope
 	if value == nil {
 		value = UnitValue()
 	}
@@ -89,6 +89,7 @@ func (s *Signature) Accepts(other *Signature, compareReturnTypes bool) bool {
 }
 
 type Parameter struct {
-	Name string
-	Type Type
+	Name     string
+	Position uint
+	Type     Type
 }

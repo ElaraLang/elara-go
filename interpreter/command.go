@@ -92,35 +92,31 @@ type VariableCommand struct {
 }
 
 func (c *VariableCommand) Exec(ctx *Context) ReturnedValue {
-	//panic("TODO VariableCommand")
-	//if ctx.receiver != nil {
-	//receiver := ctx.receiver
-	//asInstance, isInstance := ctx.receiver.Value.(Instance)
-	//if isInstance {
-	//	instanceVariable, exists := asInstance.Values[c.Variable]
-	//	if exists {
-	//		return instanceVariable
-	//	}
-	//}
-	//typeVariable, exists := receiver.Type.variables.m[c.Variable]
-	//if exists {
-	//	return typeVariable.Value
-	//}
-	//}
-
-	param := ctx.FindParameter(c.Variable)
-	if param == nil {
-		variable := ctx.FindVariable(c.Variable)
-		if variable == nil {
-			constructor := ctx.FindConstructor(c.Variable)
-			if constructor == nil {
-				panic("No such variable or parameter or constructor " + c.Variable)
+	paramIndex := -1
+	fun := ctx.function
+	if fun != nil {
+		for i, parameter := range fun.Signature.Parameters {
+			if parameter.Name == c.Variable {
+				paramIndex = i
+				break
 			}
-			return NonReturningValue(constructor)
 		}
-		return NonReturningValue(variable.Value)
 	}
-	return NonReturningValue(param)
+	if paramIndex != -1 {
+		param := ctx.FindParameter(uint(paramIndex))
+		if param != nil {
+			return NonReturningValue(param)
+		}
+	}
+	variable := ctx.FindVariable(c.Variable)
+	if variable == nil {
+		constructor := ctx.FindConstructor(c.Variable)
+		if constructor == nil {
+			panic("No such variable or parameter or constructor " + c.Variable)
+		}
+		return NonReturningValue(constructor)
+	}
+	return NonReturningValue(variable.Value)
 }
 
 type InvocationCommand struct {
@@ -242,8 +238,9 @@ func (c *FunctionLiteralCommand) Exec(ctx *Context) ReturnedValue {
 	for i, parameter := range c.parameters {
 		paramType := FromASTType(parameter.Type, c.currentContext)
 		params[i] = Parameter{
-			Type: paramType,
-			Name: parameter.Name,
+			Type:     paramType,
+			Name:     parameter.Name,
+			Position: uint(i),
 		}
 	}
 

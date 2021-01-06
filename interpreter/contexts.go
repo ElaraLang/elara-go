@@ -8,14 +8,14 @@ import (
 var contextPool = sync.Pool{
 	New: func() interface{} {
 		return &Context{
-			variables:       map[string][]*Variable{},
-			parameters:      map[string]*Value{},
-			namespace:       "",
-			name:            "",
-			contextPath:     map[string][]*Context{},
-			types:           map[string]Type{},
-			parent:          nil,
-			isFunctionScope: false,
+			variables:   map[string][]*Variable{},
+			parameters:  []*Value{},
+			namespace:   "",
+			name:        "",
+			contextPath: map[string][]*Context{},
+			types:       map[string]Type{},
+			parent:      nil,
+			function:    nil,
 		}
 	},
 }
@@ -33,12 +33,12 @@ func (c *Context) Clone() *Context {
 	fromPool.contextPath = c.contextPath
 	fromPool.types = c.types
 	fromPool.parent = parentClone
-	fromPool.isFunctionScope = c.isFunctionScope
+	fromPool.function = c.function
 	return fromPool
 }
 
 func (c *Context) Cleanup() {
-	c.isFunctionScope = false
+	c.function = nil
 
 	for s := range c.variables {
 		vars := c.variables[s]
@@ -47,10 +47,12 @@ func (c *Context) Cleanup() {
 		}
 		delete(c.variables, s)
 	}
-	for k, v := range c.parameters {
-		v.Cleanup()
-		delete(c.parameters, k)
+	for _, v := range c.parameters {
+		if v != nil {
+			v.Cleanup()
+		}
 	}
+	c.parameters = []*Value{}
 
 	c.namespace = ""
 	c.name = ""

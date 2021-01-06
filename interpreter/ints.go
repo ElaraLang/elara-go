@@ -11,15 +11,16 @@ func InitInts(ctx *Context) {
 					Type: IntType,
 				},
 				{
-					Name: "value",
-					Type: IntType,
+					Name:     "value",
+					Type:     IntType,
+					Position: 1,
 				},
 			},
 			ReturnType: IntType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this").Value.(int64)
-			value := ctx.FindParameter("value").Value.(int64)
+			this := ctx.FindParameter(0).Value.(int64)
+			value := ctx.FindParameter(1).Value.(int64)
 
 			returningValue := NonReturningValue(IntValue(this + value))
 			return returningValue
@@ -34,15 +35,16 @@ func InitInts(ctx *Context) {
 					Type: IntType,
 				},
 				{
-					Name: "value",
-					Type: IntType,
+					Name:     "value",
+					Type:     IntType,
+					Position: 1,
 				},
 			},
 			ReturnType: IntType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this").Value.(int64)
-			value := ctx.FindParameter("value").Value.(int64)
+			this := ctx.FindParameter(0).Value.(int64)
+			value := ctx.FindParameter(1).Value.(int64)
 
 			return NonReturningValue(IntValue(this - value))
 		}),
@@ -56,15 +58,16 @@ func InitInts(ctx *Context) {
 					Type: IntType,
 				},
 				{
-					Name: "value",
-					Type: IntType,
+					Name:     "value",
+					Type:     IntType,
+					Position: 1,
 				},
 			},
 			ReturnType: IntType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this").Value.(int64)
-			value := ctx.FindParameter("value").Value.(int64)
+			this := ctx.FindParameter(0).Value.(int64)
+			value := ctx.FindParameter(1).Value.(int64)
 
 			return NonReturningValue(IntValue(this * value))
 		}),
@@ -78,15 +81,16 @@ func InitInts(ctx *Context) {
 					Type: IntType,
 				},
 				{
-					Name: "value",
-					Type: IntType,
+					Name:     "value",
+					Type:     IntType,
+					Position: 1,
 				},
 			},
 			ReturnType: IntType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this").Value.(int64)
-			value := ctx.FindParameter("value").Value.(int64)
+			this := ctx.FindParameter(0).Value.(int64)
+			value := ctx.FindParameter(1).Value.(int64)
 
 			return NonReturningValue(IntValue(this / value))
 		}),
@@ -100,15 +104,16 @@ func InitInts(ctx *Context) {
 					Type: IntType,
 				},
 				{
-					Name: "value",
-					Type: IntType,
+					Name:     "value",
+					Type:     IntType,
+					Position: 1,
 				},
 			},
 			ReturnType: IntType,
 		},
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
-			this := ctx.FindParameter("this").Value.(int64)
-			value := ctx.FindParameter("value").Value.(int64)
+			this := ctx.FindParameter(0).Value.(int64)
+			value := ctx.FindParameter(1).Value.(int64)
 
 			return NonReturningValue(IntValue(this % value))
 		}),

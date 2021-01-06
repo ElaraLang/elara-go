@@ -30,7 +30,6 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 	for i := 0; i < len(s.lines); i++ {
 		line := s.lines[i]
 		command := ToCommand(line)
-
 		res := command.Exec(s.context).Unwrap()
 		values[i] = res
 		if scriptMode {

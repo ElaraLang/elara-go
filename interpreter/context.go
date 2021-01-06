@@ -7,27 +7,27 @@ import (
 
 type Context struct {
 	variables  map[string][]*Variable
-	parameters map[string]*Value
+	parameters []*Value
 	namespace  string
 	name       string //The optional name of the context - may be empty
 
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
 
-	types           map[string]Type
-	parent          *Context
-	isFunctionScope bool
+	types    map[string]Type
+	parent   *Context
+	function *Function //Will only be nil if this is a Function scope
 }
 
 var globalContext = &Context{
 	namespace:   "__global__",
 	name:        "__global__",
 	variables:   map[string][]*Variable{},
-	parameters:  map[string]*Value{},
+	parameters:  []*Value{},
 	contextPath: map[string][]*Context{},
 
-	types:           map[string]Type{},
-	isFunctionScope: false,
+	types:    map[string]Type{},
+	function: nil,
 }
 
 func (c *Context) Init(namespace string) {
@@ -98,7 +98,7 @@ func (c *Context) FindVariableMaxDepth(name string, maxDepth int) (*Variable, in
 		}
 		parentVar, depth := c.parent.FindVariableMaxDepth(name, maxDepth-i)
 		if parentVar != nil {
-			if maxDepth == -1 || !c.parent.isFunctionScope && i+depth <= maxDepth {
+			if maxDepth == -1 || c.parent.function == nil && i+depth <= maxDepth {
 				return parentVar, i + depth
 			} else {
 				return nil, i + depth
@@ -122,19 +122,16 @@ func (c *Context) FindVariableMaxDepth(name string, maxDepth int) (*Variable, in
 	return nil, -1
 }
 
-func (c *Context) DefineParameter(name string, value *Value) {
-	c.parameters[name] = value
+func (c *Context) DefineParameter(pos uint, value *Value) {
+	c.parameters[pos] = value
 }
 
-func (c *Context) FindParameter(name string) *Value {
-	par := c.parameters[name]
+func (c *Context) FindParameter(pos uint) *Value {
+	par := c.parameters[pos]
 	if par != nil {
 		return par
 	}
-	if c.parent == nil {
-		return nil
-	}
-	return c.parent.FindParameter(name)
+	return nil
 }
 
 func (c *Context) FindType(name string) Type {
@@ -153,13 +150,14 @@ func (c *Context) FindType(name string) Type {
 	return nil
 }
 
-func (c *Context) EnterScope(name string) *Context {
+func (c *Context) EnterScope(name string, function *Function, paramLength uint) *Context {
 	scope := NewContext(false)
 	scope.parent = c
 	scope.namespace = c.name
 	scope.name = name
 	scope.contextPath = c.contextPath
-	scope.isFunctionScope = true
+	scope.function = function
+	scope.parameters = make([]*Value, paramLength)
 	return scope
 }
 
@@ -174,13 +172,16 @@ func (c *Context) FindConstructor(name string) *Value {
 		panic("Cannot construct non struct type")
 	}
 	constructorParams := make([]Parameter, 0)
+	i := uint(0)
 	for _, v := range asStruct.Properties {
 		if v.DefaultValue == nil {
 			constructorParams = append(constructorParams, Parameter{
-				Name: v.Name,
-				Type: v.Type,
+				Position: i,
+				Name:     v.Name,
+				Type:     v.Type,
 			})
 		}
+		i++
 	}
 
 	constructor := Function{
@@ -191,7 +192,7 @@ func (c *Context) FindConstructor(name string) *Value {
 		Body: NewAbstractCommand(func(ctx *Context) ReturnedValue {
 			values := make(map[string]*Value, len(constructorParams))
 			for _, param := range constructorParams {
-				values[param.Name] = ctx.FindParameter(param.Name)
+				values[param.Name] = ctx.FindParameter(param.Position)
 			}
 			return NonReturningValue(&Value{
 				Type: t,
