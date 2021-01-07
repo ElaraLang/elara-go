@@ -29,28 +29,29 @@ For mutability, the syntax `let mut [name] = [value]` should be used
 
 Functions are first class types, and are declared in a near identical way to variables:
 
+Note that the **Arrow Syntax** (`=>`) is used with functions to distinguish from a function *call*
 ```
-let print-hello = () => {
-    print "Hello World!"
+let printHello() => { 
+  print("Hello World!")
 }
 ```
 
 Functions with a single expression can be declared with a more concise syntax:
 ```
-let print-hello => print "Hello World!"
+let printHello => print "Hello World!"
 ```
 
 Functions with parameters:
 ```
-let print-twice = (String message) => {
-    print message
-    print message
+let printTwice(String message) => {
+    print(message)
+    print(message)
 }
 ```
 
 Functions with a clearly defined return type:
 ```
-let add = (Int a, Int b) => Int {
+let add(Int a, Int b) => Int {
     a + b
 }
 ```
@@ -60,27 +61,31 @@ let add = (Int a, Int b) => Int {
 Elara supports a wide range of function calling syntax to try and make programming more natural and less restrictive:
 
 #### Simple Calling
-`print-twice("Hello")`
+`printTwice("Hello")`
 
-`print-hello()`
+`printHello()`
 
-#### Calling without parentheses (does not work for no-arg functions)
-`print-twice "Hello"`
 
 #### OOP style calling on a receiver function
-`"Hello" print-twice`
+`"Hello".printTwice()`
 
 This feature works with multiple parameters:
 ```
-let add-to = (Int a, Int b) => {
+let addTo(Int a, Int b) => {
     a + b
 }
 
-3 add-to 4
-add-to 3 4
+3.addTo(4)
+addTo(3, 4)
 ```
 
 the 2 calls are identical
+
+#### Infix Style calling
+You can also omit the parentheses and commas with infix functions (functions with 2 parameters):
+```
+3 addTo 4
+```
 
 ### Structs
 
@@ -106,14 +111,14 @@ struct Person {
     //blah
 }
 extend Person {
-    let celebrate-birthday = () => {
-        print "Happy Birthday " + name + "!"
+    let celebrateBirthday => {
+        print("Happy Birthday " + name + "!")
         age += 1
     }
 } 
 ```
 
-from here we can do `somePerson.celebrate-birthday()` as if it was a method.
+from here we can do `somePerson.celebrateBirthday()` as if it was a method.
 
 The `extend` syntax works with any type and can be done from any file
 
@@ -150,20 +155,20 @@ Type parameters for generics support contract based boundary.
 Take for example the simple generic function, ignoring the unnecessary generic (since T can be any type):
 ```
 <T>
-let print-and-return = (T data) => T {
-    print data
+let printAndReturn(T data) => T {
+    print(data)
     return data
 }
 ``` 
  
 We cannot guarantee that every type will give a user-friendly value for `print`.
 
-To work around this, we can add a boundary to `T`, that only accepts types that define a `to-string` function:
+To work around this, we can add a boundary to `T`, that only accepts types that define a `toString` function:
 
 ```
-<T { to-string() => String } >
-let print-and-return = (T data) => T {
-    print data.to-string()
+<T { toString() => String } >
+let printAndReturn(T data) => T {
+    print(data.toString())
     return data
 }
 ```
@@ -192,18 +197,14 @@ Parameter types can be omitted if possible to infer from context
 
 * Functions are first class
 ```
-let add-1 = (Int a) => a + 1
+let add1 = (Int a) => a + 1
 
-let added-1-list = some-list map add-1
+let added1List = someList map add1
 ```
 
 * Function chaining is trivial
 ```
-some-list map add-1 filter is-even forEach (it) => { print it }
-```
-is directly equivalent to
-```
-some-list.map(add-1).filter(is-even).forEach((it) => { print it })
+someList.map(add1).filter(isEven).forEach(print)
 ```
 ### Conclusion
 
