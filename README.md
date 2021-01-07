@@ -38,7 +38,7 @@ let printHello() => {
 
 Functions with a single expression can be declared with a more concise syntax:
 ```
-let printHello => print "Hello World!"
+let printHello => print("Hello World!")
 ```
 
 Functions with parameters:
