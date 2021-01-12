@@ -364,6 +364,10 @@ func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
 		return Mod, str
 	case '^':
 		return Xor, str
+	case '|':
+		return TypeOr, str
+	case '&':
+		return TypeAnd, str
 
 	case '>':
 		{

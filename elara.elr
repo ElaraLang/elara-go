@@ -1,27 +1,4 @@
 namespace test/lol
 import elara/std
 
-
-struct Person {
-    String name
-    Int age
-}
-
-extend Person as person {
-    let printName => { print("Hello, my name is " + person.name) }
-}
-
-extend Person {
-    let printInfo => {
-        print("Name: " + this.name)
-        print("Age: " + this.age)
-    }
-
-    let description => { this.name + " is " + this.age + " years old." }
-}
-
-let dave = Person("Dave", 50)
-
-dave.printName()
-
-print(dave.description())
+type T = Int | String

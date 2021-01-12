@@ -38,7 +38,7 @@ func (p *Parser) typeContractDefinable() (contract Type) {
 
 func (p *Parser) contractualOr(allowDef bool) (contract Type) {
 	contract = p.contractualAnd(allowDef)
-	for p.match(lexer.Or) {
+	for p.match(lexer.TypeOr) {
 		op := p.previous()
 		rhs := p.contractualAnd(allowDef)
 		contract = BinaryTypeContract{
@@ -53,7 +53,7 @@ func (p *Parser) contractualOr(allowDef bool) (contract Type) {
 func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
 	contract = p.primaryContract(allowDef)
 
-	for p.match(lexer.And) {
+	for p.match(lexer.TypeAnd) {
 		op := p.previous()
 		rhs := p.primaryContract(allowDef)
 

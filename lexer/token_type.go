@@ -51,6 +51,9 @@ const (
 	LesserEqual
 	Not
 
+	TypeOr  // |
+	TypeAnd // &
+
 	//Symbol
 	Equal
 	Arrow
