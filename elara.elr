@@ -1,4 +1,6 @@
 namespace test/lol
 import elara/std
 
-type T = Int | String
+type Name = {
+    String i
+}
