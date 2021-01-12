@@ -15,7 +15,7 @@ type Context struct {
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
 
-	extensions map[Type]map[string]*Variable
+	extensions map[Type]map[string]*Extension
 	types      map[string]Type
 	parent     *Context
 	function   *Function //Will only be nil if this is a Function scope
@@ -25,7 +25,7 @@ var globalContext = &Context{
 	namespace:   "__global__",
 	name:        "__global__",
 	variables:   map[uint64][]*Variable{},
-	extensions:  map[Type]map[string]*Variable{},
+	extensions:  map[Type]map[string]*Extension{},
 	parameters:  []*Value{},
 	contextPath: map[string][]*Context{},
 
@@ -262,10 +262,10 @@ func (c *Context) Stringify(value *Value) string {
 
 }
 
-func (c *Context) DefineExtension(receiverType Type, name string, value *Variable) {
+func (c *Context) DefineExtension(receiverType Type, name string, value *Extension) {
 	extensions, present := c.extensions[receiverType]
 	if !present {
-		extensions = map[string]*Variable{}
+		extensions = map[string]*Extension{}
 	}
 	_, exists := extensions[name]
 	if exists {
@@ -275,10 +275,10 @@ func (c *Context) DefineExtension(receiverType Type, name string, value *Variabl
 	c.extensions[receiverType] = extensions
 }
 
-func (c *Context) FindExtension(receiverType Type, name string) *Variable {
+func (c *Context) FindExtension(receiverType Type, name string) *Extension {
 	extensions, present := c.extensions[receiverType]
 	if !present {
-		extensions = map[string]*Variable{}
+		extensions = map[string]*Extension{}
 	}
 	return extensions[name]
 }

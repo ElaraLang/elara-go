@@ -16,7 +16,7 @@ var contextPool = sync.Pool{
 			types:       map[string]Type{},
 			parent:      nil,
 			function:    nil,
-			extensions:  map[Type]map[string]*Variable{},
+			extensions:  map[Type]map[string]*Extension{},
 		}
 	},
 }
@@ -52,7 +52,7 @@ func (c *Context) Cleanup() {
 	c.name = ""
 	c.contextPath = map[string][]*Context{}
 	c.types = map[string]Type{}
-	c.extensions = map[Type]map[string]*Variable{}
+	c.extensions = map[Type]map[string]*Extension{}
 	c.parent = nil
 	contextPool.Put(c)
 }

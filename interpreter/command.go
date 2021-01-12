@@ -59,7 +59,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
 	}
 
 	if value == nil {
-		panic("Command " + reflect.TypeOf(c.value).Name() + " returned nil")
+		panic("Command " + reflect.TypeOf(c.value).String() + " returned nil")
 	}
 
 	variableType := c.getType(ctx)
@@ -186,10 +186,7 @@ func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, 
 		Parameters: parameters,
 		ReturnType: AnyType, //can't infer this rn
 	}
-	extension := ctx.FindExtension(receiverType, functionName)
-	if extension != nil {
-		return extension.Value.Value.(*Function)
-	}
+
 	receiverFunction := ctx.FindFunction(nameHash, receiverSignature)
 	if receiverFunction == nil {
 		paramTypes := make([]string, 0)
@@ -232,16 +229,8 @@ func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 	//ContextCommand seems to think it's a special case... because it is.
 	var receiver *Value
 
-	if c.cachedFun == nil {
-		switch t := context.receiver.(type) {
-		case *VariableCommand:
-			variable := t.findVariable(ctx)
-			if variable != nil && !variable.Mutable {
-				receiver = variable.Value
-				c.cachedFun = c.findReceiverFunction(ctx, receiver, argValues, context.variable, context.hash())
-			}
-		}
-	}
+	functionName := context.variable
+
 	receiver = context.receiver.Exec(ctx).Unwrap()
 
 	if c.cachedFun != nil {
@@ -249,10 +238,11 @@ func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 		argValuesAndSelf = append(argValuesAndSelf, argValues...)
 		return NonReturningValue(c.cachedFun.Exec(ctx, argValuesAndSelf))
 	}
+
 	structType, isStruct := receiver.Type.(*StructType)
 
 	if isStruct {
-		value, ok := structType.GetProperty(context.variable)
+		value, ok := structType.GetProperty(functionName)
 		if ok {
 			function, ok := value.DefaultValue.Value.(*Function)
 			if !ok {
@@ -269,9 +259,17 @@ func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 		}
 	}
 
-	//Look for a receiver
+	extension := ctx.FindExtension(receiver.Type, functionName)
+	if extension != nil {
+		fun := extension.Value.Value.Value.(*Function)
+		c.cachedFun = fun
+		argValuesAndSelf := []*Value{receiver}
+		argValuesAndSelf = append(argValuesAndSelf, argValues...)
+		return NonReturningValue(fun.Exec(ctx, argValuesAndSelf))
+	}
 
-	receiverFunction := c.findReceiverFunction(ctx, receiver, argValues, context.variable, context.hash())
+	//Look for a receiver
+	receiverFunction := c.findReceiverFunction(ctx, receiver, argValues, functionName, context.hash())
 	argValuesAndSelf := []*Value{receiver}
 	argValuesAndSelf = append(argValuesAndSelf, argValues...)
 	return NonReturningValue(receiverFunction.Exec(ctx, argValuesAndSelf))
@@ -398,42 +396,33 @@ func (c *ContextCommand) Exec(ctx *Context) *ReturnedValue {
 		c.hashedVariable = util.Hash(c.variable)
 	}
 	receiver := c.receiver.Exec(ctx).Unwrap()
+
+	var value *ReturnedValue
 	switch val := receiver.Value.(type) {
 	case *Collection:
 		{
 			switch c.variable {
 			case "size":
-				return NonReturningValue(IntValue(int64(len(val.Elements))))
-			default:
-				panic("Unknown property" + c.variable)
+				value = NonReturningValue(IntValue(int64(len(val.Elements))))
 			}
 		}
 	case *Instance:
 		{
-			return NonReturningValue(val.Values[c.variable])
+			value = NonReturningValue(val.Values[c.variable])
 		}
 	default:
 		panic("Unsupported receiver " + util.Stringify(receiver))
 	}
+	if value != nil && value.Value != nil {
+		return value
+	}
 
-	//instance, isInstance := receiver.Value.(Instance)
-	//if isInstance {
-	//	variable, ok := instance.Values[c.variable]
-	//	if !ok {
-	//		value, ok := receiver.Type.variables.m[c.variable]
-	//		if !ok {
-	//			panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
-	//		}
-	//		return value.Value
-	//	}
-	//	return variable
-	//}
-	//variable, ok := receiver.Type.variables.m[c.variable]
-	//if !ok {
-	//	panic("No such variable " + c.variable + " on type " + receiver.Type.Name)
-	//}
-	//
-	//return variable.Value
+	//Search for an extension
+	extension := ctx.FindExtension(receiver.Type, c.variable)
+	if extension == nil {
+		panic("Unknown property or extension for " + receiver.String() + " with name " + c.variable)
+	}
+	return NonReturningValue(extension.Value.Value)
 }
 
 type IfElseCommand struct {
@@ -581,7 +570,29 @@ func (c *ExtendCommand) Exec(ctx *Context) *ReturnedValue {
 	for _, statement := range c.statements {
 		switch statement := statement.(type) {
 		case *DefineVarCommand:
+
 			value := statement.value.Exec(ctx).Unwrap()
+
+			asFunction, isFunction := value.Value.(*Function)
+			if isFunction {
+				//Need to append the receiver to the function's signature
+				receiverParameter := Parameter{
+					Name:     c.alias,
+					Position: 0,
+					Type:     extending,
+				}
+				signature := asFunction.Signature
+				params := make([]Parameter, len(signature.Parameters)+1)
+				params[0] = receiverParameter
+				for i := range signature.Parameters {
+					p := signature.Parameters[i]
+					p.Position++
+					params[i] = p
+				}
+				signature.Parameters = params
+				asFunction.Signature = signature
+			}
+
 			variable := &Variable{
 				Name:    statement.Name,
 				Mutable: statement.Mutable,
@@ -589,7 +600,12 @@ func (c *ExtendCommand) Exec(ctx *Context) *ReturnedValue {
 				Value:   value,
 			}
 
-			ctx.DefineExtension(extending, statement.Name, variable)
+			extension := &Extension{
+				ReceiverName: c.alias,
+				Value:        variable,
+			}
+
+			ctx.DefineExtension(extending, statement.Name, extension)
 		}
 	}
 	return NilValue()

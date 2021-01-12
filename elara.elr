@@ -1,28 +1,27 @@
 namespace test/lol
 import elara/std
 
-let c = [1, 2, 3, 4]
-
-let plus1(Int i) => { i + 1 }
-let times3(Int i) => { i * 3 }
-let isEven(Int i) => { i % 2 == 0 }
 
 struct Person {
     String name
     Int age
 }
 
-let daveFactory = () => { Person("Dave", 50) }
-
-let produceDaves(Int amount) => {
-    let factories = [daveFactory] * amount
-    factories.map(run)
-}
-
-let daves = produceDaves(50)
-
-print("50 daves coming right up!")
-
 extend Person as person {
-    let printName => { print(person.name) }
+    let printName => { print("Hello, my name is " + person.name) }
 }
+
+extend Person {
+    let printInfo => {
+        print("Name: " + this.name)
+        print("Age: " + this.age)
+    }
+
+    let description => { this.name + " is " + this.age + " years old." }
+}
+
+let dave = Person("Dave", 50)
+
+dave.printName()
+
+print(dave.description())
