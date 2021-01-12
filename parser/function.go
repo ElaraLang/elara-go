@@ -88,3 +88,18 @@ func (p *Parser) findParenClosingPoint(start int) (index int) {
 	}
 	return cur
 }
+
+func (p *Parser) isBlockPresent() bool {
+	curIdx := p.current
+
+	for curIdx < len(p.tokens) {
+		switch p.tokens[curIdx].TokenType {
+		case lexer.LBrace:
+			return true
+		case lexer.NEWLINE:
+			return false
+		}
+		curIdx++
+	}
+	return false
+}

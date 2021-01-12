@@ -320,7 +320,8 @@ func (p *Parser) funDef() Expr {
 		args := p.functionArguments()
 		var typ Type
 		p.consume(lexer.Arrow, "Expected arrow at function definition")
-		if p.check(lexer.Identifier) {
+
+		if p.check(lexer.Identifier) && p.isBlockPresent() {
 			typ = p.typeContract()
 		}
 		return FuncDefExpr{

@@ -1,6 +1,6 @@
 namespace test/lol
 import elara/std
 
-type Name = {
-    String i
-}
+let a() => print("hi")
+
+a()
