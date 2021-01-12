@@ -15,15 +15,17 @@ type Context struct {
 	//A map from namespace -> context slice
 	contextPath map[string][]*Context
 
-	types    map[string]Type
-	parent   *Context
-	function *Function //Will only be nil if this is a Function scope
+	extensions map[Type]map[string]*Variable
+	types      map[string]Type
+	parent     *Context
+	function   *Function //Will only be nil if this is a Function scope
 }
 
 var globalContext = &Context{
 	namespace:   "__global__",
 	name:        "__global__",
 	variables:   map[uint64][]*Variable{},
+	extensions:  map[Type]map[string]*Variable{},
 	parameters:  []*Value{},
 	contextPath: map[string][]*Context{},
 
@@ -164,6 +166,7 @@ func (c *Context) EnterScope(name string, function *Function, paramLength uint) 
 	scope.contextPath = c.contextPath
 	scope.function = function
 	scope.parameters = make([]*Value, paramLength)
+	scope.extensions = c.extensions
 	return scope
 }
 
@@ -254,18 +257,28 @@ func (c *Context) Stringify(value *Value) string {
 	if value == nil {
 		return "<empty value>"
 	}
-	//toString := c.FindFunction("toString", &Signature{
-	//	Parameters: []Parameter{
-	//		{Name: "this",
-	//			Type: value.Type,
-	//		},
-	//	},
-	//	ReturnType: StringType,
-	//})
-	//if toString != nil {
-	//	asString := toString.Exec(c, []*Value{value})
-	//	return asString.Value.(string)
-	//} else {
+
 	return util.Stringify(value.Value)
-	//}
+
+}
+
+func (c *Context) DefineExtension(receiverType Type, name string, value *Variable) {
+	extensions, present := c.extensions[receiverType]
+	if !present {
+		extensions = map[string]*Variable{}
+	}
+	_, exists := extensions[name]
+	if exists {
+		panic("Extension on " + receiverType.Name() + " with name " + name + " already exists.")
+	}
+	extensions[name] = value
+	c.extensions[receiverType] = extensions
+}
+
+func (c *Context) FindExtension(receiverType Type, name string) *Variable {
+	extensions, present := c.extensions[receiverType]
+	if !present {
+		extensions = map[string]*Variable{}
+	}
+	return extensions[name]
 }

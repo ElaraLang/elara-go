@@ -186,6 +186,10 @@ func (c *InvocationCommand) findReceiverFunction(ctx *Context, receiver *Value, 
 		Parameters: parameters,
 		ReturnType: AnyType, //can't infer this rn
 	}
+	extension := ctx.FindExtension(receiverType, functionName)
+	if extension != nil {
+		return extension.Value.Value.(*Function)
+	}
 	receiverFunction := ctx.FindFunction(nameHash, receiverSignature)
 	if receiverFunction == nil {
 		paramTypes := make([]string, 0)
@@ -565,30 +569,30 @@ func (c *StructDefCommand) Exec(ctx *Context) *ReturnedValue {
 type ExtendCommand struct {
 	Type       string
 	statements []Command
+	alias      string
 }
 
 func (c *ExtendCommand) Exec(ctx *Context) *ReturnedValue {
-	panic("TODO ExtendCommand")
-	//extending := ctx.FindType(c.Type)
-	//if extending == nil {
-	//	panic("No such type " + c.Type)
-	//}
-	//for _, statement := range c.statements {
-	//	switch statement := statement.(type) {
-	//	case *DefineVarCommand:
-	//		//defVar := statement
-	//		//value := defVar.value.Exec(ctx)
-	//		//variable := &Variable{
-	//		//	Name:    defVar.Name,
-	//		//	Mutable: defVar.Mutable,
-	//		//	Type:    defVar.getType(ctx),
-	//		//	Value:   value,
-	//		//}
-	//
-	//		//extending.variables.Set(defVar.Name, variable)
-	//	}
-	//}
-	//return nil
+	extending := ctx.FindType(c.Type)
+	if extending == nil {
+		panic("No such type " + c.Type)
+	}
+
+	for _, statement := range c.statements {
+		switch statement := statement.(type) {
+		case *DefineVarCommand:
+			value := statement.value.Exec(ctx).Unwrap()
+			variable := &Variable{
+				Name:    statement.Name,
+				Mutable: statement.Mutable,
+				Type:    statement.getType(ctx),
+				Value:   value,
+			}
+
+			ctx.DefineExtension(extending, statement.Name, variable)
+		}
+	}
+	return NilValue()
 }
 
 type TypeCheckCommand struct {
@@ -681,6 +685,7 @@ func ToCommand(statement parser.Stmt) Command {
 			Type:    t.Type,
 			value:   valueExpr,
 		}
+
 	case parser.ExpressionStmt:
 		return ExpressionToCommand(t.Expr)
 
@@ -744,6 +749,7 @@ func ToCommand(statement parser.Stmt) Command {
 		return &ExtendCommand{
 			Type:       t.Identifier,
 			statements: commands,
+			alias:      t.Alias,
 		}
 
 	case parser.WhileStmt:

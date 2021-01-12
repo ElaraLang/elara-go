@@ -27,14 +27,14 @@ func NewEmptyParser() *Parser {
 	return &Parser{}
 }
 
-func NewParser(tokens *[]Token) *Parser {
+func NewParser(tokens []Token) *Parser {
 	return &Parser{
-		tokens: *tokens,
+		tokens: tokens,
 	}
 }
 
-func (p *Parser) Reset(tokens *[]Token) {
-	p.tokens = *tokens
+func (p *Parser) Reset(tokens []Token) {
+	p.tokens = tokens
 	p.current = 0
 }
 
@@ -170,7 +170,7 @@ func (p *Parser) insertBlankType(index int, value ...TokenType) {
 		blankTokens[i] = Token{
 			TokenType: value[i],
 			Text:      nil,
-			Position:  lexer.CreatePosition(nil, -1, 1),
+			Position:  lexer.CreatePosition(-1, 1),
 		}
 	}
 	p.insert(index, blankTokens...)

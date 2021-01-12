@@ -22,3 +22,7 @@ let produceDaves(Int amount) => {
 let daves = produceDaves(50)
 
 print("50 daves coming right up!")
+
+extend Person as person {
+    let printName => { print(person.name) }
+}

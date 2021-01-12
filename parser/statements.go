@@ -42,6 +42,7 @@ type WhileStmt struct {
 type ExtendStmt struct {
 	Identifier string
 	Body       BlockStmt
+	Alias      string
 }
 type TypeStmt struct {
 	Identifier string
@@ -219,8 +220,15 @@ func (p *Parser) exprStatement() Stmt {
 func (p *Parser) extendStatement() Stmt {
 	p.consume(lexer.Extend, "Expected 'extend'")
 	id := p.consumeValidIdentifier("Expected struct name to extend")
+	alias := "this" //
+	next := p.peek()
+	if next.TokenType == lexer.As {
+		p.advance()
+		alias = string(p.consume(lexer.Identifier, "Expected identifier for extend alias").Text)
+	}
 	return ExtendStmt{
 		Identifier: string(id.Text),
 		Body:       p.blockStatement(),
+		Alias:      alias,
 	}
 }

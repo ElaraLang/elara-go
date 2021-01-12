@@ -22,7 +22,6 @@ func (t *Token) Equals(other *Token) bool {
 }
 
 type Position struct {
-	file   *string
 	line   int
 	column int
 }
@@ -35,9 +34,8 @@ func CreateToken(tokenType TokenType, text string, position Position) Token {
 	}
 }
 
-func CreatePosition(file *string, line int, column int) Position {
+func CreatePosition(line int, column int) Position {
 	return Position{
-		file:   file,
 		line:   line,
 		column: column,
 	}
@@ -48,8 +46,5 @@ func (t *Token) String() string {
 }
 
 func (p *Position) String() string {
-	if p.file != nil {
-		return fmt.Sprintf("%s, %d:%d", *p.file, p.line, p.column)
-	}
-	return fmt.Sprintf("Unknown file, %d:%d", p.line, p.column)
+	return fmt.Sprintf("%d:%d", p.line, p.column)
 }
