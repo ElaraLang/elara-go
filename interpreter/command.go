@@ -213,7 +213,7 @@ func (c *InvocationCommand) Exec(ctx *Context) *ReturnedValue {
 		val := c.Invoking.Exec(ctx).Unwrap()
 		fun, ok := val.Value.(*Function)
 		if !ok {
-			panic("Cannot invoke non-value")
+			panic("Cannot invoke value that isn't a function ")
 		}
 		switch t := c.Invoking.(type) {
 		case *VariableCommand:

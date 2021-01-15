@@ -34,8 +34,9 @@ func Init(context *Context) {
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
-					Name: "this",
-					Type: StringType,
+					Name:     "this",
+					Type:     StringType,
+					Position: 0,
 				},
 				{
 					Name:     "other",
