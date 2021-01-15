@@ -2,6 +2,10 @@ package interpreter
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
+	"net/http"
+	"os"
 	"sync"
 )
 
@@ -100,6 +104,56 @@ func NewContext(init bool) *Context {
 			Value: inputFunction,
 		},
 	})
+
+	// START fetch() HERE
+
+	fetchFunctionName := "fetch"
+	fetchFunction := &Function{
+		name: &fetchFunctionName,
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name:     "this",
+					Type:     StringType,
+					Position: 0,
+				},
+			},
+			ReturnType: StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+
+			var requestURL string = ctx.FindParameter(0).Value.(string)
+
+			response, err := http.Get(requestURL)
+
+			if err != nil {
+				fmt.Print(err.Error())
+				os.Exit(1)
+			}
+
+			responseData, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			return NonReturningValue(&Value{Value: string(responseData), Type: StringType})
+			// return NonReturningValue(&Value{Value: fetch, Type: StringType})
+		}),
+	}
+
+	fetchContract := NewFunctionType(fetchFunction)
+
+	c.DefineVariable(&Variable{
+		Name:    fetchFunctionName,
+		Mutable: false,
+		Type:    fetchContract,
+		Value: &Value{
+			Type:  fetchContract,
+			Value: fetchFunction,
+		},
+	})
+
+	// END fetch() HERE
 
 	emptyName := "empty"
 	emptyFun := &Function{
