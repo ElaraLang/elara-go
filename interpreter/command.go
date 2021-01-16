@@ -367,7 +367,7 @@ type BlockCommand struct {
 }
 
 func (c *BlockCommand) Exec(ctx *Context) *ReturnedValue {
-	var last *ReturnedValue
+	var last = NonReturningValue(UnitValue())
 	for _, lineRef := range c.lines {
 		line := *lineRef
 		val := line.Exec(ctx)
