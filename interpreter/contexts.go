@@ -184,9 +184,9 @@ func NewContext(init bool) *Context {
 			var fxRun *Function = ctx.FindParameter(0).Value.(*Function)
 			var msRun int64  = ctx.FindParameter(1).Value.(int64)
 
-			time.AfterFunc(time.Duration(msRun), func() {
-				fxRun.Exec(ctx, []*Value{})
-			})
+			time.Sleep(time.Duration(msRun * 1000000))
+
+			fxRun.Exec(ctx, []*Value{})
 
 			return NonReturningValue(UnitValue())
 
