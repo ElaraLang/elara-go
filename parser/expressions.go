@@ -390,12 +390,6 @@ func (p *Parser) primary() (expr Expr) {
 		break
 	case lexer.Char:
 		charTok := p.consume(lexer.Char, "Expected char")
-		if len(charTok.Text) > 1 {
-			panic(ParseError{
-				token:   p.previous(),
-				message: "Char literal containing more than 1 rune found!",
-			})
-		}
 		char := charTok.Text[0]
 		expr = CharLiteralExpr{Value: char}
 	case lexer.BooleanTrue:
