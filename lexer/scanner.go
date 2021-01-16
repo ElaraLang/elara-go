@@ -22,7 +22,7 @@ func NewTokenReader(runes []rune) *TokenReader {
 }
 
 //Reads the current rune and moves the cursor to the next rune
-func (s *TokenReader) read() rune {
+func (s *TokenReader) Advance() rune {
 	if s.cursor >= len(s.runes) {
 		return eof
 	}
@@ -45,7 +45,7 @@ func (s *TokenReader) peek() rune {
 
 //TODO this is pretty gross, could use a cleanup
 func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
-	ch := s.read()
+	ch := s.Advance()
 
 	if ch == eof {
 		return EOF, []rune{ch}, s.line, s.col
@@ -159,7 +159,7 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 func (s *TokenReader) consumeWhitespace() int {
 	count := 1 //We know this function will be called when the lexer has already encountered at least 1 whitespace
 	for {
-		ch := s.read()
+		ch := s.Advance()
 		if ch == eof {
 			break
 		}
@@ -273,7 +273,7 @@ func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 }
 
 func (s *TokenReader) readBracket() (tok TokenType, text []rune) {
-	str := s.read()
+	str := s.Advance()
 	switch str {
 	case '(':
 		return LParen, []rune{str}
@@ -296,7 +296,7 @@ func (s *TokenReader) readBracket() (tok TokenType, text []rune) {
 }
 
 func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
-	ch := s.read()
+	ch := s.Advance()
 
 	switch ch {
 	case '.':
@@ -304,11 +304,11 @@ func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
 	case '=':
 		peeked := s.peek()
 		if peeked == '>' {
-			s.read()
+			s.Advance()
 			return Arrow, []rune{ch, peeked}
 		}
 		if peeked == '=' {
-			s.read()
+			s.Advance()
 			return Equals, []rune{ch, peeked}
 		}
 		return Equal, []rune{ch}
@@ -317,12 +317,12 @@ func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
 	return Illegal, []rune{ch}
 }
 func (s *TokenReader) readAngleBracket() (tok TokenType, text []rune) {
-	ch1 := s.read()
+	ch1 := s.Advance()
 	ch := s.peek()
 	if ch1 == '<' {
 		switch ch {
 		case '=':
-			s.read()
+			s.Advance()
 			return LesserEqual, []rune{ch1, ch}
 		}
 		return LAngle, []rune{ch1}
@@ -330,7 +330,7 @@ func (s *TokenReader) readAngleBracket() (tok TokenType, text []rune) {
 	if ch1 == '>' {
 		switch ch {
 		case '=':
-			s.read()
+			s.Advance()
 			return GreaterEqual, []rune{ch1, ch}
 		}
 		return RAngle, []rune{ch1}
@@ -429,7 +429,7 @@ func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
 	return Illegal, str
 }
 
-//This function is called with the assumption that the beginning " has ALREADY been read.
+//This function is called with the assumption that the beginning " has ALREADY been Advance.
 func (s *TokenReader) readString() (tok TokenType, text []rune) {
 	start := s.cursor
 	end := start
@@ -451,7 +451,7 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 	return String, s.runes[start : end-1]
 }
 
-//This function is called with the assumption that the beginning ' has ALREADY been read.
+//This function is called with the assumption that the beginning ' has ALREADY been Advance.
 func (s *TokenReader) readChar() (tok TokenType, char rune) {
 	start := s.cursor
 	char = s.runes[start]

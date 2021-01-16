@@ -26,8 +26,7 @@ func isAngleBracket(ch rune) bool {
 
 //This function is a bit of a hotspot, mostly due to how often it's called. Not much to be done here though - map access is pretty fast :/
 func isValidIdentifier(ch rune) bool {
-	s := IllegalIdentifierChars[ch]
-	return !s
+	return !IllegalIdentifierChars[ch]
 }
 
 func isNumerical(ch rune) bool {
