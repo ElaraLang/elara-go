@@ -478,6 +478,9 @@ func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
 			break
 		}
 		if r == '.' {
+		    if numType == Float {
+		        break
+		    }
 			numType = Float
 		} else if !unicode.IsNumber(r) {
 			s.unread()
