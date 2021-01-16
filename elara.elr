@@ -1,4 +1,4 @@
 namespace test/lol
 import elara/std
 
-let a = '3'
+`5`

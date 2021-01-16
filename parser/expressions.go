@@ -79,6 +79,9 @@ type CollectionExpr struct {
 type StringLiteralExpr struct {
 	Value string
 }
+type CharLiteralExpr struct {
+	Value rune
+}
 
 type IntegerLiteralExpr struct {
 	Value int64
@@ -96,6 +99,7 @@ func (FuncDefExpr) exprNode()        {}
 func (AccessExpr) exprNode()         {}
 func (CollectionExpr) exprNode()     {}
 func (StringLiteralExpr) exprNode()  {}
+func (CharLiteralExpr) exprNode()    {}
 func (IntegerLiteralExpr) exprNode() {}
 func (FloatLiteralExpr) exprNode()   {}
 func (BooleanLiteralExpr) exprNode() {}
@@ -384,6 +388,16 @@ func (p *Parser) primary() (expr Expr) {
 
 		expr = StringLiteralExpr{Value: text}
 		break
+	case lexer.Char:
+		charTok := p.consume(lexer.Char, "Expected char")
+		if len(charTok.Text) > 1 {
+			panic(ParseError{
+				token:   p.previous(),
+				message: "Char literal containing more than 1 rune found!",
+			})
+		}
+		char := charTok.Text[0]
+		expr = CharLiteralExpr{Value: char}
 	case lexer.BooleanTrue:
 		p.consume(lexer.BooleanTrue, "Expected BooleanTrue")
 		expr = BooleanLiteralExpr{Value: true}
