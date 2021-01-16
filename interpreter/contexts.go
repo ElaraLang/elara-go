@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"sync"
+	"time"
 )
 
 var contextPool = sync.Pool{
@@ -105,7 +106,7 @@ func NewContext(init bool) *Context {
 		},
 	})
 
-	// START fetch() HERE
+	// fetch(baseURL)
 
 	fetchFunctionName := "fetch"
 	fetchFunction := &Function{
@@ -153,7 +154,58 @@ func NewContext(init bool) *Context {
 		},
 	})
 
-	// END fetch() HERE
+	// end of fetch()
+
+	// setTimeout(function, ms)
+
+	setTimeoutFunctionName := "setTimeout"
+	setTimeoutFunction := &Function{
+		name: &setTimeoutFunctionName,
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "fx",
+					Type: NewSignatureFunctionType ( Signature{
+						Parameters: []Parameter{},
+						ReturnType: UnitType,
+					}),
+					Position: 0,
+				},
+				{
+					Name: "ms",
+					Type: IntType,
+					Position: 1,
+				},
+			},
+			ReturnType: AnyType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+
+			var fxRun *Function = ctx.FindParameter(0).Value.(*Function)
+			var msRun int64  = ctx.FindParameter(1).Value.(int64)
+
+			time.AfterFunc(time.Duration(msRun), func() {
+				fxRun.Exec(ctx, []*Value{})
+			})
+
+			return NonReturningValue(UnitValue())
+
+		}),
+	}
+
+	setTimeoutContract := NewFunctionType(setTimeoutFunction)
+
+	c.DefineVariable(&Variable{
+		Name:    setTimeoutFunctionName,
+		Mutable: false,
+		Type:    setTimeoutContract,
+		Value: &Value{
+			Type:  setTimeoutContract,
+			Value: setTimeoutFunction,
+		},
+	})
+
+	// end of setTimeout()
 
 	emptyName := "empty"
 	emptyFun := &Function{

@@ -1,6 +1,8 @@
 namespace test/lol
 import elara/std
 
-let a() => print("hi")
+let a() => {
+    setTimeout(() => { print("Printed after 5 seconds") }, 5000)
+}
 
 a()
