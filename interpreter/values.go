@@ -19,6 +19,15 @@ func BooleanValue(value bool) *Value {
 	return NewValue(BooleanType, value)
 }
 
+func CharValue(value rune) *Value {
+	return NewValue(CharType, value)
+}
+
 func StringValue(value string) *Value {
-	return NewValue(StringType, value)
+	chars := make([]*Value, len(value))
+	for i, c := range value {
+		chars[i] = CharValue(c)
+	}
+	val := &Collection{Elements: chars, ElementType: CharType}
+	return NewValue(NewCollectionTypeOf(CharType), val)
 }

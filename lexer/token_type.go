@@ -63,6 +63,7 @@ const (
 	BooleanTrue
 	BooleanFalse
 	String
+	Char
 	Int
 	Float
 
@@ -125,6 +126,7 @@ var tokenNames = map[TokenType]string{
 	BooleanTrue:  "True",
 	BooleanFalse: "False",
 	String:       "String",
+	Char:         "Char",
 	Int:          "Int",
 	Float:        "Float",
 

@@ -10,7 +10,10 @@ var UnitType = NewEmptyType("Unit")
 
 var FloatType = NewEmptyType("Float")
 var BooleanType = NewEmptyType("Boolean")
-var StringType = NewEmptyType("String")
+
+var CharType = NewEmptyType("Char")
+var StringType = NewCollectionTypeOf(CharType)
+
 var OutputType = NewEmptyType("Output")
 
 var types = []Type{
@@ -48,7 +51,7 @@ func Init(context *Context) {
 		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			this := ctx.FindParameter(0)
 			otherParam := ctx.FindParameter(1)
-			concatenated := this.Value.(string) + util.Stringify(otherParam.Value)
+			concatenated := this.Value.(*Collection).elemsAsString() + util.Stringify(otherParam.Value)
 			return NonReturningValue(&Value{
 				Type:  StringType,
 				Value: concatenated,
@@ -496,6 +499,7 @@ func Init(context *Context) {
 		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			value := ctx.FindParameter(1)
 			asString := ctx.Stringify(value)
+
 			fmt.Printf("%s", asString)
 			return NonReturningValue(UnitValue())
 		}),

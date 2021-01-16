@@ -1,6 +1,4 @@
 namespace test/lol
 import elara/std
 
-let a() => print("hi")
-
-a()
+let a = '3'

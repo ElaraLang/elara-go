@@ -20,6 +20,8 @@ func Stringify(s interface{}) string {
 		return t.String()
 	case string:
 		return t
+	case rune:
+		return strconv.QuoteRune(t)
 	case int:
 		return strconv.Itoa(t)
 	case int64:

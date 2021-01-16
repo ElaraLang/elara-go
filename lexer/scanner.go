@@ -135,6 +135,14 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 		return str, t, s.line, s.col
 	}
 
+	if ch == '\'' {
+		char, t := s.readChar()
+		defer func() {
+			s.col++
+		}()
+		return char, []rune{t}, s.line, s.col
+	}
+
 	if isValidIdentifier(ch) {
 		s.unread()
 		identifier, t := s.readIdentifier()
@@ -441,6 +449,18 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 	}
 	s.cursor = end
 	return String, s.runes[start : end-1]
+}
+
+//This function is called with the assumption that the beginning ' has ALREADY been read.
+func (s *TokenReader) readChar() (tok TokenType, char rune) {
+	start := s.cursor
+	char = s.runes[start]
+	s.cursor++
+	if s.runes[s.cursor] != '\'' {
+		panic("Char literal must have only 1 symbol")
+	}
+	s.cursor++
+	return Char, char
 }
 
 func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
