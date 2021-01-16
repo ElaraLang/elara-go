@@ -1,4 +1,6 @@
 namespace test/lol
 import elara/std
 
-`5`
+let s = "Hello"
+let c = s[0]
+print(c == 'H')

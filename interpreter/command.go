@@ -821,6 +821,10 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 		boolean := t.Value
 		value := BooleanValue(boolean)
 		return &LiteralCommand{value: value}
+	case parser.CharLiteralExpr:
+		char := t.Value
+		value := CharValue(char)
+		return &LiteralCommand{value: value}
 	case parser.BinaryExpr:
 		lhs := t.Lhs
 		lhsCmd := ExpressionToCommand(lhs)
