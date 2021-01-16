@@ -181,8 +181,8 @@ func NewContext(init bool) *Context {
 		},
 		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 
-			var fxRun *Function = ctx.FindParameter(0).Value.(*Function)
-			var msRun int64  = ctx.FindParameter(1).Value.(int64)
+			fxRun := ctx.FindParameter(0).Value.(*Function)
+			msRun := ctx.FindParameter(1).Value.(int64)
 
 			time.Sleep(time.Duration(msRun * 1000000))
 
