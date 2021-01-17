@@ -691,6 +691,21 @@ func (c *AccessCommand) Exec(ctx *Context) *ReturnedValue {
 	return NonReturningValue(coll.Elements[index])
 }
 
+type TypeCommand struct {
+	name  string
+	value parser.Type
+}
+
+func (c *TypeCommand) Exec(ctx *Context) *ReturnedValue {
+	runtimeType := FromASTType(c.value, ctx)
+	existing := ctx.FindType(c.name)
+	if existing != nil {
+		panic("Type with name " + c.name + " already exists in current scope")
+	}
+	ctx.types[c.name] = runtimeType
+	return NilValue()
+}
+
 func ToCommand(statement parser.Stmt) Command {
 	switch t := statement.(type) {
 	case parser.VarDefStmt:
@@ -772,6 +787,11 @@ func ToCommand(statement parser.Stmt) Command {
 		return &WhileCommand{
 			condition: ExpressionToCommand(t.Condition),
 			body:      ToCommand(t.Body),
+		}
+	case parser.TypeStmt:
+		return &TypeCommand{
+			name:  t.Identifier,
+			value: t.Contract,
 		}
 	}
 

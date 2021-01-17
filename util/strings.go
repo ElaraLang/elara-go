@@ -29,7 +29,7 @@ func Stringify(s interface{}) string {
 	case uint:
 		return strconv.FormatUint(uint64(t), 10)
 	case float64:
-		return strconv.FormatFloat(t, 'f', 'g', 64)
+		return strconv.FormatFloat(t, 'f', -1, 64)
 	case bool:
 		return strconv.FormatBool(t)
 	}
@@ -43,6 +43,6 @@ type Stringable interface {
 
 func Hash(s string) uint64 {
 	h := fnv.New64a()
-	h.Write([]byte(s))
+	_, _ = h.Write([]byte(s))
 	return h.Sum64()
 }

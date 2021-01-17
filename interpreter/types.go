@@ -2,6 +2,7 @@ package interpreter
 
 import (
 	"fmt"
+	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
 	"reflect"
 )
@@ -110,6 +111,30 @@ func NewEmptyType(name string) Type {
 	return &EmptyType{name: name}
 }
 
+type UnionType struct {
+	a Type
+	b Type
+}
+
+func (t *UnionType) Name() string {
+	return t.a.Name() + " | " + t.b.Name()
+}
+func (t *UnionType) Accepts(other Type) bool {
+	return t.a.Accepts(other) || t.b.Accepts(other)
+}
+
+type IntersectionType struct {
+	a Type
+	b Type
+}
+
+func (t *IntersectionType) Name() string {
+	return t.a.Name() + " & " + t.b.Name()
+}
+func (t *IntersectionType) Accepts(other Type) bool {
+	return t.a.Accepts(other) && t.b.Accepts(other)
+}
+
 func FromASTType(astType parser.Type, ctx *Context) Type {
 	switch t := astType.(type) {
 	case parser.ElementaryTypeContract:
@@ -141,6 +166,21 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 		return &CollectionType{
 			ElementType: elemType,
 		}
+
+	case parser.BinaryTypeContract:
+		switch t.TypeOp {
+		case lexer.TypeAnd:
+			return &IntersectionType{
+				a: FromASTType(t.Lhs, ctx),
+				b: FromASTType(t.Rhs, ctx),
+			}
+		case lexer.TypeOr:
+			return &UnionType{
+				a: FromASTType(t.Lhs, ctx),
+				b: FromASTType(t.Rhs, ctx),
+			}
+		}
+
 	}
 	println("Cannot handle " + reflect.TypeOf(astType).Name())
 	return nil

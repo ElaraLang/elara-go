@@ -1,6 +1,24 @@
 namespace test/lol
 import elara/std
 
+type Named = {
+    String age
+}
+
+struct Person {
+    String name
+    Int age
+}
+
+type Entity = Named & Aged
+
+let test(Entity t) => {
+    print(t.name)
+}
+
+let dave = Person("Dave", 18)
+test(dave)
+
 let s = "Hello"
 let c = s[0]
 print(c == 'H')
