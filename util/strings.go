@@ -21,7 +21,7 @@ func Stringify(s interface{}) string {
 	case string:
 		return t
 	case rune:
-		return strconv.QuoteRune(t)
+		return string(t)
 	case int:
 		return strconv.Itoa(t)
 	case int64:

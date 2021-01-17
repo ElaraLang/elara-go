@@ -622,7 +622,7 @@ func (c *TypeCheckCommand) Exec(ctx *Context) *ReturnedValue {
 		panic("No such type " + util.Stringify(c.checkType))
 	}
 	res := c.expression.Exec(ctx).Unwrap()
-	is := res.Type.Accepts(checkAgainst, ctx)
+	is := checkAgainst.Accepts(res.Type, ctx)
 	return NonReturningValue(BooleanValue(is))
 }
 

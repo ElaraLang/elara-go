@@ -22,6 +22,6 @@ let test(Entity t) => {
 let dave = Person("Dave", 18)
 test(dave)
 
-let s = "Hello"
-let c = s[0]
-print(c == 'H')
+let hmm(Char c) => c + " "
+
+"Hello".map(hmm).print()
