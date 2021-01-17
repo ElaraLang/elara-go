@@ -1,10 +1,13 @@
 namespace test/lol
 import elara/std
 
-let m = {
-    1: 5,
-    4: 6,
-    "Hello": "Hi"
+struct Person {
+    String name
+    Int age
 }
 
-print(m)
+let mut a = 3
+let m = { Person("Dave", 16): 2}
+
+let dave = Person("Dave", 16)
+print(m[dave])

@@ -77,7 +77,12 @@ type CollectionExpr struct {
 }
 
 type MapExpr struct {
-	Entries map[Expr]Expr
+	Entries []MapEntry
+}
+
+type MapEntry struct {
+	Key   Expr
+	Value Expr
 }
 
 type StringLiteralExpr struct {
@@ -288,11 +293,6 @@ func (p *Parser) unary() (expr Expr) {
 
 func (p *Parser) invoke() (expr Expr) {
 	expr = p.funDef()
-	/*	if p.check(lexer.LParen) && p.isFuncDef() {
-			expr = p.funDef()
-		} else {
-			expr = p.primary()
-		}*/
 
 	for p.match(lexer.LParen, lexer.Dot, lexer.LSquare) {
 		switch p.previous().TokenType {
@@ -401,14 +401,14 @@ func (p *Parser) mapLiteral() Expr {
 		val := p.expression()
 		return key, val
 	}
-	entries := make(map[Expr]Expr)
+	entries := make([]MapEntry, 0)
 
 	for {
 		if p.peek().TokenType == lexer.RBrace {
 			break
 		}
 		key, val := consumeEntry()
-		entries[key] = val
+		entries = append(entries, MapEntry{key, val})
 		if p.peek().TokenType == lexer.Comma {
 			p.advance()
 		}

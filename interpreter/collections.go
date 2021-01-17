@@ -66,3 +66,20 @@ func (t *Collection) elemsAsString() string {
 	t.cachedAsString = &asString
 	return asString
 }
+
+func (t *Collection) Equals(ctx *Context, other *Value) bool {
+	otherAsCol, otherIsCol := other.Value.(*Collection)
+	if !otherIsCol {
+		return false
+	}
+	if len(t.Elements) != len(otherAsCol.Elements) {
+		return false
+	}
+	for i, element := range t.Elements {
+		otherElem := otherAsCol.Elements[i]
+		if !element.Equals(ctx, otherElem) {
+			break
+		}
+	}
+	return true
+}

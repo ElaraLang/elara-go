@@ -108,7 +108,7 @@ func (c *AssignmentCommand) Exec(ctx *Context) *ReturnedValue {
 	}
 
 	variable.Value = value
-	return NilValue()
+	return NonReturningValue(value)
 }
 
 type VariableCommand struct {
@@ -712,14 +712,18 @@ func (c *TypeCommand) Exec(ctx *Context) *ReturnedValue {
 }
 
 type MapCommand struct {
-	entries map[Command]Command
+	entries []MapEntry
+}
+type MapEntry struct {
+	key   Command
+	value Command
 }
 
 func (c *MapCommand) Exec(ctx *Context) *ReturnedValue {
 	elements := make([]*Entry, 0)
-	for k, v := range c.entries {
-		key := k.Exec(ctx).Unwrap()
-		value := v.Exec(ctx).Unwrap()
+	for _, entry := range c.entries {
+		key := entry.key.Exec(ctx).Unwrap()
+		value := entry.value.Exec(ctx).Unwrap()
 		entry := &Entry{
 			Key:   key,
 			Value: value,
@@ -999,11 +1003,13 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			index:    ExpressionToCommand(t.Index),
 		}
 	case parser.MapExpr:
-		entries := make(map[Command]Command)
-		for k, v := range t.Entries {
-			key := ExpressionToCommand(k)
-			value := ExpressionToCommand(v)
-			entries[key] = value
+		entries := make([]MapEntry, len(t.Entries))
+		for i, entry := range t.Entries {
+			mapEntry := MapEntry{
+				key:   ExpressionToCommand(entry.Key),
+				value: ExpressionToCommand(entry.Value),
+			}
+			entries[i] = mapEntry
 		}
 		return &MapCommand{
 			entries: entries,

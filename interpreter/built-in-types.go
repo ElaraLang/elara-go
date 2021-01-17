@@ -274,25 +274,28 @@ func Init(context *Context) {
 		name: &anyEqualsName,
 		Body: NewAbstractCommand(func(c *Context) *ReturnedValue {
 			this := c.FindParameter(0).Value
-			other := c.FindParameter(1).Value
+			other := c.FindParameter(1)
+			value := false
 			switch a := this.(type) {
 			case *Collection:
-				otherAsCol, otherIsCol := other.(*Collection)
-				if !otherIsCol {
-					break
+				value = a.Equals(c, other)
+			case *Instance:
+				value = a.Equals(c, other)
+			case int64:
+				asI64, isI64 := other.Value.(int64)
+				if isI64 && a == asI64 {
+					value = true
 				}
-				if len(a.Elements) != len(otherAsCol.Elements) {
-					break
+			case float64:
+				asF64, isF64 := other.Value.(float64)
+				if isF64 && a == asF64 {
+					value = true
 				}
-				for i, element := range a.Elements {
-					otherElem := otherAsCol.Elements[i]
-					if !element.Equals(c, otherElem) {
-						break
-					}
-				}
-				return NonReturningValue(BooleanValue(true))
 			}
-			return NonReturningValue(BooleanValue(this == other))
+			if value == false {
+				value = this == other
+			}
+			return NonReturningValue(BooleanValue(value))
 		}),
 	}
 	anyEqualsType := NewFunctionType(anyEquals)
