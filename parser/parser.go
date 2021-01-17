@@ -121,6 +121,12 @@ func (p *Parser) advance() Token {
 	}
 	return p.previous()
 }
+func (p *Parser) reverse() {
+	if p.current == 0 {
+		return
+	}
+	p.current--
+}
 
 func (p *Parser) match(types ...TokenType) bool {
 	for _, t := range types {

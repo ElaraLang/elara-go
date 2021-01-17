@@ -28,6 +28,11 @@ type CollectionTypeContract struct {
 	ElemType Type
 }
 
+type MapType struct {
+	KeyType   Type
+	ValueType Type
+}
+
 func (p *Parser) typeContract() (contract Type) {
 	return p.contractualOr(false)
 }
@@ -104,6 +109,40 @@ func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 			return
 		}
 	}
+	if p.peek().TokenType == lexer.LBrace {
+		p.advance()
+		//Peek until reaching a closing brace
+		count := 0
+		seenColon := false
+		for {
+			count++
+			next := p.advance().TokenType
+			if next == lexer.Colon {
+				seenColon = true
+			}
+			if next == lexer.RBrace {
+				break
+			}
+		}
+		for i := 0; i < count; i++ {
+			p.reverse()
+		}
+		if !seenColon { //it's not a map type
+			p.reverse() // Undo the lbrace read
+			return p.definedContract(allowDef)
+		}
+
+		keyType := p.typeContract()
+		p.consume(lexer.Colon, "Expected colon in map type")
+		valueType := p.typeContract()
+
+		p.consume(lexer.RBrace, "Expected closing brace for map type contract")
+
+		return MapType{
+			KeyType:   keyType,
+			ValueType: valueType,
+		}
+	}
 	return p.definedContract(allowDef)
 }
 
@@ -123,3 +162,4 @@ func (t BinaryTypeContract) typeOf()     {}
 func (t InvocableTypeContract) typeOf()  {}
 func (t DefinedTypeContract) typeOf()    {}
 func (t CollectionTypeContract) typeOf() {}
+func (t MapType) typeOf()                {}
