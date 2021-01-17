@@ -455,8 +455,8 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 func (s *TokenReader) readChar() (tok TokenType, char rune) {
 	start := s.cursor
 	char = s.runes[start]
-	if s.runes[s.cursor] == '\\' {
-		s.cursor++
+	s.cursor++
+	if s.runes[s.cursor-1] == '\\' {
 		switch s.runes[s.cursor] {
 		case 'n':
 			char = '\n'

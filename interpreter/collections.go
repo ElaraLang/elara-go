@@ -6,6 +6,8 @@ import "strings"
 type Collection struct {
 	ElementType Type
 	Elements    []*Value
+
+	elemsAsStringCalled bool
 }
 
 type CollectionType struct {
@@ -48,6 +50,10 @@ func (t *Collection) String() string {
 }
 
 func (t *Collection) elemsAsString() string {
+	if t.elemsAsStringCalled {
+		println("Duplicate call to elemsAsString")
+	}
+	t.elemsAsStringCalled = true
 	if t.ElementType != CharType {
 		panic("Cannot convert collection to string")
 	}
