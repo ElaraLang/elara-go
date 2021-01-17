@@ -2,9 +2,12 @@ namespace test/lol
 import elara/std
 
 type Named = {
-    String age
+    String name
 }
 
+type Aged = {
+    Int age
+}
 struct Person {
     String name
     Int age

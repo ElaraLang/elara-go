@@ -10,7 +10,7 @@ import (
 type Type interface {
 	Name() string
 	//returns if *this* type accepts the other type
-	Accepts(otherType Type) bool
+	Accepts(otherType Type, ctx *Context) bool
 }
 
 type StructType struct {
@@ -24,7 +24,7 @@ func (t *StructType) Name() string {
 	return t.TypeName
 }
 
-func (t *StructType) Accepts(otherType Type) bool {
+func (t *StructType) Accepts(otherType Type, ctx *Context) bool {
 	otherStruct, ok := otherType.(*StructType)
 	if !ok {
 		return false
@@ -34,7 +34,7 @@ func (t *StructType) Accepts(otherType Type) bool {
 		if !exists {
 			return false //Must have all of the properties
 		}
-		if !property.Type.Accepts(byName.Type) {
+		if !property.Type.Accepts(byName.Type, ctx) {
 			return false //And the types must be acceptable
 		}
 	}
@@ -77,12 +77,12 @@ Function acceptance is defined by having the same number of parameters,
 with all of A's parameters accepting the corresponding parameters for B
 and A's return type accepting B's return type
 */
-func (t *FunctionType) Accepts(other Type) bool {
-	otherFunc, ok := other.(*FunctionType)
+func (t *FunctionType) Accepts(otherType Type, ctx *Context) bool {
+	otherFunc, ok := otherType.(*FunctionType)
 	if !ok {
 		return false
 	}
-	return t.Signature.Accepts(&otherFunc.Signature, false)
+	return t.Signature.Accepts(&otherFunc.Signature, ctx, false)
 }
 
 //TODO mapType
@@ -95,16 +95,16 @@ func (t *EmptyType) Name() string {
 	return t.name
 }
 
-func (t *EmptyType) Accepts(other Type) bool {
+func (t *EmptyType) Accepts(otherType Type, ctx *Context) bool {
 	//This is really trying to patch a deeper problem - this function relies on there only ever being 1 pointer to a type.
 	if t.name == AnyType.Name() { //Hacky but functional
 		return true
 	}
-	asEmpty, isEmpty := other.(*EmptyType)
+	asEmpty, isEmpty := otherType.(*EmptyType)
 	if isEmpty {
 		return t.name == asEmpty.name
 	}
-	return t == other
+	return t == otherType
 }
 
 func NewEmptyType(name string) Type {
@@ -119,8 +119,8 @@ type UnionType struct {
 func (t *UnionType) Name() string {
 	return t.a.Name() + " | " + t.b.Name()
 }
-func (t *UnionType) Accepts(other Type) bool {
-	return t.a.Accepts(other) || t.b.Accepts(other)
+func (t *UnionType) Accepts(otherType Type, ctx *Context) bool {
+	return t.a.Accepts(otherType, ctx) || t.b.Accepts(otherType, ctx)
 }
 
 type IntersectionType struct {
@@ -131,8 +131,36 @@ type IntersectionType struct {
 func (t *IntersectionType) Name() string {
 	return t.a.Name() + " & " + t.b.Name()
 }
-func (t *IntersectionType) Accepts(other Type) bool {
-	return t.a.Accepts(other) && t.b.Accepts(other)
+func (t *IntersectionType) Accepts(otherType Type, ctx *Context) bool {
+	return t.a.Accepts(otherType, ctx) && t.b.Accepts(otherType, ctx)
+}
+
+type DefinedType struct {
+	name  string
+	parts map[string]Type
+}
+
+func (t *DefinedType) Name() string {
+	return t.name
+}
+
+func (t *DefinedType) Accepts(other Type, ctx *Context) bool {
+	asStruct, isStruct := other.(*StructType)
+	for s, t2 := range t.parts {
+		if isStruct {
+			property, present := asStruct.GetProperty(s)
+			if present && t2.Accepts(property.Type, ctx) {
+				continue
+			}
+		}
+		extension := ctx.FindExtension(other, s)
+		if extension != nil && t2.Accepts(extension.Value.Type, ctx) {
+			continue
+		}
+		return false
+	}
+
+	return true
 }
 
 func FromASTType(astType parser.Type, ctx *Context) Type {
@@ -180,7 +208,15 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 				b: FromASTType(t.Rhs, ctx),
 			}
 		}
-
+	case parser.DefinedTypeContract:
+		parts := make(map[string]Type, len(t.DefType))
+		for _, definedType := range t.DefType {
+			parts[definedType.Identifier] = FromASTType(definedType.DefType, ctx)
+		}
+		return &DefinedType{
+			name:  t.Name,
+			parts: parts,
+		}
 	}
 	println("Cannot handle " + reflect.TypeOf(astType).Name())
 	return nil

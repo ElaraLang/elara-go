@@ -12,8 +12,8 @@ var FloatType = NewEmptyType("Float")
 var BooleanType = NewEmptyType("Boolean")
 
 var CharType = NewEmptyType("Char")
-var StringType = NewCollectionTypeOf(CharType)
 
+var StringType = NewCollectionTypeOf(CharType)
 var OutputType = NewEmptyType("Output")
 
 var types = []Type{
@@ -23,6 +23,7 @@ var types = []Type{
 	FloatType,
 	BooleanType,
 	StringType,
+	CharType,
 	OutputType,
 }
 
@@ -30,6 +31,8 @@ func Init(context *Context) {
 	for _, t := range types {
 		context.types[t.Name()] = t
 	}
+	context.types["String"] = StringType
+
 	InitInts(context)
 
 	stringPlusName := "plus"

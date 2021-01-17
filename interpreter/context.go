@@ -58,7 +58,7 @@ func (c *Context) FindFunction(hash uint64, signature *Signature) *Function {
 		for _, variable := range vars {
 			asFunction, isFunction := variable.Value.Value.(*Function)
 			if isFunction {
-				if asFunction.Signature.Accepts(signature, false) {
+				if asFunction.Signature.Accepts(signature, c, false) {
 					matching = append(matching, variable)
 				}
 			}

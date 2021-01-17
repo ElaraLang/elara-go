@@ -16,13 +16,13 @@ func (t *CollectionType) Name() string {
 	return t.ElementType.Name() + "[]" //Eg String[]
 }
 
-func (t *CollectionType) Accepts(other Type) bool {
-	otherColl, ok := other.(*CollectionType)
+func (t *CollectionType) Accepts(otherType Type, ctx *Context) bool {
+	otherColl, ok := otherType.(*CollectionType)
 	if !ok {
 		return false
 	}
 
-	return t.ElementType.Accepts(otherColl.ElementType)
+	return t.ElementType.Accepts(otherColl.ElementType, ctx)
 }
 
 func NewCollectionType(collection *Collection) Type {

@@ -45,7 +45,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
 		if isFunction {
 			value = c.value.Exec(ctx).Unwrap()
 			valueAsFunction, valueIsFunction := value.Value.(*Function)
-			if valueIsFunction && !asFunction.Signature.Accepts(&valueAsFunction.Signature, false) {
+			if valueIsFunction && !asFunction.Signature.Accepts(&valueAsFunction.Signature, ctx, false) {
 				//We'll allow it because the functions have different arity
 			} else {
 				panic("Variable named " + c.Name + " already exists with the current signature")
@@ -64,7 +64,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
 
 	variableType := c.getType(ctx)
 	if variableType != nil {
-		if !variableType.Accepts(value.Type) {
+		if !variableType.Accepts(value.Type, ctx) {
 			panic("Cannot use value of type " + value.Type.Name() + " in place of " + variableType.Name() + " for variable " + c.Name)
 		}
 	} else {
@@ -103,7 +103,7 @@ func (c *AssignmentCommand) Exec(ctx *Context) *ReturnedValue {
 
 	value := c.value.Exec(ctx).Unwrap()
 
-	if !variable.Type.Accepts(value.Type) {
+	if !variable.Type.Accepts(value.Type, ctx) {
 		panic("Cannot reassign variable " + c.Name + " of type " + variable.Type.Name() + " to value " + value.String() + " of type " + value.Type.Name())
 	}
 
@@ -622,7 +622,7 @@ func (c *TypeCheckCommand) Exec(ctx *Context) *ReturnedValue {
 		panic("No such type " + util.Stringify(c.checkType))
 	}
 	res := c.expression.Exec(ctx).Unwrap()
-	is := res.Type.Accepts(checkAgainst)
+	is := res.Type.Accepts(checkAgainst, ctx)
 	return NonReturningValue(BooleanValue(is))
 }
 

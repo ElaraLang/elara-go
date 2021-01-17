@@ -43,8 +43,8 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	for i, paramValue := range parameters {
 		expectedParameter := f.Signature.Parameters[i]
 
-		if !expectedParameter.Type.Accepts(paramValue.Type) {
-			panic(fmt.Sprintf("Expected %s for parameter %s and got %s", expectedParameter.Type.Name(), expectedParameter.Name, paramValue.String()))
+		if !expectedParameter.Type.Accepts(paramValue.Type, ctx) {
+			panic(fmt.Sprintf("Expected %s for parameter %s and got %s (%s)", expectedParameter.Type.Name(), expectedParameter.Name, paramValue.String(), paramValue.Type.Name()))
 		}
 		//
 		//if paramValue.Value == nil {
@@ -58,7 +58,7 @@ func (f *Function) Exec(ctx *Context, parameters []*Value) (val *Value) {
 	if value == nil {
 		value = UnitValue()
 	}
-	if !f.Signature.ReturnType.Accepts(value.Type) {
+	if !f.Signature.ReturnType.Accepts(value.Type, ctx) {
 		name := "<anonymous>"
 		if f.name != nil {
 			name = *f.name
@@ -81,18 +81,18 @@ func (s *Signature) String() string {
 	return fmt.Sprintf("(%s) => %s", strings.Join(paramNames, ", "), s.ReturnType.Name())
 }
 
-func (s *Signature) Accepts(other *Signature, compareReturnTypes bool) bool {
+func (s *Signature) Accepts(other *Signature, ctx *Context, compareReturnTypes bool) bool {
 	if len(s.Parameters) != len(other.Parameters) {
 		return false
 	}
 	for i, parameter := range s.Parameters {
 		otherParam := other.Parameters[i]
-		if !parameter.Type.Accepts(otherParam.Type) {
+		if !parameter.Type.Accepts(otherParam.Type, ctx) {
 			return false
 		}
 	}
 	if compareReturnTypes {
-		return s.ReturnType.Accepts(other.ReturnType)
+		return s.ReturnType.Accepts(other.ReturnType, ctx)
 	}
 	return true
 }
