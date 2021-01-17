@@ -455,7 +455,26 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 func (s *TokenReader) readChar() (tok TokenType, char rune) {
 	start := s.cursor
 	char = s.runes[start]
-	s.cursor++
+	if s.runes[s.cursor] == '\\' {
+		s.cursor++
+		switch s.runes[s.cursor] {
+		case 'n':
+			char = '\n'
+		case 'r':
+			char = '\r'
+		case 't':
+			char = '\t'
+		case '\'':
+			char = '\''
+		case '\\':
+			char = '\\'
+		case 'b':
+			char = '\b'
+		default:
+			panic("Invalid escape sequence in char literal")
+		}
+		s.cursor++
+	}
 	if s.runes[s.cursor] != '\'' {
 		panic("Char literal must have only 1 symbol")
 	}
@@ -478,9 +497,9 @@ func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
 			break
 		}
 		if r == '.' {
-		    if numType == Float {
-		        break
-		    }
+			if numType == Float {
+				break
+			}
 			numType = Float
 		} else if !unicode.IsNumber(r) {
 			s.unread()
