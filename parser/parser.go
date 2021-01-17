@@ -72,18 +72,23 @@ func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 	}
 }
 
-func (p *Parser) handleError(error *[]ParseError) {
+func (p *Parser) handleError(errors *[]ParseError) {
 	if r := recover(); r != nil {
 		switch err := r.(type) {
 		case ParseError:
-			*error = append(*error, err)
+			*errors = append(*errors, err)
 			break
 		case []ParseError:
-			*error = append(*error, err...)
-		default:
-			*error = append(*error, ParseError{
+			*errors = append(*errors, err...)
+		case error:
+			*errors = append(*errors, ParseError{
 				token:   p.previous(),
-				message: "Invalid error thrown by Parser: ",
+				message: err.Error(),
+			})
+		default:
+			*errors = append(*errors, ParseError{
+				token:   p.previous(),
+				message: "Invalid errors thrown by Parser: ",
 			})
 			break
 		}
