@@ -6,8 +6,9 @@ struct Person {
     Int age
 }
 
-let mut a = 3
-let m = { Person("Dave", 16): 2}
-
-let dave = Person("Dave", 16)
-print(m[dave])
+let map = {
+    Person("Dave", 16): 2,
+    "Key 1": 19.4,
+    [1, 2, 3]: 4
+}
+print(map)

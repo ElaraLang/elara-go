@@ -22,7 +22,9 @@ func ExecuteFull(fileName string, scriptMode bool) {
 
 	totalTime := time.Since(start)
 
+	fmt.Println("===========================")
 	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
+	fmt.Println("===========================")
 }
 
 func LoadStdLib() {

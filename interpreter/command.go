@@ -48,7 +48,7 @@ func (c *DefineVarCommand) Exec(ctx *Context) *ReturnedValue {
 			if valueIsFunction && !asFunction.Signature.Accepts(&valueAsFunction.Signature, ctx, false) {
 				//We'll allow it because the functions have different arity
 			} else {
-				panic("Variable named " + c.Name + " already exists with the current signature")
+				//panic("Variable named " + c.Name + " already exists with the current signature") //TODO this might need to come back, maybe.
 			}
 		} else {
 			panic("Variable named " + c.Name + " already exists")
@@ -400,11 +400,42 @@ func (c *ContextCommand) Exec(ctx *Context) *ReturnedValue {
 	var value *ReturnedValue
 	switch val := receiver.Value.(type) {
 	case *Collection:
-		{
-			switch c.variable {
-			case "size":
-				value = NonReturningValue(IntValue(int64(len(val.Elements))))
+		switch c.variable {
+		case "size":
+			value = NonReturningValue(IntValue(int64(len(val.Elements))))
+		}
+	case *Map:
+		switch c.variable {
+		case "keys":
+			keySet := make([]*Value, len(val.Elements))
+			for i, element := range val.Elements {
+				keySet[i] = element.Key
 			}
+			collection := &Collection{
+				ElementType: val.MapType.KeyType,
+				Elements:    keySet,
+			}
+			collectionType := NewCollectionType(collection)
+
+			value = NonReturningValue(&Value{
+				Type:  collectionType,
+				Value: collection,
+			})
+		case "values":
+			valueSet := make([]*Value, len(val.Elements))
+			for i, element := range val.Elements {
+				valueSet[i] = element.Value
+			}
+			collection := &Collection{
+				ElementType: val.MapType.ValueType,
+				Elements:    valueSet,
+			}
+			collectionType := NewCollectionType(collection)
+
+			value = NonReturningValue(&Value{
+				Type:  collectionType,
+				Value: collection,
+			})
 		}
 	case *Instance:
 		{

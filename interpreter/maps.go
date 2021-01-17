@@ -9,10 +9,12 @@ type MapType struct {
 	KeyType   Type
 	ValueType Type
 }
+
 type Map struct {
 	MapType  *MapType
 	Elements []*Entry
 }
+
 type Entry struct {
 	Key   *Value
 	Value *Value
@@ -54,7 +56,6 @@ func (m *Map) String() string {
 	builder.WriteRune('{')
 	for i, elem := range m.Elements {
 		builder.WriteRune('\n')
-		builder.WriteString("    ")
 		builder.WriteString(elem.Key.String())
 		builder.WriteString(": ")
 		builder.WriteString(elem.Value.String())
