@@ -76,6 +76,10 @@ type CollectionExpr struct {
 	Elements []Expr
 }
 
+type MapExpr struct {
+	Entries map[Expr]Expr
+}
+
 type StringLiteralExpr struct {
 	Value string
 }
@@ -98,6 +102,7 @@ type BooleanLiteralExpr struct {
 func (FuncDefExpr) exprNode()        {}
 func (AccessExpr) exprNode()         {}
 func (CollectionExpr) exprNode()     {}
+func (MapExpr) exprNode()            {}
 func (StringLiteralExpr) exprNode()  {}
 func (CharLiteralExpr) exprNode()    {}
 func (IntegerLiteralExpr) exprNode() {}
@@ -334,6 +339,10 @@ func (p *Parser) funDef() Expr {
 			Statement:  p.statement(),
 		}
 	case lexer.LBrace:
+		mapExpr := p.tryParseMapLiteral()
+		if mapExpr != nil {
+			return mapExpr
+		}
 		if p.previous().TokenType == lexer.Arrow {
 			panic(ParseError{
 				token:   tok,
@@ -357,6 +366,59 @@ func (p *Parser) funDef() Expr {
 	}
 }
 
+func (p *Parser) tryParseMapLiteral() Expr {
+	p.advance()
+	//Peek until reaching a closing brace
+	count := 0
+	seenColon := false
+	for {
+		count++
+		next := p.advance().TokenType
+		if next == lexer.Colon {
+			seenColon = true
+			break
+		}
+		if next == lexer.RBrace {
+			break
+		}
+	}
+	for i := 0; i < count; i++ {
+		p.reverse()
+	}
+	p.reverse()     // Undo the lbrace read
+	if !seenColon { //it's not a map literal
+		return nil
+	}
+	return p.mapLiteral()
+}
+
+func (p *Parser) mapLiteral() Expr {
+	p.consume(lexer.LBrace, "Expected { in map literal")
+	p.cleanNewLines()
+	consumeEntry := func() (Expr, Expr) {
+		key := p.expression()
+		p.consume(lexer.Colon, "Expected colon between map literal key and value")
+		val := p.expression()
+		return key, val
+	}
+	entries := make(map[Expr]Expr)
+
+	for {
+		if p.peek().TokenType == lexer.RBrace {
+			break
+		}
+		key, val := consumeEntry()
+		entries[key] = val
+		if p.peek().TokenType == lexer.Comma {
+			p.advance()
+		}
+		//p.consume(lexer.Comma, "Expected comma after map literal entry")
+		p.cleanNewLines()
+	}
+	p.consume(lexer.RBrace, "Expected } to close map literal")
+	return MapExpr{Entries: entries}
+}
+
 func (p *Parser) collection() (expr Expr) {
 	if p.match(lexer.LSquare) {
 		col := make([]Expr, 0)
@@ -368,12 +430,11 @@ func (p *Parser) collection() (expr Expr) {
 			}
 		}
 		p.consume(lexer.RSquare, "Expected ']' at end of collection literal")
-		expr = CollectionExpr{
+		return CollectionExpr{
 			Elements: col,
 		}
-	} else {
-		expr = p.primary()
 	}
+	expr = p.primary()
 	return
 }
 

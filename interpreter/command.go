@@ -680,15 +680,20 @@ type AccessCommand struct {
 }
 
 func (c *AccessCommand) Exec(ctx *Context) *ReturnedValue {
-	coll, isColl := c.checking.Exec(ctx).Unwrap().Value.(*Collection)
-	if !isColl {
-		panic("Indexed access not supported for non-collection type")
+	checking := c.checking.Exec(ctx).Unwrap().Value
+	switch accessingType := checking.(type) {
+	case *Collection:
+		index, isInt := c.index.Exec(ctx).Unwrap().Value.(int64)
+		if !isInt {
+			panic("Index was not an integer")
+		}
+		return NonReturningValue(accessingType.Elements[index])
+
+	case *Map:
+		index := c.index.Exec(ctx).Unwrap()
+		return NonReturningValue(accessingType.Get(ctx, index))
 	}
-	index, isInt := c.index.Exec(ctx).Unwrap().Value.(int64)
-	if !isInt {
-		panic("Index was not an integer")
-	}
-	return NonReturningValue(coll.Elements[index])
+	panic("Indexed access not supported for non-collection type")
 }
 
 type TypeCommand struct {
@@ -704,6 +709,28 @@ func (c *TypeCommand) Exec(ctx *Context) *ReturnedValue {
 	}
 	ctx.types[c.name] = runtimeType
 	return NilValue()
+}
+
+type MapCommand struct {
+	entries map[Command]Command
+}
+
+func (c *MapCommand) Exec(ctx *Context) *ReturnedValue {
+	elements := make([]*Entry, 0)
+	for k, v := range c.entries {
+		key := k.Exec(ctx).Unwrap()
+		value := v.Exec(ctx).Unwrap()
+		entry := &Entry{
+			Key:   key,
+			Value: value,
+		}
+		elements = append(elements, entry)
+	}
+
+	mapValue := MapOf(elements)
+	mapType := mapValue.MapType
+	value := NewValue(mapType, mapValue)
+	return NonReturningValue(value)
 }
 
 func ToCommand(statement parser.Stmt) Command {
@@ -970,6 +997,16 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 		return &AccessCommand{
 			checking: ExpressionToCommand(t.Expr),
 			index:    ExpressionToCommand(t.Index),
+		}
+	case parser.MapExpr:
+		entries := make(map[Command]Command)
+		for k, v := range t.Entries {
+			key := ExpressionToCommand(k)
+			value := ExpressionToCommand(v)
+			entries[key] = value
+		}
+		return &MapCommand{
+			entries: entries,
 		}
 	}
 

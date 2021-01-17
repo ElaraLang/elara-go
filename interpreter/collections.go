@@ -7,7 +7,7 @@ type Collection struct {
 	ElementType Type
 	Elements    []*Value
 
-	elemsAsStringCalled bool
+	cachedAsString *string
 }
 
 type CollectionType struct {
@@ -50,10 +50,10 @@ func (t *Collection) String() string {
 }
 
 func (t *Collection) elemsAsString() string {
-	if t.elemsAsStringCalled {
-		println("Duplicate call to elemsAsString")
+	if t.cachedAsString != nil {
+		return *t.cachedAsString
 	}
-	t.elemsAsStringCalled = true
+
 	if t.ElementType != CharType {
 		panic("Cannot convert collection to string")
 	}
@@ -62,5 +62,7 @@ func (t *Collection) elemsAsString() string {
 		builder.WriteRune(elem.Value.(rune))
 	}
 
-	return builder.String()
+	asString := builder.String()
+	t.cachedAsString = &asString
+	return asString
 }

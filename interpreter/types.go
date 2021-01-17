@@ -82,23 +82,6 @@ func (t *FunctionType) Accepts(otherType Type, ctx *Context) bool {
 	return t.Signature.Accepts(&otherFunc.Signature, ctx, false)
 }
 
-//TODO mapType
-type MapType struct {
-	KeyType   Type
-	ValueType Type
-}
-
-func (t *MapType) Name() string {
-	return fmt.Sprintf("{ %s : %s }", t.KeyType.Name(), t.ValueType.Name())
-}
-func (t *MapType) Accepts(otherType Type, ctx *Context) bool {
-	asMap, isMap := otherType.(*MapType)
-	if !isMap {
-		return false
-	}
-	return t.KeyType.Accepts(asMap.KeyType, ctx) && t.ValueType.Accepts(asMap.ValueType, ctx)
-}
-
 type EmptyType struct {
 	name string
 }

@@ -1,16 +1,10 @@
 namespace test/lol
 import elara/std
 
-type Named = {
-    String name
+let m = {
+    1: 5,
+    4: 6
+    "Hello": "Hi"
 }
 
-type Aged = {
-    Int age
-}
-struct Person {
-    String name
-    Int age
-}
-
-type Entity = Named & Aged
+print(m["Hello"])

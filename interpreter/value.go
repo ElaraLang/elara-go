@@ -24,6 +24,23 @@ func (v *Value) Copy() *Value {
 	return NewValue(v.Type, v.Value)
 }
 
+var equalsNameHash = util.Hash("equals")
+
+func (v *Value) Equals(ctx *Context, b *Value) bool {
+	eqFunction := ctx.FindFunction(equalsNameHash, &Signature{
+		Parameters: []Parameter{
+			{Name: "this", Position: 0, Type: v.Type},
+			{Name: "other", Position: 1, Type: b.Type},
+		},
+		ReturnType: BooleanType,
+	})
+	if eqFunction != nil {
+		res := eqFunction.Exec(ctx, []*Value{v, b}).Value.(bool)
+		return res
+	}
+	return v.Value == b.Value
+}
+
 var unitValue = NewValue(UnitType, nil)
 
 func UnitValue() *Value {
@@ -76,6 +93,7 @@ func (r ReturnedValue) Unwrap() *Value {
 	r.clean()
 	return val
 }
+
 func (r ReturnedValue) UnwrapNotNil() *Value {
 	if r.IsReturning {
 		panic("Value should return")
