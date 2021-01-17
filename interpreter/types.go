@@ -23,7 +23,6 @@ type StructType struct {
 func (t *StructType) Name() string {
 	return t.TypeName
 }
-
 func (t *StructType) Accepts(otherType Type, ctx *Context) bool {
 	otherStruct, ok := otherType.(*StructType)
 	if !ok {
@@ -40,7 +39,6 @@ func (t *StructType) Accepts(otherType Type, ctx *Context) bool {
 	}
 	return true
 }
-
 func (t *StructType) GetProperty(identifier string) (Property, bool) {
 	i, present := t.propertyPositions[identifier]
 	if !present {
@@ -67,7 +65,6 @@ func NewFunctionType(function *Function) *FunctionType {
 func NewSignatureFunctionType(signature Signature) *FunctionType {
 	return &FunctionType{Signature: signature}
 }
-
 func (t *FunctionType) Name() string {
 	return t.Signature.String()
 }
@@ -86,6 +83,21 @@ func (t *FunctionType) Accepts(otherType Type, ctx *Context) bool {
 }
 
 //TODO mapType
+type MapType struct {
+	KeyType   Type
+	ValueType Type
+}
+
+func (t *MapType) Name() string {
+	return fmt.Sprintf("{ %s : %s }", t.KeyType.Name(), t.ValueType.Name())
+}
+func (t *MapType) Accepts(otherType Type, ctx *Context) bool {
+	asMap, isMap := otherType.(*MapType)
+	if !isMap {
+		return false
+	}
+	return t.KeyType.Accepts(asMap.KeyType, ctx) && t.ValueType.Accepts(asMap.ValueType, ctx)
+}
 
 type EmptyType struct {
 	name string
@@ -94,8 +106,7 @@ type EmptyType struct {
 func (t *EmptyType) Name() string {
 	return t.name
 }
-
-func (t *EmptyType) Accepts(otherType Type, ctx *Context) bool {
+func (t *EmptyType) Accepts(otherType Type, _ *Context) bool {
 	if *t == *(AnyType.(*EmptyType)) { //ew
 		return true
 	}
@@ -107,7 +118,6 @@ func (t *EmptyType) Accepts(otherType Type, ctx *Context) bool {
 	}
 	return t == otherType
 }
-
 func NewEmptyType(name string) Type {
 	return &EmptyType{name: name}
 }
@@ -144,7 +154,6 @@ type DefinedType struct {
 func (t *DefinedType) Name() string {
 	return t.name
 }
-
 func (t *DefinedType) Accepts(other Type, ctx *Context) bool {
 	asStruct, isStruct := other.(*StructType)
 	for s, t2 := range t.parts {
@@ -218,7 +227,13 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 			name:  t.Name,
 			parts: parts,
 		}
+	case parser.MapTypeContract:
+		keyType := FromASTType(t.KeyType, ctx)
+		valueType := FromASTType(t.ValueType, ctx)
+		return &MapType{
+			KeyType: keyType, ValueType: valueType,
+		}
 	}
-	println("Cannot handle " + reflect.TypeOf(astType).Name())
+	panic("Cannot handle " + reflect.TypeOf(astType).Name())
 	return nil
 }

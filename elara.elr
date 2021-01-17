@@ -14,5 +14,3 @@ struct Person {
 }
 
 type Entity = Named & Aged
-
-let m: { Named : Entity } = 3

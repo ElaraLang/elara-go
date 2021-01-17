@@ -28,7 +28,7 @@ type CollectionTypeContract struct {
 	ElemType Type
 }
 
-type MapType struct {
+type MapTypeContract struct {
 	KeyType   Type
 	ValueType Type
 }
@@ -138,7 +138,7 @@ func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 
 		p.consume(lexer.RBrace, "Expected closing brace for map type contract")
 
-		return MapType{
+		return MapTypeContract{
 			KeyType:   keyType,
 			ValueType: valueType,
 		}
@@ -162,4 +162,4 @@ func (t BinaryTypeContract) typeOf()     {}
 func (t InvocableTypeContract) typeOf()  {}
 func (t DefinedTypeContract) typeOf()    {}
 func (t CollectionTypeContract) typeOf() {}
-func (t MapType) typeOf()                {}
+func (t MapTypeContract) typeOf()        {}
