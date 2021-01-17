@@ -15,7 +15,7 @@ type CollectionType struct {
 }
 
 func (t *CollectionType) Name() string {
-	return t.ElementType.Name() + "[]" //Eg String[]
+	return "[" + t.ElementType.Name() + "]" //Eg [String]
 }
 
 func (t *CollectionType) Accepts(otherType Type, ctx *Context) bool {

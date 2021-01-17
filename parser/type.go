@@ -67,14 +67,14 @@ func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
 }
 
 func (p *Parser) primaryContract(allowDef bool) (contract Type) {
-
+	if p.peek().TokenType == lexer.LSquare {
+		p.advance()
+		collType := p.consume(lexer.Identifier, "Expected identifier after [ for collection type")
+		p.consume(lexer.RSquare, "Expected ] after [ for collection type")
+		return CollectionTypeContract{ElemType: ElementaryTypeContract{Identifier: string(collType.Text)}}
+	}
 	if p.peek().TokenType == lexer.Identifier {
 		name := string(p.advance().Text)
-		if p.peek().TokenType == lexer.LSquare {
-			p.advance()
-			p.consume(lexer.RSquare, "Expected ] after [ for collection type")
-			return CollectionTypeContract{ElemType: ElementaryTypeContract{Identifier: name}}
-		}
 		return ElementaryTypeContract{Identifier: name}
 	} else if p.check(lexer.LParen) {
 		isFunc := p.isFuncDef()

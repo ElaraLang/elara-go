@@ -15,13 +15,5 @@ struct Person {
 
 type Entity = Named & Aged
 
-let test(Entity t) => {
-    print(t.name)
-}
-
-let dave = Person("Dave", 18)
-test(dave)
-
-let hmm(Char c) => c + " "
-
-"Hello".map(hmm).print()
+let a: [Char] = ['a', 'b', 'c']
+print(a)
