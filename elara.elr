@@ -3,8 +3,8 @@ import elara/std
 
 let m = {
     1: 5,
-    4: 6
+    4: 6,
     "Hello": "Hi"
 }
 
-print(m["Hello"])
+print(m)

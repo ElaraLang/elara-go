@@ -1,6 +1,9 @@
 package interpreter
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 type MapType struct {
 	KeyType   Type
@@ -37,10 +40,29 @@ func MapOf(elements []*Entry) *Map {
 func (t *MapType) Name() string {
 	return fmt.Sprintf("{ %s : %s }", t.KeyType.Name(), t.ValueType.Name())
 }
+
 func (t *MapType) Accepts(otherType Type, ctx *Context) bool {
 	asMap, isMap := otherType.(*MapType)
 	if !isMap {
 		return false
 	}
 	return t.KeyType.Accepts(asMap.KeyType, ctx) && t.ValueType.Accepts(asMap.ValueType, ctx)
+}
+
+func (m *Map) String() string {
+	builder := strings.Builder{}
+	builder.WriteRune('{')
+	for i, elem := range m.Elements {
+		builder.WriteRune('\n')
+		builder.WriteString("    ")
+		builder.WriteString(elem.Key.String())
+		builder.WriteString(": ")
+		builder.WriteString(elem.Value.String())
+		if i != len(m.Elements)-1 {
+			builder.WriteRune(',')
+		}
+	}
+	builder.WriteRune('\n')
+	builder.WriteRune('}')
+	return builder.String()
 }
