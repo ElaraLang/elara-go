@@ -12,6 +12,27 @@ type TokenTape struct {
 	isRepl  bool
 }
 
+// NewTokenTape creates a TokenTape with a predefined token slice
+func NewTokenTape(initialTokens []lexer.Token) TokenTape {
+	return TokenTape{
+		Channel: nil,
+		tokens:  initialTokens,
+		index:   0,
+		isRepl:  false,
+	}
+}
+
+// NewReplTokenTape creates a TokenTape with a 0 initial elements.
+// It uses the Channel created to read required tokens
+func NewReplTokenTape() TokenTape {
+	return TokenTape{
+		Channel: make(chan lexer.Token),
+		tokens:  []lexer.Token{},
+		index:   0,
+		isRepl:  true,
+	}
+}
+
 // tokenAt returns the token at specified index
 // attempts to read tokens from channel if And only if isRepl is true and index is not on tape
 func (tStream *TokenTape) tokenAt(index int) lexer.Token {
