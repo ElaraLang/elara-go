@@ -54,16 +54,32 @@ func JoinToString(slice interface{}, separator string) string {
 	switch slice := slice.(type) {
 	case []string:
 		l := len(slice)
-		for i,v := range slice {
+		for i, v := range slice {
 			res += v
 			if i < l {
 				res += separator
 			}
 		}
-	case []ast.Para
+	case []ast.Entry:
+		l := len(slice)
+		for i, v := range slice {
+			res += "(" + v.Key.ToString() + ") :" + "(" + v.Value.ToString() + ")"
+			if i < l {
+				res += separator
+			}
+		}
+
+	case []ast.Parameter:
+		l := len(slice)
+		for i, v := range slice {
+			res += v.ToString()
+			if i < l {
+				res += separator
+			}
+		}
 	case []ast.Node:
 		l := len(slice)
-		for i,v := range slice {
+		for i, v := range slice {
 			res += v.ToString()
 			if i < l {
 				res += separator
