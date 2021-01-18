@@ -2,26 +2,26 @@ package interpreter
 
 import (
 	"fmt"
-	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/parserlegacy"
 	"reflect"
 )
 
 type Interpreter struct {
-	lines   []parser.Stmt
+	lines   []parserlegacy.Stmt
 	context *Context
 }
 
-func NewInterpreter(code []parser.Stmt) *Interpreter {
+func NewInterpreter(code []parserlegacy.Stmt) *Interpreter {
 	return &Interpreter{
 		lines:   code,
 		context: NewContext(true),
 	}
 }
 func NewEmptyInterpreter() *Interpreter {
-	return NewInterpreter([]parser.Stmt{})
+	return NewInterpreter([]parserlegacy.Stmt{})
 }
 
-func (s *Interpreter) ResetLines(lines *[]parser.Stmt) {
+func (s *Interpreter) ResetLines(lines *[]parserlegacy.Stmt) {
 	s.lines = *lines
 }
 

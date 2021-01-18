@@ -3,7 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/lexer"
-	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/parserlegacy"
 	"github.com/ElaraLang/elara/util"
 	_ "github.com/ElaraLang/elara/util"
 	"reflect"
@@ -17,7 +17,7 @@ type Command interface {
 type DefineVarCommand struct {
 	Name        string
 	Mutable     bool
-	Type        parser.Type
+	Type        parserlegacy.Type
 	value       Command
 	runtimeType Type
 
@@ -299,8 +299,8 @@ func (c *LiteralCommand) Exec(_ *Context) *ReturnedValue {
 
 type FunctionLiteralCommand struct {
 	name       *string
-	parameters []parser.FunctionArgument
-	returnType parser.Type //Can be nil - infer return type
+	parameters []parserlegacy.FunctionArgument
+	returnType parserlegacy.Type //Can be nil - infer return type
 	body       Command
 
 	currentContext *Context
@@ -543,7 +543,7 @@ func (c *ImportCommand) Exec(ctx *Context) *ReturnedValue {
 
 type StructDefCommand struct {
 	name   string
-	fields []parser.StructField
+	fields []parserlegacy.StructField
 }
 
 func (c *StructDefCommand) Exec(ctx *Context) *ReturnedValue {
@@ -644,7 +644,7 @@ func (c *ExtendCommand) Exec(ctx *Context) *ReturnedValue {
 
 type TypeCheckCommand struct {
 	expression Command
-	checkType  parser.Type
+	checkType  parserlegacy.Type
 }
 
 func (c *TypeCheckCommand) Exec(ctx *Context) *ReturnedValue {
@@ -729,7 +729,7 @@ func (c *AccessCommand) Exec(ctx *Context) *ReturnedValue {
 
 type TypeCommand struct {
 	name  string
-	value parser.Type
+	value parserlegacy.Type
 }
 
 func (c *TypeCommand) Exec(ctx *Context) *ReturnedValue {
@@ -768,9 +768,9 @@ func (c *MapCommand) Exec(ctx *Context) *ReturnedValue {
 	return NonReturningValue(value)
 }
 
-func ToCommand(statement parser.Stmt) Command {
+func ToCommand(statement parserlegacy.Stmt) Command {
 	switch t := statement.(type) {
-	case parser.VarDefStmt:
+	case parserlegacy.VarDefStmt:
 		valueExpr := NamedExpressionToCommand(t.Value, &t.Identifier)
 		return &DefineVarCommand{
 			Name:    t.Identifier,
@@ -779,10 +779,10 @@ func ToCommand(statement parser.Stmt) Command {
 			value:   valueExpr,
 		}
 
-	case parser.ExpressionStmt:
+	case parserlegacy.ExpressionStmt:
 		return ExpressionToCommand(t.Expr)
 
-	case parser.BlockStmt:
+	case parserlegacy.BlockStmt:
 		commands := make([]*Command, len(t.Stmts))
 		for i, stmt := range t.Stmts {
 			cmd := ToCommand(stmt)
@@ -796,7 +796,7 @@ func ToCommand(statement parser.Stmt) Command {
 
 		return &BlockCommand{lines: commands}
 
-	case parser.IfElseStmt:
+	case parserlegacy.IfElseStmt:
 		condition := ExpressionToCommand(t.Condition)
 		ifBranch := ToCommand(t.MainBranch)
 		var elseBranch Command
@@ -810,7 +810,7 @@ func ToCommand(statement parser.Stmt) Command {
 			elseBranch: elseBranch,
 		}
 
-	case parser.ReturnStmt:
+	case parserlegacy.ReturnStmt:
 		if t.Returning != nil {
 			return &ReturnCommand{
 				ExpressionToCommand(t.Returning),
@@ -819,22 +819,22 @@ func ToCommand(statement parser.Stmt) Command {
 		return &ReturnCommand{
 			nil,
 		}
-	case parser.NamespaceStmt:
+	case parserlegacy.NamespaceStmt:
 		return &NamespaceCommand{
 			namespace: t.Namespace,
 		}
-	case parser.ImportStmt:
+	case parserlegacy.ImportStmt:
 		return &ImportCommand{
 			imports: t.Imports,
 		}
-	case parser.StructDefStmt:
+	case parserlegacy.StructDefStmt:
 		name := t.Identifier
 		return &StructDefCommand{
 			name:   name,
 			fields: t.StructFields,
 		}
 
-	case parser.ExtendStmt:
+	case parserlegacy.ExtendStmt:
 		commands := make([]Command, len(t.Body.Stmts))
 		for i, stmt := range t.Body.Stmts {
 			commands[i] = ToCommand(stmt)
@@ -845,12 +845,12 @@ func ToCommand(statement parser.Stmt) Command {
 			alias:      t.Alias,
 		}
 
-	case parser.WhileStmt:
+	case parserlegacy.WhileStmt:
 		return &WhileCommand{
 			condition: ExpressionToCommand(t.Condition),
 			body:      ToCommand(t.Body),
 		}
-	case parser.TypeStmt:
+	case parserlegacy.TypeStmt:
 		return &TypeCommand{
 			name:  t.Identifier,
 			value: t.Contract,
@@ -860,17 +860,17 @@ func ToCommand(statement parser.Stmt) Command {
 	panic("Could not handle " + reflect.TypeOf(statement).Name())
 }
 
-func ExpressionToCommand(expr parser.Expr) Command {
+func ExpressionToCommand(expr parserlegacy.Expr) Command {
 	return NamedExpressionToCommand(expr, nil)
 }
 
-func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
+func NamedExpressionToCommand(expr parserlegacy.Expr, name *string) Command {
 
 	switch t := expr.(type) {
-	case parser.VariableExpr:
+	case parserlegacy.VariableExpr:
 		return &VariableCommand{Variable: t.Identifier}
 
-	case parser.InvocationExpr:
+	case parserlegacy.InvocationExpr:
 		fun := ExpressionToCommand(t.Invoker)
 		args := make([]Command, 0)
 		for _, arg := range t.Args {
@@ -886,28 +886,28 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			args:     args,
 		}
 
-	case parser.StringLiteralExpr:
+	case parserlegacy.StringLiteralExpr:
 		str := t.Value
 		value := StringValue(str)
 		return &LiteralCommand{value: value}
 
-	case parser.IntegerLiteralExpr:
+	case parserlegacy.IntegerLiteralExpr:
 		integer := t.Value
 		value := IntValue(integer)
 		return &LiteralCommand{value: value}
-	case parser.FloatLiteralExpr:
+	case parserlegacy.FloatLiteralExpr:
 		float := t.Value
 		value := FloatValue(float)
 		return &LiteralCommand{value: value}
-	case parser.BooleanLiteralExpr:
+	case parserlegacy.BooleanLiteralExpr:
 		boolean := t.Value
 		value := BooleanValue(boolean)
 		return &LiteralCommand{value: value}
-	case parser.CharLiteralExpr:
+	case parserlegacy.CharLiteralExpr:
 		char := t.Value
 		value := CharValue(char)
 		return &LiteralCommand{value: value}
-	case parser.BinaryExpr:
+	case parserlegacy.BinaryExpr:
 		lhs := t.Lhs
 		lhsCmd := ExpressionToCommand(lhs)
 		op := t.Op
@@ -959,7 +959,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 				args: []Command{rhsCmd},
 			}
 		}
-	case parser.FuncDefExpr:
+	case parserlegacy.FuncDefExpr:
 		return &FunctionLiteralCommand{
 			name:       name,
 			parameters: t.Arguments,
@@ -967,7 +967,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			body:       ToCommand(t.Statement),
 		}
 
-	case parser.ContextExpr:
+	case parserlegacy.ContextExpr:
 		contextCmd := ExpressionToCommand(t.Context)
 		varName := t.Variable.Identifier
 		return &ContextCommand{
@@ -976,7 +976,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			util.Hash(varName),
 		}
 
-	case parser.AssignmentExpr:
+	case parserlegacy.AssignmentExpr:
 		//TODO contexts
 		name := t.Identifier
 		valueCmd := NamedExpressionToCommand(t.Value, &name)
@@ -985,7 +985,7 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			value: valueCmd,
 		}
 
-	case parser.IfElseExpr:
+	case parserlegacy.IfElseExpr:
 		condition := ExpressionToCommand(t.Condition)
 		var ifBranch []Command
 		if t.IfBranch != nil {
@@ -1013,27 +1013,27 @@ func NamedExpressionToCommand(expr parser.Expr, name *string) Command {
 			elseResult: elseResult,
 		}
 
-	case parser.TypeCheckExpr:
+	case parserlegacy.TypeCheckExpr:
 		return &TypeCheckCommand{
 			expression: ExpressionToCommand(t.Expr),
 			checkType:  t.Type,
 		}
-	case parser.GroupExpr:
+	case parserlegacy.GroupExpr:
 		return ExpressionToCommand(t.Group)
 
-	case parser.CollectionExpr:
+	case parserlegacy.CollectionExpr:
 		elements := make([]Command, len(t.Elements))
 		for i, element := range t.Elements {
 			elements[i] = ExpressionToCommand(element)
 		}
 		return &CollectionCommand{Elements: elements}
 
-	case parser.AccessExpr:
+	case parserlegacy.AccessExpr:
 		return &AccessCommand{
 			checking: ExpressionToCommand(t.Expr),
 			index:    ExpressionToCommand(t.Index),
 		}
-	case parser.MapExpr:
+	case parserlegacy.MapExpr:
 		entries := make([]MapEntry, len(t.Entries))
 		for i, entry := range t.Entries {
 			mapEntry := MapEntry{

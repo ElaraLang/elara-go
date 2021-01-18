@@ -1,9 +1,9 @@
 package typer
 
-import "github.com/ElaraLang/elara/parser"
+import "github.com/ElaraLang/elara/parserlegacy"
 
 type Typer struct {
-	Input []parser.Stmt
+	Input []parserlegacy.Stmt
 }
 
 func (t *Typer) HandleTyping() {
@@ -13,33 +13,33 @@ func (t *Typer) HandleTyping() {
 	functionReturns := t.scanForFunctionReturns()
 }
 
-func (t *Typer) scanForUserDefinedTypes() []parser.Type {
-	types := make([]parser.Type, 0)
-	var cur parser.Stmt
+func (t *Typer) scanForUserDefinedTypes() []parserlegacy.Type {
+	types := make([]parserlegacy.Type, 0)
+	var cur parserlegacy.Stmt
 	for index := range t.Input {
 		cur = t.Input[index]
 		switch cur.(type) {
-		case parser.StructDefStmt:
-			structDef := cur.(parser.StructDefStmt)
+		case parserlegacy.StructDefStmt:
+			structDef := cur.(parserlegacy.StructDefStmt)
 			appendType(&types, &structDef)
 		}
 	}
 	return types
 }
 
-func (t *Typer) scanForFunctionReturns() []parser.Type {
+func (t *Typer) scanForFunctionReturns() []parserlegacy.Type {
 
 }
 
-func appendType(types *[]parser.Type, p *parser.StructDefStmt) {
-	fields := make([]parser.DefinedType, 0)
+func appendType(types *[]parserlegacy.Type, p *parserlegacy.StructDefStmt) {
+	fields := make([]parserlegacy.DefinedType, 0)
 	for fieldIndex := range p.StructFields {
 		curField := p.StructFields[fieldIndex]
-		field := parser.DefinedType{
+		field := parserlegacy.DefinedType{
 			Identifier: curField.Identifier,
 			DefType:    *curField.FieldType,
 		}
 		fields = append(fields, field)
 	}
-	*types = append(*types, parser.DefinedTypeContract{DefType: fields, Name: p.Identifier})
+	*types = append(*types, parserlegacy.DefinedTypeContract{DefType: fields, Name: p.Identifier})
 }

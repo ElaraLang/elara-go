@@ -4,19 +4,19 @@ import (
 	"fmt"
 	"github.com/ElaraLang/elara/interpreter"
 	"github.com/ElaraLang/elara/lexer"
-	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/parserlegacy"
 )
 
 var replFile = "Repl"
 
 type ReplSession struct {
-	Parser    parser.Parser
+	Parser    parserlegacy.Parser
 	Evaluator interpreter.Interpreter
 }
 
 func NewReplSession() ReplSession {
 	return ReplSession{
-		Parser:    *parser.NewEmptyParser(),
+		Parser:    *parserlegacy.NewEmptyParser(),
 		Evaluator: *interpreter.NewEmptyInterpreter(),
 	}
 }

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/ElaraLang/elara/interpreter"
 	"github.com/ElaraLang/elara/lexer"
-	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/parserlegacy"
 	"os"
 	"time"
 )
@@ -15,7 +15,7 @@ func Execute(fileName *string, code string, scriptMode bool) (results []*interpr
 	lexTime = time.Since(start)
 
 	start = time.Now()
-	psr := parser.NewParser(result)
+	psr := parserlegacy.NewParser(result)
 	parseRes, errs := psr.Parse()
 	parseTime = time.Since(start)
 

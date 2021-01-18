@@ -33,6 +33,9 @@ func CreateToken(tokenType TokenType, text string, position Position) Token {
 		Position:  position,
 	}
 }
+func CreateBlankToken(tokenType TokenType) Token {
+	return CreateToken(tokenType, "", CreatePosition(-1, -1))
+}
 
 func CreatePosition(line int, column int) Position {
 	return Position{
