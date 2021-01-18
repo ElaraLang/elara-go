@@ -2,7 +2,6 @@ package ast
 
 import (
 	"github.com/ElaraLang/elara/lexer"
-	"go/token"
 )
 
 type BinaryExpression struct {
@@ -14,7 +13,7 @@ type BinaryExpression struct {
 
 type UnaryExpression struct {
 	Token    lexer.Token
-	Operator string
+	Operator lexer.Token
 	Right    Expression
 }
 
@@ -84,6 +83,7 @@ type StringLiteral struct {
 
 type FunctionLiteral struct {
 	Token      lexer.Token
+	ReturnType Type
 	Parameters []Parameter
 	Body       Statement
 }

@@ -7,17 +7,17 @@ type Program struct {
 }
 
 type Node interface {
-	toString() string
+	ToString() string
 	TokenValue() string
 }
 
 type Statement interface {
-	toString() string
+	ToString() string
 	statementNode()
 }
 
 type Expression interface {
-	toString() string
+	ToString() string
 	expressionNode()
 }
 
