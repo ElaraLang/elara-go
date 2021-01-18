@@ -33,6 +33,10 @@ type ExtendStatement struct {
 	Body       BlockStatement
 }
 
+type BlockStatement struct {
+	Block []Statement
+}
+
 type TypeStatement struct {
 	Identifier Identifier
 	Contract   Type

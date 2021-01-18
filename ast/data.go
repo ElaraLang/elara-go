@@ -18,3 +18,8 @@ type Entry struct {
 	Key   Expression
 	Value Expression
 }
+
+type StructField struct {
+	Type       Type
+	Identifier Identifier
+}

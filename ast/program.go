@@ -21,6 +21,11 @@ type Expression interface {
 	expressionNode()
 }
 
+type Type interface {
+	ToString() string
+	typeNode()
+}
+
 type Identifier struct {
 	token lexer.Token
 	name  string
