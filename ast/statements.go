@@ -2,6 +2,16 @@ package ast
 
 import "github.com/ElaraLang/elara/lexer"
 
+type ImportStatement struct {
+	Token  lexer.Token
+	Module Module
+}
+
+type NamespaceStatement struct {
+	Token  lexer.Token
+	Module Module
+}
+
 type ExpressionStatement struct {
 	Token      lexer.Token
 	Expression Expression

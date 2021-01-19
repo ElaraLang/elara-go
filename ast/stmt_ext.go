@@ -2,6 +2,22 @@ package ast
 
 import "github.com/ElaraLang/elara/util"
 
+func (s *ImportStatement) statementNode() {}
+func (s *ImportStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *ImportStatement) ToString() string {
+	return s.TokenValue() + " " + s.Module.ToString()
+}
+
+func (s *NamespaceStatement) statementNode() {}
+func (s *NamespaceStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *NamespaceStatement) ToString() string {
+	return s.TokenValue() + " " + s.Module.ToString()
+}
+
 func (s *ExpressionStatement) statementNode() {}
 func (s *ExpressionStatement) TokenValue() string {
 	return s.Token.String()
