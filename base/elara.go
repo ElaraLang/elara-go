@@ -46,7 +46,7 @@ func LoadStdLib() {
 	}
 	downloadStandardLibrary(filePath)
 
-	filepath.Walk(filePath, loadWalkedFile)
+	filepath.Walk(elaraPath, loadWalkedFile)
 }
 
 func downloadStandardLibrary(to string) {
