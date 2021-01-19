@@ -77,6 +77,14 @@ func JoinToString(slice interface{}, separator string) string {
 				res += separator
 			}
 		}
+	case []ast.StructField:
+		l := len(slice)
+		for i, v := range slice {
+			res += v.ToString()
+			if i < l {
+				res += separator
+			}
+		}
 	case []ast.Node:
 		l := len(slice)
 		for i, v := range slice {
@@ -89,4 +97,15 @@ func JoinToString(slice interface{}, separator string) string {
 		res = "Unknown"
 	}
 	return res
+}
+
+func JoinStringConditionally(mapping map[string]bool, separator string) string {
+	output := ""
+	for k, v := range mapping {
+		if v {
+			output += k
+			output += separator
+		}
+	}
+	return output
 }

@@ -1,0 +1,87 @@
+package ast
+
+import "github.com/ElaraLang/elara/util"
+
+func (s *ExpressionStatement) statementNode() {}
+func (s *ExpressionStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *ExpressionStatement) ToString() string {
+	return s.ToString()
+}
+
+func (s *DeclarationStatement) statementNode() {}
+func (s *DeclarationStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *DeclarationStatement) ToString() string {
+	return s.TokenValue() + " " + util.JoinStringConditionally(map[string]bool{
+		"mut":  s.Mutable,
+		"lazy": s.Lazy,
+		"open": s.Open,
+	}, " ") + s.Identifier + ":" + s.Type.ToString() + " = " + s.Value.ToString()
+}
+
+func (s *StructDefStatement) statementNode() {}
+func (s *StructDefStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *StructDefStatement) ToString() string {
+	return s.TokenValue() + " " + s.Id.name +
+		" {\n" + util.JoinToString(s.Fields, " ") + "\n}\n"
+}
+
+func (s *WhileStatement) statementNode() {}
+func (s *WhileStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *WhileStatement) ToString() string {
+	return s.TokenValue() + " " + s.Condition.ToString() + " " + s.Body.ToString()
+}
+
+func (s *ExtendStatement) statementNode() {}
+func (s *ExtendStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *ExtendStatement) ToString() string {
+	return s.TokenValue() + " " +
+		s.Identifier.name + " as " + s.Alias.name + " " +
+		s.Body.ToString()
+}
+
+func (s *BlockStatement) statementNode() {}
+func (s *BlockStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *BlockStatement) ToString() string {
+	result := "{\n"
+	for _, v := range s.Block {
+		result += v.ToString()
+		result += "\n"
+	}
+	return result + "}\n"
+}
+
+func (s *TypeStatement) statementNode() {}
+func (s *TypeStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *TypeStatement) ToString() string {
+	return s.TokenValue() + " " + s.Identifier.name + " = " + s.Contract.ToString()
+}
+
+func (s *GenerifiedStatement) statementNode() {}
+func (s *GenerifiedStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *GenerifiedStatement) ToString() string {
+	return "<" + util.JoinToString(s.Contracts, " ") + ">\n" + s.Statement.ToString()
+}
+
+func (s *ReturnStatement) statementNode() {}
+func (s *ReturnStatement) TokenValue() string {
+	return s.Token.String()
+}
+func (s *ReturnStatement) ToString() string {
+	return s.TokenValue() + " " + s.Value.ToString()
+}

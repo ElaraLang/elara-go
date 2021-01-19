@@ -19,7 +19,15 @@ type Entry struct {
 	Value Expression
 }
 
+func (p *Entry) ToString() string {
+	return "(" + p.Key.ToString() + " : " + p.Value.ToString() + ")"
+}
+
 type StructField struct {
 	Type       Type
 	Identifier Identifier
+}
+
+func (p *StructField) ToString() string {
+	return p.Type.ToString() + " " + p.Identifier.name
 }
