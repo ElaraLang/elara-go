@@ -20,7 +20,7 @@ func (v Variable) String() string {
 //	if v.Mutable != other.Mutable {
 //		return false
 //	}
-//	if !v.Type.Accepts(other.Type, ) {
+//	if !v.TokenType.Accepts(other.TokenType, ) {
 //		//TODO exact equality necessary?
 //		return false
 //	}

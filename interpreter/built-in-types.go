@@ -316,7 +316,7 @@ func Init(context *Context) {
 //	if isInt {
 //		result := ctx.receiver.Value.(int64) + asInt
 //		return &Value{
-//			Type:  IntType,
+//			TokenType:  IntType,
 //			Value: result,
 //		}
 //	} else {
@@ -324,7 +324,7 @@ func Init(context *Context) {
 //		if isFloat {
 //			result := float64(ctx.receiver.Value.(int64)) + asFloat
 //			return &Value{
-//				Type:  FloatType,
+//				TokenType:  FloatType,
 //				Value: result,
 //			}
 //		} else {
@@ -332,7 +332,7 @@ func Init(context *Context) {
 //			//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
 //			result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
 //			return &Value{
-//				Type:  StringType,
+//				TokenType:  StringType,
 //				Value: result,
 //			}
 //		}

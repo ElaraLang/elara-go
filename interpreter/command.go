@@ -736,7 +736,7 @@ func (c *TypeCommand) Exec(ctx *Context) *ReturnedValue {
 	runtimeType := FromASTType(c.value, ctx)
 	existing := ctx.FindType(c.name)
 	if existing != nil {
-		panic("Type with name " + c.name + " already exists in current scope")
+		panic("TokenType with name " + c.name + " already exists in current scope")
 	}
 	ctx.types[c.name] = runtimeType
 	return NilValue()

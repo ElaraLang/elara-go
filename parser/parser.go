@@ -5,7 +5,7 @@ import (
 	"github.com/ElaraLang/elara/lexer"
 )
 
-type Scanner = lexer.TokenReader
+type Scanner = lexer.Lexer
 type Token = lexer.Token
 type TokenType = lexer.TokenType
 

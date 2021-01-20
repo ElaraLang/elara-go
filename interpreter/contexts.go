@@ -138,7 +138,7 @@ func NewContext(init bool) *Context {
 			}
 
 			return NonReturningValue(&Value{Value: string(responseData), Type: StringType})
-			// return NonReturningValue(&Value{Value: fetch, Type: StringType})
+			// return NonReturningValue(&Value{Value: fetch, TokenType: StringType})
 		}),
 	}
 
@@ -165,15 +165,15 @@ func NewContext(init bool) *Context {
 			Parameters: []Parameter{
 				{
 					Name: "fx",
-					Type: NewSignatureFunctionType ( Signature{
+					Type: NewSignatureFunctionType(Signature{
 						Parameters: []Parameter{},
 						ReturnType: UnitType,
 					}),
 					Position: 0,
 				},
 				{
-					Name: "ms",
-					Type: IntType,
+					Name:     "ms",
+					Type:     IntType,
 					Position: 1,
 				},
 			},

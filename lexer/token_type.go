@@ -6,17 +6,17 @@ const (
 	//special tokens
 	Illegal TokenType = iota
 	EOF
-	NEWLINE
+	NEWLINE // \n
 
 	//Brackets
-	LParen
-	RParen
-	LBrace
-	RBrace
-	LAngle //<
-	RAngle //>
-	LSquare
-	RSquare
+	LParen  // (
+	RParen  // )
+	LBrace  // {
+	RBrace  // }
+	LAngle  //<
+	RAngle  //>
+	LSquare // [
+	RSquare // ]
 
 	//Keywords
 	Let
@@ -37,27 +37,27 @@ const (
 	Is
 
 	//Operators
-	Add
-	Subtract
-	Multiply
-	Slash
-	Mod
-	And
-	Or
-	Xor
-	Equals
-	NotEquals
-	GreaterEqual
-	LesserEqual
-	Not
+	Add          // +
+	Subtract     // -
+	Multiply     // *
+	Slash        // /
+	Mod          // %
+	And          // &&
+	Or           // ||
+	Xor          // ^
+	Equals       // ==
+	NotEquals    // !=
+	GreaterEqual // >=
+	LesserEqual  // <=
+	Not          // !
 
 	TypeOr  // |
 	TypeAnd // &
 
 	//Symbol
-	Equal
-	Arrow
-	Dot
+	Equal // =
+	Arrow // =>
+	Dot   // .
 
 	//Literals
 	BooleanTrue
@@ -67,15 +67,15 @@ const (
 	Int
 	Float
 
-	Comma
-	Colon
+	Comma // ,
+	Colon // :
 
 	Identifier
-	Underscore
+	//Underscore
 )
 
-func (token *TokenType) String() string {
-	return tokenNames[*token]
+func (token TokenType) String() string {
+	return tokenNames[token]
 }
 
 var tokenNames = map[TokenType]string{
@@ -91,7 +91,7 @@ var tokenNames = map[TokenType]string{
 	RAngle:       "RAngle",
 	LSquare:      "LSquare",
 	RSquare:      "RSquare",
-	Type:         "Type",
+	Type:         "TokenType",
 	Let:          "Let",
 	Extend:       "Extend",
 	Return:       "Return",
@@ -134,24 +134,25 @@ var tokenNames = map[TokenType]string{
 	Colon: "Colon",
 
 	Identifier: "Identifier",
-	Underscore: "Underscore",
+	//Underscore: "Underscore",
 }
-var IllegalIdentifierChars = []bool{
-	',':  true,
-	'.':  true,
-	':':  true,
-	'#':  true,
-	'[':  true,
-	']':  true,
-	'(':  true,
-	')':  true,
-	'{':  true,
-	'}':  true,
-	'"':  true,
-	'>':  true,
-	'<':  true,
-	' ':  true,
-	'\n': true,
-	'\r': true,
-	'\t': true,
+
+var IllegalIdentifierChars = map[int]struct{}{
+	',':  {},
+	'.':  {},
+	':':  {},
+	'#':  {},
+	'[':  {},
+	']':  {},
+	'(':  {},
+	')':  {},
+	'{':  {},
+	'}':  {},
+	'"':  {},
+	'>':  {},
+	'<':  {},
+	' ':  {},
+	'\n': {},
+	'\r': {},
+	'\t': {},
 }
