@@ -66,7 +66,7 @@ type IntegerLiteral struct {
 	Value int64
 }
 
-type DoubleLiteral struct {
+type FloatLiteral struct {
 	Token lexer.Token
 	Value float64
 }

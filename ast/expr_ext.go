@@ -112,11 +112,11 @@ func (e *IntegerLiteral) ToString() string {
 	return strconv.FormatInt(e.Value, 10)
 }
 
-func (e *DoubleLiteral) expressionNode() {}
-func (e *DoubleLiteral) TokenValue() string {
+func (e *FloatLiteral) expressionNode() {}
+func (e *FloatLiteral) TokenValue() string {
 	return e.Token.String()
 }
-func (e *DoubleLiteral) ToString() string {
+func (e *FloatLiteral) ToString() string {
 	return strconv.FormatFloat(e.Value, 10, 4, 64)
 }
 

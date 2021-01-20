@@ -13,9 +13,9 @@ type TokenTape struct {
 }
 
 // NewTokenTape creates a TokenTape with a predefined token slice
-func NewTokenTape(initialTokens []lexer.Token) TokenTape {
+func NewTokenTape(initialTokens []lexer.Token, channel chan lexer.Token) TokenTape {
 	return TokenTape{
-		Channel: nil,
+		Channel: channel,
 		tokens:  initialTokens,
 		index:   0,
 		isRepl:  false,
@@ -24,9 +24,9 @@ func NewTokenTape(initialTokens []lexer.Token) TokenTape {
 
 // NewReplTokenTape creates a TokenTape with a 0 initial elements.
 // It uses the Channel created to read required tokens
-func NewReplTokenTape() TokenTape {
+func NewReplTokenTape(channel chan lexer.Token) TokenTape {
 	return TokenTape{
-		Channel: make(chan lexer.Token),
+		Channel: channel,
 		tokens:  []lexer.Token{},
 		index:   0,
 		isRepl:  true,
