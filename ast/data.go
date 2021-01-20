@@ -10,9 +10,9 @@ type Module struct {
 
 func (m *Module) ToString() string {
 	if &m.Sub != nil {
-		return m.Root.name
+		return m.Root.Name
 	}
-	return m.Root.name + "/" + m.Sub.name
+	return m.Root.Name + "/" + m.Sub.Name
 }
 
 type Parameter struct {
@@ -25,7 +25,7 @@ func (p *Parameter) ToString() string {
 	if p.Type != nil {
 		res += p.Type.ToString() + " "
 	}
-	res += p.Identifier.name
+	res += p.Identifier.Name
 	return res
 }
 
@@ -44,5 +44,5 @@ type StructField struct {
 }
 
 func (p *StructField) ToString() string {
-	return p.Type.ToString() + " " + p.Identifier.name
+	return p.Type.ToString() + " " + p.Identifier.Name
 }

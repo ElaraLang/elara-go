@@ -34,8 +34,8 @@ type Type interface {
 	typeNode()
 }
 
-// Identifier represents an identifier leaf used by the syntax tree to represent a "name"
+// Identifier represents an identifier leaf used by the syntax tree to represent a "Name"
 type Identifier struct {
-	token lexer.Token
-	name  string
+	Token lexer.Token
+	Name  string
 }

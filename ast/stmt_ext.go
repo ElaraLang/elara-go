@@ -43,7 +43,7 @@ func (s *StructDefStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *StructDefStatement) ToString() string {
-	return s.TokenValue() + " " + s.Id.name +
+	return s.TokenValue() + " " + s.Id.Name +
 		" {\n" + util.JoinToString(s.Fields, " ") + "\n}\n"
 }
 
@@ -61,7 +61,7 @@ func (s *ExtendStatement) TokenValue() string {
 }
 func (s *ExtendStatement) ToString() string {
 	return s.TokenValue() + " " +
-		s.Identifier.name + " as " + s.Alias.name + " " +
+		s.Identifier.Name + " as " + s.Alias.Name + " " +
 		s.Body.ToString()
 }
 
@@ -83,7 +83,7 @@ func (s *TypeStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *TypeStatement) ToString() string {
-	return s.TokenValue() + " " + s.Identifier.name + " = " + s.Contract.ToString()
+	return s.TokenValue() + " " + s.Identifier.Name + " = " + s.Contract.ToString()
 }
 
 func (s *GenerifiedStatement) statementNode() {}

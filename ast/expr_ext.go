@@ -26,7 +26,7 @@ func (e *PropertyExpression) TokenValue() string {
 	return e.Token.String()
 }
 func (e *PropertyExpression) ToString() string {
-	return "(" + e.Context.ToString() + ")." + e.Variable.name
+	return "(" + e.Context.ToString() + ")." + e.Variable.Name
 }
 
 func (e *IfExpression) expressionNode() {}

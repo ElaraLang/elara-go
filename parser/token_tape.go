@@ -77,9 +77,40 @@ func (tStream *TokenTape) Peek(amount int) lexer.Token {
 	return tStream.tokenAt(tStream.index + amount)
 }
 
+// ValidationPeek peeks by given amount and validates if the provided token is at that index
+func (tStream *TokenTape) ValidationPeek(amount int, tokenType ...lexer.TokenType) bool {
+	actual := tStream.Peek(amount).TokenType
+	for _, v := range tokenType {
+		if actual == v {
+			return true
+		}
+	}
+	return false
+}
+
 // Current returns token at current tape head
 func (tStream *TokenTape) Current() lexer.Token {
 	return tStream.tokenAt(tStream.index)
+}
+
+// Consume current and compare token type
+func (tStream *TokenTape) Match(tokenType ...lexer.TokenType) bool {
+	cur := tStream.Current()
+	tStream.advance()
+	found := false
+	for _, typ := range tokenType {
+		if cur.TokenType == typ {
+			found = true
+			break
+		}
+	}
+	return found
+}
+
+func (tStream *TokenTape) ConsumeAny() lexer.Token {
+	cur := tStream.Current()
+	tStream.advance()
+	return cur
 }
 
 // Consume attempts to match current token with any of the provided token types and returns the same
@@ -87,14 +118,14 @@ func (tStream *TokenTape) Current() lexer.Token {
 func (tStream *TokenTape) Consume(tokenType ...lexer.TokenType) lexer.Token {
 	cur := tStream.Current()
 	tStream.advance()
-	notFound := true
+	found := false
 	for _, typ := range tokenType {
 		if cur.TokenType == typ {
-			notFound = false
+			found = true
 			break
 		}
 	}
-	if notFound {
+	if !found {
 		// panic()
 	}
 	return cur
