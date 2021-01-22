@@ -82,8 +82,12 @@ func (p *Parser) parseCollection() ast.Expression {
 	tok := p.Tape.Consume(lexer.LSquare)
 	elements := p.parseCollectionElements()
 	p.Tape.Expect(lexer.RSquare)
-	return &ast.CollectionLiteral{
-		Token:    tok,
-		Elements: elements,
-	}
+	return &ast.CollectionLiteral{Token: tok, Elements: elements}
+}
+
+func (p *Parser) parseMap() ast.Expression {
+	tok := p.Tape.Consume(lexer.LBrace)
+	elements := p.parseMapEntries()
+	p.Tape.Consume(lexer.RBrace)
+	return &ast.MapLiteral{Token: tok, Entries: elements}
 }
