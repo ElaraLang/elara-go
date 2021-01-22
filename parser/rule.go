@@ -12,7 +12,7 @@ func (p *Parser) initializePrefixParselets() {
 	p.registerPrefix(lexer.Float, p.parseFloat)
 	p.registerPrefix(lexer.Char, p.parseFloat)
 	p.registerPrefix(lexer.String, p.parseFloat)
-	// p.registerPrefix(lexer.LParen, p.parseFunction) // TODO Ambiguity resolver required
+	p.registerPrefix(lexer.LParen, p.createResolvingParslet(p.createFunctionGroupResolver()))
 	p.registerPrefix(lexer.BooleanTrue, p.parseBoolean)
 	p.registerPrefix(lexer.BooleanFalse, p.parseBoolean)
 }
@@ -72,6 +72,13 @@ func (p *Parser) parseFunction() ast.Expression {
 		Parameters: params,
 		Body:       body,
 	}
+}
+
+func (p *Parser) parseGroupExpression() ast.Expression {
+	p.Tape.Expect(lexer.LParen)
+	expr := p.parseExpression()
+	p.Tape.Expect(lexer.RParen)
+	return expr
 }
 
 func (p *Parser) parseType() ast.Type {
