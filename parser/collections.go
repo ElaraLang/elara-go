@@ -11,7 +11,7 @@ func (p *Parser) parseCollectionElements() []ast.Expression {
 		if len(elements) > 0 {
 			p.Tape.Expect(lexer.Comma)
 		}
-		expr := p.parseExpression()
+		expr := p.parseExpression(LOWEST)
 		elements = append(elements, expr)
 	}
 	return elements

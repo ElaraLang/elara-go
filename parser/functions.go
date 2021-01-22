@@ -7,6 +7,9 @@ import (
 
 func (p *Parser) parseFunctionParameters() []ast.Parameter {
 	params := make([]ast.Parameter, 0)
+	if p.Tape.ValidationPeek(0, lexer.RParen) {
+		return params
+	}
 outer:
 	for {
 		if p.Tape.ValidationPeek(0, lexer.Identifier) &&
@@ -31,7 +34,7 @@ outer:
 		case lexer.RParen:
 			break outer
 		case lexer.Comma:
-			p.Tape.Expect(lexer.Comma)
+			p.Tape.advance()
 		default:
 			// Panic
 		}

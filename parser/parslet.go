@@ -7,7 +7,7 @@ import (
 )
 
 func (p *Parser) initializePrefixParselets() {
-	p.prefixParseFunctions = make(map[lexer.TokenType]prefixParslet)
+	p.prefixParslets = make(map[lexer.TokenType]prefixParslet)
 	p.registerPrefix(lexer.Int, p.parseInteger)
 	p.registerPrefix(lexer.Float, p.parseFloat)
 	p.registerPrefix(lexer.Char, p.parseChar)
@@ -76,7 +76,7 @@ func (p *Parser) parseFunction() ast.Expression {
 
 func (p *Parser) parseGroupExpression() ast.Expression {
 	p.Tape.Expect(lexer.LParen)
-	expr := p.parseExpression()
+	expr := p.parseExpression(LOWEST)
 	p.Tape.Expect(lexer.RParen)
 	return expr
 }
