@@ -7,7 +7,7 @@ import (
 
 type Parser struct {
 	Tape                 TokenTape
-	prefixParseFunctions map[lexer.TokenType]parsePrefix
+	prefixParseFunctions map[lexer.TokenType]prefixParslet
 	infixParseFunctions  map[lexer.TokenType]parseInfix
 }
 
@@ -20,11 +20,11 @@ func NewReplParser(channel chan lexer.Token) Parser {
 }
 
 type (
-	parsePrefix func() ast.Expression
-	parseInfix  func(ast.Expression) ast.Expression
+	prefixParslet func() ast.Expression
+	parseInfix    func(ast.Expression) ast.Expression
 )
 
-func (p *Parser) registerPrefix(tokenType lexer.TokenType, function parsePrefix) {
+func (p *Parser) registerPrefix(tokenType lexer.TokenType, function prefixParslet) {
 	p.prefixParseFunctions[tokenType] = function
 }
 func (p *Parser) registerInfix(tokenType lexer.TokenType, function parseInfix) {

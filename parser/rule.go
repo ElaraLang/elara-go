@@ -7,12 +7,12 @@ import (
 )
 
 func (p *Parser) initializePrefixParselets() {
-	p.prefixParseFunctions = make(map[lexer.TokenType]parsePrefix)
+	p.prefixParseFunctions = make(map[lexer.TokenType]prefixParslet)
 	p.registerPrefix(lexer.Int, p.parseInteger)
 	p.registerPrefix(lexer.Float, p.parseFloat)
-	p.registerPrefix(lexer.Char, p.parseFloat)
-	p.registerPrefix(lexer.String, p.parseFloat)
-	p.registerPrefix(lexer.LParen, p.createResolvingParslet(p.createFunctionGroupResolver()))
+	p.registerPrefix(lexer.Char, p.parseChar)
+	p.registerPrefix(lexer.String, p.parseString)
+	p.registerPrefix(lexer.LParen, p.resolvingParslet(p.functionGroupResolver()))
 	p.registerPrefix(lexer.BooleanTrue, p.parseBoolean)
 	p.registerPrefix(lexer.BooleanFalse, p.parseBoolean)
 }

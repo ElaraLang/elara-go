@@ -5,10 +5,9 @@ import (
 	"github.com/ElaraLang/elara/lexer"
 )
 
-type Resolver = func(p *Parser) bool
+type resolver = func(p *Parser) bool
 
-func (p *Parser) createResolvingParslet(resolutionConditions map[*Resolver]*parsePrefix) parsePrefix {
-
+func (p *Parser) resolvingParslet(resolutionConditions map[*resolver]*prefixParslet) prefixParslet {
 	return func() ast.Expression {
 		for resolver, parslet := range resolutionConditions {
 			if (*resolver)(p) {
@@ -19,13 +18,15 @@ func (p *Parser) createResolvingParslet(resolutionConditions map[*Resolver]*pars
 	}
 }
 
-func (p *Parser) createFunctionGroupResolver() map[*Resolver]*parsePrefix {
+func (p *Parser) functionGroupResolver() map[*resolver]*prefixParslet {
 	checkFuncDef := isFunctionDefinition
 	checkGroupExpression := not(isFunctionDefinition)
-	var functionParslet parsePrefix = p.parseFunction
-	var groupParslet parsePrefix = p.parseGroupExpression
-	functionGroupResolver := map[*Resolver]*parsePrefix{
-		&checkFuncDef:           &functionParslet,
+
+	var functionParslet prefixParslet = p.parseFunction
+	var groupParslet prefixParslet = p.parseGroupExpression
+
+	functionGroupResolver := map[*resolver]*prefixParslet{
+		&(checkFuncDef):         &functionParslet,
 		&(checkGroupExpression): &groupParslet,
 	}
 	return functionGroupResolver
@@ -36,8 +37,8 @@ func isFunctionDefinition(p *Parser) bool {
 	return p.Tape.ValidationPeek(closingIndex+1, lexer.Arrow)
 }
 
-func not(fn func(p *Parser) bool) func(p *Parser) bool {
+func not(predicate func(p *Parser) bool) func(p *Parser) bool {
 	return func(p *Parser) bool {
-		return !fn(p)
+		return !predicate(p)
 	}
 }
