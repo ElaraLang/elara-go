@@ -57,11 +57,14 @@ func (p *Parser) parseFunction() ast.Expression {
 	token := p.Tape.Consume(lexer.LParen)
 	params := p.parseFunctionParameters()
 	p.Tape.Expect(lexer.RParen)
+	p.Tape.Expect(lexer.Arrow)
+
 	var typ ast.Type
-	if p.Tape.Current().TokenType != lexer.Arrow {
+
+	if !p.Tape.ValidationPeek(0, lexer.LBrace) {
 		typ = p.parseType()
 	}
-	p.Tape.Expect(lexer.Arrow)
+
 	body := p.parseStatement()
 	return &ast.FunctionLiteral{
 		Token:      token,
@@ -73,4 +76,14 @@ func (p *Parser) parseFunction() ast.Expression {
 
 func (p *Parser) parseType() ast.Type {
 	return nil // TODO
+}
+
+func (p *Parser) parseCollection() ast.Expression {
+	tok := p.Tape.Consume(lexer.LSquare)
+	elements := p.parseCollectionElements()
+	p.Tape.Expect(lexer.RSquare)
+	return &ast.CollectionLiteral{
+		Token:    tok,
+		Elements: elements,
+	}
 }
