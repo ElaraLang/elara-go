@@ -33,6 +33,7 @@ func (p *Parser) initInfixParselets() {
 	p.registerInfix(lexer.RAngle, p.parseBinaryExpression)
 	p.registerInfix(lexer.Dot, p.parsePropertyExpression)
 	p.registerInfix(lexer.LParen, p.parseFunctionCall)
+	p.registerInfix(lexer.LSquare, p.parseAccessOperator)
 }
 
 func (p *Parser) initStatementParselets() {
@@ -47,13 +48,24 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 }
 
 func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
-	opening := p.Tape.Consume(lexer.RParen)
+	opening := p.Tape.Consume(lexer.LParen)
 	args := p.parseFunctionCallArguments()
 	p.Tape.Expect(lexer.RParen)
 	return &ast.CallExpression{
 		Token:      opening,
 		Expression: left,
 		Arguments:  args,
+	}
+}
+
+func (p *Parser) parseAccessOperator(left ast.Expression) ast.Expression {
+	opening := p.Tape.Consume(lexer.LSquare)
+	index := p.parseExpression(LOWEST)
+	p.Tape.Expect(lexer.RSquare)
+	return &ast.AccessExpression{
+		Token:      opening,
+		Expression: left,
+		Index:      index,
 	}
 }
 
