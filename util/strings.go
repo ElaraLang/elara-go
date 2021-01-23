@@ -2,7 +2,6 @@ package util
 
 import (
 	"fmt"
-	"github.com/ElaraLang/elara/ast"
 	"hash/fnv"
 	"reflect"
 	"strconv"
@@ -46,57 +45,6 @@ func Hash(s string) uint64 {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(s))
 	return h.Sum64()
-}
-
-func JoinToString(slice interface{}, separator string) string {
-	res := ""
-
-	switch slice := slice.(type) {
-	case []string:
-		l := len(slice)
-		for i, v := range slice {
-			res += v
-			if i < l {
-				res += separator
-			}
-		}
-	case []ast.Entry:
-		l := len(slice)
-		for i, v := range slice {
-			res += "(" + v.Key.ToString() + ") :" + "(" + v.Value.ToString() + ")"
-			if i < l {
-				res += separator
-			}
-		}
-
-	case []ast.Parameter:
-		l := len(slice)
-		for i, v := range slice {
-			res += v.ToString()
-			if i < l {
-				res += separator
-			}
-		}
-	case []ast.StructField:
-		l := len(slice)
-		for i, v := range slice {
-			res += v.ToString()
-			if i < l {
-				res += separator
-			}
-		}
-	case []ast.Node:
-		l := len(slice)
-		for i, v := range slice {
-			res += v.ToString()
-			if i < l {
-				res += separator
-			}
-		}
-	default:
-		res = "Unknown"
-	}
-	return res
 }
 
 func JoinStringConditionally(mapping map[string]bool, separator string) string {

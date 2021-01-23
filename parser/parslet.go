@@ -38,6 +38,34 @@ func (p *Parser) initInfixParselets() {
 
 func (p *Parser) initStatementParselets() {
 	p.statementParslets = make(map[lexer.TokenType]statementParslet, 0)
+	p.registerStatement(lexer.Let, p.parseLetStatement)
+
+}
+
+func (p *Parser) parseLetStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.Let)
+	prop := p.Tape.MatchInorderedSequence(lexer.Mut, lexer.Lazy, lexer.Restricted)
+	id := p.parseIdentifier()
+	var varType ast.Type
+	var value ast.Expression
+	if p.Tape.ValidationPeek(0, lexer.LParen) {
+		value = p.parseExpression(LOWEST)
+	} else {
+		if p.Tape.ValidationPeek(0, lexer.Colon) {
+			varType = p.parseType()
+		}
+		p.Tape.Expect(lexer.Equal)
+		value = p.parseExpression(LOWEST)
+	}
+	return &ast.DeclarationStatement{
+		Token:      token,
+		Mutable:    prop[lexer.Mut],
+		Lazy:       prop[lexer.Lazy],
+		Open:       prop[lexer.Restricted], // TODO:: Introduce OPEN to lexer
+		Identifier: id,
+		Type:       varType,
+		Value:      value,
+	}
 }
 
 func (p *Parser) parseExpressionStatement() ast.Statement {

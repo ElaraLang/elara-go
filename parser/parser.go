@@ -13,11 +13,19 @@ type Parser struct {
 }
 
 func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
-	return Parser{Tape: NewTokenTape(tokens, channel)}
+	p := Parser{Tape: NewTokenTape(tokens, channel)}
+	p.initPrefixParselets()
+	p.initPrefixParselets()
+	p.initStatementParselets()
+	return p
 }
 
 func NewReplParser(channel chan lexer.Token) Parser {
-	return Parser{Tape: NewReplTokenTape(channel)}
+	p := Parser{Tape: NewReplTokenTape(channel)}
+	p.initPrefixParselets()
+	p.initPrefixParselets()
+	p.initStatementParselets()
+	return p
 }
 
 type (
@@ -31,6 +39,9 @@ func (p *Parser) registerPrefix(tokenType lexer.TokenType, function prefixParsle
 }
 func (p *Parser) registerInfix(tokenType lexer.TokenType, function infixParselet) {
 	p.infixParslets[tokenType] = function
+}
+func (p *Parser) registerStatement(tokenType lexer.TokenType, function statementParslet) {
+	p.statementParslets[tokenType] = function
 }
 
 func (p *Parser) parseStatement() ast.Statement {

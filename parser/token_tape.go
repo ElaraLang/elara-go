@@ -36,7 +36,7 @@ func NewReplTokenTape(channel chan lexer.Token) TokenTape {
 // tokenAt returns the token at specified index
 // attempts to read tokens from channel if And only if isRepl is true and index is not on tape
 func (tStream *TokenTape) tokenAt(index int) lexer.Token {
-	if index > len(tStream.tokens) {
+	if index >= len(tStream.tokens) {
 		if !tStream.isRepl {
 			return lexer.CreateBlankToken(lexer.EOF)
 		}
@@ -93,20 +93,16 @@ func (tStream *TokenTape) Current() lexer.Token {
 	return tStream.tokenAt(tStream.index)
 }
 
-// Consume current and compare token type
+// Validate current token and advance if successful
 func (tStream *TokenTape) Match(tokenType ...lexer.TokenType) bool {
-	cur := tStream.Current()
-	tStream.advance()
-	found := false
-	for _, typ := range tokenType {
-		if cur.TokenType == typ {
-			found = true
-			break
-		}
+	found := tStream.ValidationPeek(0, tokenType...)
+	if found {
+		tStream.advance()
 	}
 	return found
 }
 
+// ConsumeAny reads the current token independent of its type
 func (tStream *TokenTape) ConsumeAny() lexer.Token {
 	cur := tStream.Current()
 	tStream.advance()
@@ -129,6 +125,18 @@ func (tStream *TokenTape) Consume(tokenType ...lexer.TokenType) lexer.Token {
 		// panic()
 	}
 	return cur
+}
+
+func (tStream *TokenTape) MatchInorderedSequence(tokenType ...lexer.TokenType) map[lexer.TokenType]bool {
+	result := map[lexer.TokenType]bool{}
+	for _, v := range tokenType {
+		result[v] = false
+	}
+	for tStream.ValidationPeek(0, tokenType...) {
+		result[tStream.Current().TokenType] = true
+		tStream.advance()
+	}
+	return result
 }
 
 // Expect functions exactly the same as Consume but without returning consumed token

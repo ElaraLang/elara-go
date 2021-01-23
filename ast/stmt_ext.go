@@ -31,11 +31,17 @@ func (s *DeclarationStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *DeclarationStatement) ToString() string {
-	return s.TokenValue() + " " + util.JoinStringConditionally(map[string]bool{
+	var typ string
+	if s.Type == nil {
+		typ = "INFER"
+	} else {
+		typ = s.Type.ToString()
+	}
+	return "let " + util.JoinStringConditionally(map[string]bool{
 		"mut":  s.Mutable,
 		"lazy": s.Lazy,
 		"open": s.Open,
-	}, " ") + s.Identifier + ":" + s.Type.ToString() + " = " + s.Value.ToString()
+	}, " ") + s.Identifier.Name + ":" + typ + " = " + s.Value.ToString()
 }
 
 func (s *StructDefStatement) statementNode() {}
@@ -44,7 +50,7 @@ func (s *StructDefStatement) TokenValue() string {
 }
 func (s *StructDefStatement) ToString() string {
 	return s.TokenValue() + " " + s.Id.Name +
-		" {\n" + util.JoinToString(s.Fields, " ") + "\n}\n"
+		" {\n" + JoinToString(s.Fields, " ") + "\n}\n"
 }
 
 func (s *WhileStatement) statementNode() {}
@@ -91,7 +97,7 @@ func (s *GenerifiedStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *GenerifiedStatement) ToString() string {
-	return "<" + util.JoinToString(s.Contracts, " ") + ">\n" + s.Statement.ToString()
+	return "<" + JoinToString(s.Contracts, " ") + ">\n" + s.Statement.ToString()
 }
 
 func (s *ReturnStatement) statementNode() {}

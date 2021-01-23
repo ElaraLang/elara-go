@@ -22,7 +22,7 @@ type DeclarationStatement struct {
 	Mutable    bool
 	Lazy       bool
 	Open       bool
-	Identifier string
+	Identifier Identifier
 	Type       Type
 	Value      Expression
 }

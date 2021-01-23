@@ -1,7 +1,6 @@
 package ast
 
 import (
-	"github.com/ElaraLang/elara/util"
 	"strconv"
 )
 
@@ -53,7 +52,7 @@ func (e *CallExpression) TokenValue() string {
 	return e.Token.String()
 }
 func (e *CallExpression) ToString() string {
-	return "(" + e.Expression.ToString() + ")(" + util.JoinToString(e.Arguments, ", ") + ")"
+	return "(" + e.Expression.ToString() + ")(" + JoinToString(e.Arguments, ", ") + ")"
 }
 
 func (e *TypeCastExpression) expressionNode() {}
@@ -77,7 +76,7 @@ func (e *FunctionLiteral) TokenValue() string {
 	return e.Token.String()
 }
 func (e *FunctionLiteral) ToString() string {
-	return "(" + util.JoinToString(e.Parameters, ", ") + ") => " + e.ReturnType.ToString() + " {\n" + e.Body.ToString() + "\n}\n"
+	return "(" + JoinToString(e.Parameters, ", ") + ") => " + e.ReturnType.ToString() + " {\n" + e.Body.ToString() + "\n}\n"
 }
 
 func (e *MapLiteral) expressionNode() {}
@@ -85,7 +84,7 @@ func (e *MapLiteral) TokenValue() string {
 	return e.Token.String()
 }
 func (e *MapLiteral) ToString() string {
-	return "{\n" + util.JoinToString(e.Entries, ",\n") + "\n}\n"
+	return "{\n" + JoinToString(e.Entries, ",\n") + "\n}\n"
 }
 
 func (e *CollectionLiteral) expressionNode() {}
@@ -93,7 +92,7 @@ func (e *CollectionLiteral) TokenValue() string {
 	return e.Token.String()
 }
 func (e *CollectionLiteral) ToString() string {
-	return "[" + util.JoinToString(e.Elements, ", ") + "]"
+	return "[" + JoinToString(e.Elements, ", ") + "]"
 }
 
 func (e *BooleanLiteral) expressionNode() {}
