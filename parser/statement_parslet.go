@@ -53,6 +53,27 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 	}
 }
 
+func (p *Parser) parseExtendStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.Extend)
+	id := p.parseIdentifier()
+	var alias ast.Identifier
+	if p.Tape.Match(lexer.As) {
+		alias = p.parseIdentifier()
+	} else {
+		alias = ast.Identifier{
+			Token: token,
+			Name:  "this",
+		}
+	}
+	body := p.parseBlockStatement()
+	return &ast.ExtendStatement{
+		Token:      token,
+		Identifier: id,
+		Alias:      alias,
+		Body:       body,
+	}
+}
+
 func (p *Parser) parseBlockStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.LBrace)
 	block := make([]ast.Statement, 0)

@@ -43,7 +43,7 @@ type ExtendStatement struct {
 	Token      lexer.Token
 	Identifier Identifier
 	Alias      Identifier
-	Body       BlockStatement
+	Body       Statement
 }
 
 type BlockStatement struct {
