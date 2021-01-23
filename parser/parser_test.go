@@ -1,7 +1,6 @@
 package parser
 
 import (
-	"fmt"
 	"github.com/ElaraLang/elara/lexer"
 	"testing"
 )
@@ -9,7 +8,10 @@ import (
 func TestBasicParsing(t *testing.T) {
 	code := "let a = 30"
 	tokens := lexer.Lex(code)
-	parser := NewParser(tokens, make(chan lexer.Token))
-	res := parser.parseStatement()
-	fmt.Println(res.ToString())
+	parser := NewReplParser(make(chan lexer.Token))
+	go parser.parseStatement()
+	for _, v := range tokens {
+		parser.Tape.Channel <- v
+	}
+	//fmt.Println(res.ToString())
 }

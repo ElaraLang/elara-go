@@ -41,7 +41,7 @@ func (tStream *TokenTape) tokenAt(index int) lexer.Token {
 			return lexer.CreateBlankToken(lexer.EOF)
 		}
 		// If in a REPL, try to read further from the channel
-		required := index - len(tStream.tokens)
+		required := index - len(tStream.tokens) + 1
 		tStream.readFromChannel(required)
 	}
 	return tStream.tokens[index]
@@ -75,6 +75,11 @@ func (tStream *TokenTape) Append(inputTokens ...lexer.Token) {
 // Peek returns the token at an offset of specified amount from current index
 func (tStream *TokenTape) Peek(amount int) lexer.Token {
 	return tStream.tokenAt(tStream.index + amount)
+}
+
+// ValidateHead validates if any of the provided token is at current head
+func (tStream *TokenTape) ValidateHead(tokenType ...lexer.TokenType) bool {
+	return tStream.ValidationPeek(0, tokenType...)
 }
 
 // ValidationPeek peeks by given amount and validates if the provided token is at that index
