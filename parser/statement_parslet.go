@@ -8,7 +8,10 @@ import (
 func (p *Parser) initStatementParselets() {
 	p.statementParslets = make(map[lexer.TokenType]statementParslet, 0)
 	p.registerStatement(lexer.Let, p.parseLetStatement)
-
+	p.registerStatement(lexer.While, p.parseWhileStatement)
+	p.registerStatement(lexer.Return, p.parseReturnStatement)
+	p.registerStatement(lexer.Extend, p.parseExtendStatement)
+	p.registerStatement(lexer.LBrace, p.parseBlockStatement)
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
@@ -50,6 +53,15 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 		Token:     token,
 		Condition: condition,
 		Body:      body,
+	}
+}
+
+func (p *Parser) parseReturnStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.Return)
+	value := p.parseExpression(LOWEST)
+	return &ast.ReturnStatement{
+		Token: token,
+		Value: value,
 	}
 }
 
