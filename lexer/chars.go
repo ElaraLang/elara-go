@@ -17,7 +17,7 @@ func isBracket(ch rune) bool {
 }
 
 func isStartOfSymbol(ch rune) bool {
-	return ch == '.' || ch == '='
+	return ch == '.' || ch == '=' || ch == '#'
 }
 
 func isAngleBracket(ch rune) bool {

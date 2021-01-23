@@ -299,6 +299,8 @@ func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
 	ch := s.Advance()
 
 	switch ch {
+	case '#':
+		return Hash, []rune{ch}
 	case '.':
 		return Dot, []rune{ch}
 	case '=':
