@@ -53,6 +53,18 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 	}
 }
 
+func (p *Parser) parseBlockStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.LBrace)
+	block := make([]ast.Statement, 0)
+	for p.Tape.Match(lexer.RBrace) {
+		block = append(block, p.parseStatement())
+	}
+	return &ast.BlockStatement{
+		Token: token,
+		Block: block,
+	}
+}
+
 func (p *Parser) parseExpressionStatement() ast.Statement {
 	return &ast.ExpressionStatement{
 		Token:      p.Tape.Current(),
