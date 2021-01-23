@@ -135,3 +135,11 @@ func (e *StringLiteral) TokenValue() string {
 func (e *StringLiteral) ToString() string {
 	return e.Value
 }
+
+func (e *Identifier) expressionNode() {}
+func (e *Identifier) TokenValue() string {
+	return e.Token.String()
+}
+func (e *Identifier) ToString() string {
+	return e.Name
+}

@@ -41,3 +41,15 @@ outer:
 	}
 	return params
 }
+
+func (p *Parser) parseFunctionCallArguments() []ast.Expression {
+	args := make([]ast.Expression, 0)
+	if p.Tape.ValidationPeek(0, lexer.RParen) {
+		return args
+	}
+	args = append(args, p.parseExpression(LOWEST))
+	for p.Tape.Match(lexer.Comma) {
+		args = append(args, p.parseExpression(LOWEST))
+	}
+	return args
+}

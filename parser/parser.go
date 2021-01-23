@@ -6,9 +6,10 @@ import (
 )
 
 type Parser struct {
-	Tape           TokenTape
-	prefixParslets map[lexer.TokenType]prefixParslet
-	infixParslets  map[lexer.TokenType]parseInfix
+	Tape              TokenTape
+	statementParslets map[lexer.TokenType]statementParslet
+	prefixParslets    map[lexer.TokenType]prefixParslet
+	infixParslets     map[lexer.TokenType]infixParselet
 }
 
 func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
@@ -20,19 +21,24 @@ func NewReplParser(channel chan lexer.Token) Parser {
 }
 
 type (
-	prefixParslet func() ast.Expression
-	parseInfix    func(ast.Expression) ast.Expression
+	statementParslet func() ast.Statement
+	prefixParslet    func() ast.Expression
+	infixParselet    func(ast.Expression) ast.Expression
 )
 
 func (p *Parser) registerPrefix(tokenType lexer.TokenType, function prefixParslet) {
 	p.prefixParslets[tokenType] = function
 }
-func (p *Parser) registerInfix(tokenType lexer.TokenType, function parseInfix) {
+func (p *Parser) registerInfix(tokenType lexer.TokenType, function infixParselet) {
 	p.infixParslets[tokenType] = function
 }
 
 func (p *Parser) parseStatement() ast.Statement {
-	return nil // TODO
+	parseStmt := p.statementParslets[p.Tape.Current().TokenType]
+	if parseStmt == nil {
+		return p.parseExpressionStatement()
+	}
+	return parseStmt()
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {

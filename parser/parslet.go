@@ -6,8 +6,8 @@ import (
 	"strconv"
 )
 
-func (p *Parser) initializePrefixParselets() {
-	p.prefixParslets = make(map[lexer.TokenType]prefixParslet)
+func (p *Parser) initPrefixParselets() {
+	p.prefixParslets = make(map[lexer.TokenType]prefixParslet, 0)
 	p.registerPrefix(lexer.Int, p.parseInteger)
 	p.registerPrefix(lexer.Float, p.parseFloat)
 	p.registerPrefix(lexer.Char, p.parseChar)
@@ -15,6 +15,83 @@ func (p *Parser) initializePrefixParselets() {
 	p.registerPrefix(lexer.LParen, p.resolvingParslet(p.functionGroupResolver()))
 	p.registerPrefix(lexer.BooleanTrue, p.parseBoolean)
 	p.registerPrefix(lexer.BooleanFalse, p.parseBoolean)
+	p.registerPrefix(lexer.Subtract, p.parseUnaryExpression)
+	p.registerPrefix(lexer.Not, p.parseUnaryExpression)
+}
+
+func (p *Parser) initInfixParselets() {
+	p.infixParslets = make(map[lexer.TokenType]infixParselet, 0)
+	p.registerInfix(lexer.Add, p.parseBinaryExpression)
+	p.registerInfix(lexer.Subtract, p.parseBinaryExpression)
+	p.registerInfix(lexer.Multiply, p.parseBinaryExpression)
+	p.registerInfix(lexer.Slash, p.parseBinaryExpression)
+	p.registerInfix(lexer.Equals, p.parseBinaryExpression)
+	p.registerInfix(lexer.NotEquals, p.parseBinaryExpression)
+	p.registerInfix(lexer.GreaterEqual, p.parseBinaryExpression)
+	p.registerInfix(lexer.LesserEqual, p.parseBinaryExpression)
+	p.registerInfix(lexer.LAngle, p.parseBinaryExpression)
+	p.registerInfix(lexer.RAngle, p.parseBinaryExpression)
+	p.registerInfix(lexer.Dot, p.parsePropertyExpression)
+	p.registerInfix(lexer.LParen, p.parseFunctionCall)
+}
+
+func (p *Parser) initStatementParselets() {
+	p.statementParslets = make(map[lexer.TokenType]statementParslet, 0)
+}
+
+func (p *Parser) parseExpressionStatement() ast.Statement {
+	return &ast.ExpressionStatement{
+		Token:      p.Tape.Current(),
+		Expression: p.parseExpression(LOWEST),
+	}
+}
+
+func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
+	opening := p.Tape.Consume(lexer.RParen)
+	args := p.parseFunctionCallArguments()
+	p.Tape.Expect(lexer.RParen)
+	return &ast.CallExpression{
+		Token:      opening,
+		Expression: left,
+		Arguments:  args,
+	}
+}
+
+func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
+	operator := p.Tape.ConsumeAny()
+	precedence := precedenceOf(operator.TokenType)
+	right := p.parseExpression(precedence)
+	return &ast.BinaryExpression{
+		Token:    operator,
+		Left:     left,
+		Operator: operator,
+		Right:    right,
+	}
+}
+
+func (p *Parser) parsePropertyExpression(left ast.Expression) ast.Expression {
+	token := p.Tape.Consume(lexer.Dot)
+	right := p.parseIdentifier()
+	return &ast.PropertyExpression{
+		Token:    token,
+		Context:  left,
+		Variable: right,
+	}
+}
+
+func (p *Parser) parseUnaryExpression() ast.Expression {
+	operator := p.Tape.Consume(lexer.Dot)
+	expr := p.parseExpression(PREFIX)
+	return &ast.UnaryExpression{
+		Token:    operator,
+		Operator: operator,
+		Right:    expr,
+	}
+}
+
+func (p *Parser) parseIdentifier() ast.Identifier {
+	token := p.Tape.Consume(lexer.Int)
+	return ast.Identifier{Token: token, Name: string(token.Text)}
 }
 
 func (p *Parser) parseInteger() ast.Expression {
