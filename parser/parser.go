@@ -9,13 +9,13 @@ type Parser struct {
 	Tape              TokenTape
 	statementParslets map[lexer.TokenType]statementParslet
 	prefixParslets    map[lexer.TokenType]prefixParslet
-	infixParslets     map[lexer.TokenType]infixParselet
+	infixParslets     map[lexer.TokenType]infixParslet
 }
 
 func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
 	p := Parser{Tape: NewTokenTape(tokens, channel)}
 	p.initPrefixParselets()
-	p.initPrefixParselets()
+	p.initInfixParselets()
 	p.initStatementParselets()
 	return p
 }
@@ -23,7 +23,7 @@ func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
 func NewReplParser(channel chan lexer.Token) Parser {
 	p := Parser{Tape: NewReplTokenTape(channel)}
 	p.initPrefixParselets()
-	p.initPrefixParselets()
+	p.initInfixParselets()
 	p.initStatementParselets()
 	return p
 }
@@ -31,13 +31,13 @@ func NewReplParser(channel chan lexer.Token) Parser {
 type (
 	statementParslet func() ast.Statement
 	prefixParslet    func() ast.Expression
-	infixParselet    func(ast.Expression) ast.Expression
+	infixParslet     func(ast.Expression) ast.Expression
 )
 
 func (p *Parser) registerPrefix(tokenType lexer.TokenType, function prefixParslet) {
 	p.prefixParslets[tokenType] = function
 }
-func (p *Parser) registerInfix(tokenType lexer.TokenType, function infixParselet) {
+func (p *Parser) registerInfix(tokenType lexer.TokenType, function infixParslet) {
 	p.infixParslets[tokenType] = function
 }
 func (p *Parser) registerStatement(tokenType lexer.TokenType, function statementParslet) {

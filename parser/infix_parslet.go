@@ -6,7 +6,7 @@ import (
 )
 
 func (p *Parser) initInfixParselets() {
-	p.infixParslets = make(map[lexer.TokenType]infixParselet, 0)
+	p.infixParslets = make(map[lexer.TokenType]infixParslet, 0)
 	p.registerInfix(lexer.Add, p.parseBinaryExpression)
 	p.registerInfix(lexer.Subtract, p.parseBinaryExpression)
 	p.registerInfix(lexer.Multiply, p.parseBinaryExpression)

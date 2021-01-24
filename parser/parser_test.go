@@ -6,12 +6,11 @@ import (
 )
 
 func TestBasicParsing(t *testing.T) {
-	code := "let a = 30"
+	code := "let a = 5 + 3\n"
 	tokens := lexer.Lex(code)
 	parser := NewReplParser(make(chan lexer.Token))
-	go parser.parseStatement()
+	go parser.parseLetStatement()
 	for _, v := range tokens {
 		parser.Tape.Channel <- v
 	}
-	//fmt.Println(res.ToString())
 }
