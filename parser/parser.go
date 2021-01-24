@@ -6,14 +6,15 @@ import (
 )
 
 type Parser struct {
-	Tape              TokenTape
+	Tape              *TokenTape
 	statementParslets map[lexer.TokenType]statementParslet
 	prefixParslets    map[lexer.TokenType]prefixParslet
 	infixParslets     map[lexer.TokenType]infixParslet
 }
 
 func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
-	p := Parser{Tape: NewTokenTape(tokens, channel)}
+	tape := NewTokenTape(tokens, channel)
+	p := Parser{Tape: &tape}
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
@@ -21,7 +22,8 @@ func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
 }
 
 func NewReplParser(channel chan lexer.Token) Parser {
-	p := Parser{Tape: NewReplTokenTape(channel)}
+	tape := NewReplTokenTape(channel)
+	p := Parser{Tape: &tape}
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
