@@ -13,13 +13,14 @@ const (
 	SUM
 	PRODUCT
 	PREFIX
-	CALL
+	INVOKE
 
 	// Type precedences
 	TYPE_LOWEST
 	TYPE_UNION
 	TYPE_INTERSECTION
 	TYPE_MAP
+	TYPE_PROPERTY
 )
 
 var precedences = map[lexer.TokenType]int{
@@ -33,14 +34,16 @@ var precedences = map[lexer.TokenType]int{
 	lexer.Subtract:     SUM,
 	lexer.Multiply:     PRODUCT,
 	lexer.Slash:        PRODUCT,
-	lexer.LParen:       CALL,
-	lexer.LSquare:      CALL,
+	lexer.Dot:          INVOKE,
+	lexer.LParen:       INVOKE,
+	lexer.LSquare:      INVOKE,
 }
 
 var typePrecedences = map[lexer.TokenType]int{
 	lexer.TypeAnd: TYPE_UNION,
 	lexer.TypeOr:  TYPE_INTERSECTION,
 	lexer.Colon:   TYPE_MAP,
+	lexer.Dot:     TYPE_PROPERTY,
 }
 
 func precedenceOf(tok lexer.TokenType) int {
