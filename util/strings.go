@@ -46,3 +46,14 @@ func Hash(s string) uint64 {
 	_, _ = h.Write([]byte(s))
 	return h.Sum64()
 }
+
+func JoinStringConditionally(mapping map[string]bool, separator string) string {
+	output := ""
+	for k, v := range mapping {
+		if v {
+			output += k
+			output += separator
+		}
+	}
+	return output
+}

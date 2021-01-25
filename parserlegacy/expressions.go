@@ -1,4 +1,4 @@
-package parser
+package parserlegacy
 
 import (
 	"github.com/ElaraLang/elara/lexer"

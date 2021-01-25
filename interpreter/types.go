@@ -3,7 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/lexer"
-	"github.com/ElaraLang/elara/parser"
+	"github.com/ElaraLang/elara/parserlegacy"
 	"reflect"
 )
 
@@ -156,16 +156,16 @@ func (t *DefinedType) Accepts(other Type, ctx *Context) bool {
 	return true
 }
 
-func FromASTType(astType parser.Type, ctx *Context) Type {
+func FromASTType(astType parserlegacy.Type, ctx *Context) Type {
 	switch t := astType.(type) {
-	case parser.ElementaryTypeContract:
+	case parserlegacy.ElementaryTypeContract:
 		found := ctx.FindType(t.Identifier)
 		if found != nil {
 			return found
 		}
 		return NewEmptyType(t.Identifier)
 
-	case parser.InvocableTypeContract:
+	case parserlegacy.InvocableTypeContract:
 		returned := FromASTType(t.ReturnType, ctx)
 		args := make([]Parameter, len(t.Args))
 		for i, arg := range t.Args {
@@ -182,13 +182,13 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 		}
 		return NewSignatureFunctionType(signature)
 
-	case parser.CollectionTypeContract:
+	case parserlegacy.CollectionTypeContract:
 		elemType := FromASTType(t.ElemType, ctx)
 		return &CollectionType{
 			ElementType: elemType,
 		}
 
-	case parser.BinaryTypeContract:
+	case parserlegacy.BinaryTypeContract:
 		switch t.TypeOp {
 		case lexer.TypeAnd:
 			return &IntersectionType{
@@ -201,7 +201,7 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 				b: FromASTType(t.Rhs, ctx),
 			}
 		}
-	case parser.DefinedTypeContract:
+	case parserlegacy.DefinedTypeContract:
 		parts := make(map[string]Type, len(t.DefType))
 		for _, definedType := range t.DefType {
 			parts[definedType.Identifier] = FromASTType(definedType.DefType, ctx)
@@ -210,7 +210,7 @@ func FromASTType(astType parser.Type, ctx *Context) Type {
 			name:  t.Name,
 			parts: parts,
 		}
-	case parser.MapTypeContract:
+	case parserlegacy.MapTypeContract:
 		keyType := FromASTType(t.KeyType, ctx)
 		valueType := FromASTType(t.ValueType, ctx)
 		return &MapType{

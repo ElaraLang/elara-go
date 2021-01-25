@@ -26,3 +26,16 @@ func BenchmarkLexer(t *testing.B) {
 	}
 
 }
+
+func TestHashLexing(t *testing.T) {
+	code := "#"
+	tokens := Lex(code)
+
+	expectedTokens := []Token{
+		CreateToken(Hash, "#", CreatePosition(0, 0)),
+	}
+
+	if !reflect.DeepEqual(tokens, expectedTokens) {
+		t.Errorf("Incorrect lexing output, got %v but expected %v", tokens, expectedTokens)
+	}
+}
