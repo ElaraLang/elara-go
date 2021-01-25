@@ -26,9 +26,13 @@ func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
 func NewReplParser(channel chan lexer.Token) Parser {
 	tape := NewReplTokenTape(channel)
 	p := Parser{Tape: &tape}
+
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
+
+	p.initTypePrefixParselets()
+	p.initTypeInfixParselets()
 	return p
 }
 

@@ -9,6 +9,10 @@ const (
 	// Expression precedences
 	Lowest
 	Assign
+	CastAs
+	CheckIs
+	LogicOr
+	LogicAnd
 	Equals
 	Comparison
 	Sum
@@ -26,6 +30,9 @@ const (
 
 var precedences = map[lexer.TokenType]int{
 	lexer.Equal:        Assign,
+	lexer.As:           CastAs,
+	lexer.Or:           LogicOr,
+	lexer.And:          LogicAnd,
 	lexer.Equals:       Equals,
 	lexer.NotEquals:    Equals,
 	lexer.GreaterEqual: Comparison,

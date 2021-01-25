@@ -7,7 +7,7 @@ import (
 
 func (p *Parser) initTypePrefixParselets() {
 	p.prefixTypeParslets = make(map[lexer.TokenType]prefixTypeParslet, 0)
-	p.registerTypePrefix(lexer.LParen, p.parseFunctionType)
+	p.registerTypePrefix(lexer.LParen, p.resolvingTypePrefixParslet(p.functionGroupTypeResolver()))
 	p.registerTypePrefix(lexer.LSquare, p.parseCollectionType)
 	p.registerTypePrefix(lexer.Type, p.parseContractualType)
 	p.registerTypePrefix(lexer.Identifier, p.parsePrimaryType)
@@ -34,6 +34,13 @@ func (p *Parser) parseFunctionType() ast.Type {
 		ParamTypes: params,
 		ReturnType: retType,
 	}
+}
+
+func (p *Parser) parseGroupedType() ast.Type {
+	p.Tape.Expect(lexer.LParen)
+	typ := p.parseType(Lowest)
+	p.Tape.Expect(lexer.RParen)
+	return typ
 }
 
 func (p *Parser) parseCollectionType() ast.Type {
