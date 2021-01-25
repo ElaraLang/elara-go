@@ -21,8 +21,8 @@ func (p *Parser) initInfixParselets() {
 	p.registerInfix(lexer.LParen, p.parseFunctionCall)
 	p.registerInfix(lexer.LSquare, p.parseAccessOperator)
 	p.registerInfix(lexer.Equal, p.parseAssignment)
-	p.registerInfix(lexer.Is, p.parseAssignment)
-	p.registerInfix(lexer.As, p.parseAssignment)
+	p.registerInfix(lexer.Is, p.parseTypeOperation)
+	p.registerInfix(lexer.As, p.parseTypeOperation)
 }
 
 func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
