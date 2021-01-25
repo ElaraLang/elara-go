@@ -6,7 +6,7 @@ import (
 )
 
 func TestBasicParsing(t *testing.T) {
-	code := "let a = 5 * 3 + 3 * 8\n"
+	code := "let a = 5 * 3 + 3 * 8"
 	tokens := lexer.Lex(code)
 	parser := NewReplParser(make(chan lexer.Token))
 	go parser.parseStatement()

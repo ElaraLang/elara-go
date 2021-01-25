@@ -50,7 +50,7 @@ func (s *StructDefStatement) TokenValue() string {
 }
 func (s *StructDefStatement) ToString() string {
 	return s.TokenValue() + " " + s.Id.Name +
-		" {\n" + JoinToString(s.Fields, " ") + "\n}\n"
+		" {\n" + joinToString(s.Fields, " ") + "\n}\n"
 }
 
 func (s *WhileStatement) statementNode() {}
@@ -97,7 +97,7 @@ func (s *GenerifiedStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *GenerifiedStatement) ToString() string {
-	return "<" + JoinToString(s.Contracts, " ") + ">\n" + s.Statement.ToString()
+	return "<" + joinToString(s.Contracts, " ") + ">\n" + s.Statement.ToString()
 }
 
 func (s *ReturnStatement) statementNode() {}

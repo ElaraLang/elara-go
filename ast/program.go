@@ -42,7 +42,7 @@ type Identifier struct {
 	Name  string
 }
 
-func JoinToString(slice interface{}, separator string) string {
+func joinToString(slice interface{}, separator string) string {
 	res := ""
 
 	switch slice := slice.(type) {

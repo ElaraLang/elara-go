@@ -1,5 +1,7 @@
 package ast
 
+import "github.com/ElaraLang/elara/lexer"
+
 // Module represents the namespace of a program.
 // Helps segregate different components and avoid identifier conflicts
 // Represented as Root / Sub or just Root if Sub is not provided
@@ -45,4 +47,10 @@ type StructField struct {
 
 func (p *StructField) ToString() string {
 	return p.Type.ToString() + " " + p.Identifier.Name
+}
+
+type NamedContract struct {
+	Token      lexer.Token
+	Identifier Identifier
+	Type       Type
 }
