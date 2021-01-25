@@ -6,6 +6,11 @@ import (
 )
 
 func (p *Parser) initTypePrefixParselets() {
+	p.prefixTypeParslets = make(map[lexer.TokenType]prefixTypeParslet, 0)
+	p.registerTypePrefix(lexer.LParen, p.parseFunctionType)
+	p.registerTypePrefix(lexer.LSquare, p.parseCollectionType)
+	p.registerTypePrefix(lexer.Type, p.parseContractualType)
+	p.registerTypePrefix(lexer.Identifier, p.parsePrimaryType)
 }
 
 func (p *Parser) parseFunctionType() ast.Type {
@@ -13,7 +18,7 @@ func (p *Parser) parseFunctionType() ast.Type {
 	params := make([]ast.Type, 0)
 
 	for !p.Tape.ValidateHead(lexer.RParen) {
-		param := p.parseType()
+		param := p.parseType(TYPE_LOWEST)
 		params = append(params, param)
 		if !(p.Tape.Match(lexer.Comma) || p.Tape.ValidateHead(lexer.RParen)) {
 			// panic
@@ -22,7 +27,7 @@ func (p *Parser) parseFunctionType() ast.Type {
 	p.Tape.Expect(lexer.RParen)
 	p.Tape.Expect(lexer.Arrow)
 
-	retType := p.parseType()
+	retType := p.parseType(TYPE_LOWEST)
 
 	return &ast.FunctionType{
 		Token:      tok,
@@ -31,22 +36,9 @@ func (p *Parser) parseFunctionType() ast.Type {
 	}
 }
 
-func (p *Parser) parseMapType() ast.Type {
-	tok := p.Tape.Consume(lexer.LBrace)
-	keyType := p.parseType()
-	p.Tape.Expect(lexer.Comma)
-	valueType := p.parseType()
-	p.Tape.Expect(lexer.RBrace)
-	return &ast.MapType{
-		Token:     tok,
-		KeyType:   keyType,
-		ValueType: valueType,
-	}
-}
-
 func (p *Parser) parseCollectionType() ast.Type {
 	tok := p.Tape.Consume(lexer.LSquare)
-	typ := p.parseType()
+	typ := p.parseType(TYPE_LOWEST)
 	p.Tape.Expect(lexer.RSquare)
 	return &ast.CollectionType{
 		Token: tok,
@@ -74,7 +66,7 @@ func (p *Parser) parseContractualType() ast.Type {
 
 func (p *Parser) parseContract() ast.Contract {
 	id := p.Tape.Consume(lexer.Identifier)
-	typ := p.parseType()
+	typ := p.parseType(TYPE_LOWEST)
 	return ast.Contract{
 		Token: id,
 		Identifier: ast.Identifier{

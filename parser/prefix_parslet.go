@@ -79,7 +79,7 @@ func (p *Parser) parseFunction() ast.Expression {
 	var typ ast.Type
 
 	if !p.Tape.ValidationPeek(0, lexer.LBrace) {
-		typ = p.parseType()
+		typ = p.parseType(TYPE_LOWEST)
 	}
 
 	body := p.parseStatement()
@@ -96,10 +96,6 @@ func (p *Parser) parseGroupExpression() ast.Expression {
 	expr := p.parseExpression(LOWEST)
 	p.Tape.Expect(lexer.RParen)
 	return expr
-}
-
-func (p *Parser) parseType() ast.Type {
-	return nil // TODO
 }
 
 func (p *Parser) parseCollection() ast.Expression {

@@ -6,10 +6,12 @@ import (
 )
 
 type Parser struct {
-	Tape              *TokenTape
-	statementParslets map[lexer.TokenType]statementParslet
-	prefixParslets    map[lexer.TokenType]prefixParslet
-	infixParslets     map[lexer.TokenType]infixParslet
+	Tape               *TokenTape
+	statementParslets  map[lexer.TokenType]statementParslet
+	prefixParslets     map[lexer.TokenType]prefixParslet
+	infixParslets      map[lexer.TokenType]infixParslet
+	prefixTypeParslets map[lexer.TokenType]prefixTypeParslet
+	infixTypeParslets  map[lexer.TokenType]infixTypeParslet
 }
 
 func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
@@ -31,9 +33,11 @@ func NewReplParser(channel chan lexer.Token) Parser {
 }
 
 type (
-	statementParslet func() ast.Statement
-	prefixParslet    func() ast.Expression
-	infixParslet     func(ast.Expression) ast.Expression
+	statementParslet  func() ast.Statement
+	prefixParslet     func() ast.Expression
+	infixParslet      func(ast.Expression) ast.Expression
+	prefixTypeParslet func() ast.Type
+	infixTypeParslet  func(ast.Type) ast.Type
 )
 
 func (p *Parser) registerPrefix(tokenType lexer.TokenType, function prefixParslet) {
@@ -42,6 +46,14 @@ func (p *Parser) registerPrefix(tokenType lexer.TokenType, function prefixParsle
 func (p *Parser) registerInfix(tokenType lexer.TokenType, function infixParslet) {
 	p.infixParslets[tokenType] = function
 }
+
+func (p *Parser) registerTypePrefix(tokenType lexer.TokenType, function prefixTypeParslet) {
+	p.prefixTypeParslets[tokenType] = function
+}
+func (p *Parser) registerTypeInfix(tokenType lexer.TokenType, function infixTypeParslet) {
+	p.infixTypeParslets[tokenType] = function
+}
+
 func (p *Parser) registerStatement(tokenType lexer.TokenType, function statementParslet) {
 	p.statementParslets[tokenType] = function
 }
@@ -69,4 +81,8 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		expr = infix(expr)
 	}
 	return expr
+}
+
+func (p *Parser) parseType(precedence int) ast.Type {
+	return nil // TODO
 }

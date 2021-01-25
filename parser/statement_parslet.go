@@ -24,7 +24,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 		value = p.parseExpression(LOWEST)
 	} else {
 		if p.Tape.ValidationPeek(0, lexer.Colon) {
-			varType = p.parseType()
+			varType = p.parseType(TYPE_LOWEST)
 		}
 		p.Tape.Expect(lexer.Equal)
 		value = p.parseExpression(LOWEST)

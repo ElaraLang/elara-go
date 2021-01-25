@@ -23,7 +23,7 @@ outer:
 
 			continue
 		}
-		typ := p.parseType()
+		typ := p.parseType(TYPE_LOWEST)
 		id := p.Tape.Consume(lexer.Identifier)
 		param := ast.Parameter{
 			Type:       typ,

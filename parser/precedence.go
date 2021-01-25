@@ -19,6 +19,7 @@ const (
 	TYPE_LOWEST
 	TYPE_UNION
 	TYPE_INTERSECTION
+	TYPE_MAP
 )
 
 var precedences = map[lexer.TokenType]int{
@@ -39,6 +40,7 @@ var precedences = map[lexer.TokenType]int{
 var typePrecedences = map[lexer.TokenType]int{
 	lexer.TypeAnd: TYPE_UNION,
 	lexer.TypeOr:  TYPE_INTERSECTION,
+	lexer.Colon:   TYPE_MAP,
 }
 
 func precedenceOf(tok lexer.TokenType) int {
