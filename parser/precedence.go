@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/ElaraLang/elara/lexer"
+import (
+	"github.com/ElaraLang/elara/lexer"
+)
 
 const (
 	_ int = iota
@@ -24,6 +26,7 @@ var precedences = map[lexer.TokenType]int{
 	lexer.Subtract:     SUM,
 	lexer.Multiply:     PRODUCT,
 	lexer.Slash:        PRODUCT,
+	lexer.LParen:       CALL,
 }
 
 func precedenceOf(tok lexer.TokenType) int {
