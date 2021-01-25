@@ -5,7 +5,7 @@ import (
 	"github.com/ElaraLang/elara/lexer"
 )
 
-func (p *Parser) initTypeParselets() {
+func (p *Parser) initTypePrefixParselets() {
 }
 
 func (p *Parser) parseFunctionType() ast.Type {
