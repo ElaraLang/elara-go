@@ -8,7 +8,7 @@ import (
 
 func (p *Parser) initPrefixParselets() {
 	p.prefixParslets = make(map[lexer.TokenType]prefixParslet, 0)
-	p.registerPrefix(lexer.Int, p.parseInteger)
+	p.registerPrefix(lexer.DecimalInt, p.parseInteger)
 	p.registerPrefix(lexer.Float, p.parseFloat)
 	p.registerPrefix(lexer.Char, p.parseChar)
 	p.registerPrefix(lexer.String, p.parseString)
@@ -30,13 +30,13 @@ func (p *Parser) parseUnaryExpression() ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Identifier {
-	token := p.Tape.Consume(lexer.Int)
-	return ast.Identifier{Token: token, Name: string(token.Text)}
+	token := p.Tape.Consume(lexer.DecimalInt)
+	return ast.Identifier{Token: token, Name: string(token.Data)}
 }
 
 func (p *Parser) parseInteger() ast.Expression {
-	token := p.Tape.Consume(lexer.Int)
-	value, err := strconv.ParseInt(string(token.Text), 10, 64)
+	token := p.Tape.Consume(lexer.DecimalInt)
+	value, err := strconv.ParseInt(string(token.Data), 10, 64)
 	if err != nil {
 		// panic
 	}
@@ -45,7 +45,7 @@ func (p *Parser) parseInteger() ast.Expression {
 
 func (p *Parser) parseFloat() ast.Expression {
 	token := p.Tape.Consume(lexer.Float)
-	value, err := strconv.ParseFloat(string(token.Text), 10)
+	value, err := strconv.ParseFloat(string(token.Data), 10)
 	if err != nil {
 		// panic
 	}
@@ -60,13 +60,13 @@ func (p *Parser) parseBoolean() ast.Expression {
 
 func (p *Parser) parseChar() ast.Expression {
 	token := p.Tape.Consume(lexer.Char)
-	value := token.Text[0]
+	value := token.Data[0]
 	return &ast.CharLiteral{Token: token, Value: value}
 }
 
 func (p *Parser) parseString() ast.Expression {
 	token := p.Tape.Consume(lexer.String)
-	value := string(token.Text)
+	value := string(token.Data)
 	return &ast.StringLiteral{Token: token, Value: value}
 }
 
@@ -82,7 +82,7 @@ func (p *Parser) parseFunction() ast.Expression {
 		typ = p.parseType()
 	}
 
-	body := p.parseStatement()
+	body := p.ParseStatement()
 	return &ast.FunctionLiteral{
 		Token:      token,
 		ReturnType: typ,

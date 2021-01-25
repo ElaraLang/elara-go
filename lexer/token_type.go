@@ -2,6 +2,13 @@ package lexer
 
 type TokenType int
 
+var EOF_TOKEN = Token{
+	TokenType: EOF,
+	Data:      nil,
+	Line:      -1,
+	Col:       -1,
+}
+
 const (
 	//special tokens
 	Illegal TokenType = iota
@@ -25,7 +32,7 @@ const (
 	While
 	Mut
 	Lazy
-	Restricted
+	Open
 	Struct
 	Namespace
 	Import
@@ -35,6 +42,7 @@ const (
 	Match
 	As
 	Is
+	Try
 
 	//Operators
 	Add          // +
@@ -64,7 +72,9 @@ const (
 	BooleanFalse
 	String
 	Char
-	Int
+	DecimalInt
+	BinaryInt
+	HexadecimalInt
 	Float
 
 	Comma // ,
@@ -83,76 +93,59 @@ var tokenNames = map[TokenType]string{
 	EOF:     "EOF",
 	NEWLINE: "\\n",
 
-	LParen:       "LParen",
-	RParen:       "RParen",
-	LBrace:       "LBrace",
-	RBrace:       "RBrace",
-	LAngle:       "LAngle",
-	RAngle:       "RAngle",
-	LSquare:      "LSquare",
-	RSquare:      "RSquare",
-	Type:         "TokenType",
-	Let:          "Let",
-	Extend:       "Extend",
-	Return:       "Return",
-	While:        "While",
-	Mut:          "Mut",
-	Lazy:         "Lazy",
-	Restricted:   "Restricted",
-	Struct:       "Struct",
-	Namespace:    "Namespace",
-	Import:       "Import",
-	If:           "If",
-	Else:         "Else",
-	Match:        "Match",
-	As:           "As",
-	Is:           "Is",
-	Add:          "Add",
-	Subtract:     "Subtract",
-	Multiply:     "Multiply",
-	Slash:        "Slash",
-	Mod:          "Mod",
-	And:          "And",
-	Or:           "Or",
-	Xor:          "Xor",
-	Equals:       "Equals",
-	NotEquals:    "NotEquals",
-	GreaterEqual: "GreaterEqual",
-	LesserEqual:  "LesserEqual",
-	Not:          "Not",
-	Equal:        "Equal",
-	Arrow:        "Arrow",
-	Dot:          "Dot",
-	BooleanTrue:  "True",
-	BooleanFalse: "False",
-	String:       "String",
-	Char:         "Char",
-	Int:          "Int",
-	Float:        "Float",
+	LParen:         "LParen",
+	RParen:         "RParen",
+	LBrace:         "LBrace",
+	RBrace:         "RBrace",
+	LAngle:         "LAngle",
+	RAngle:         "RAngle",
+	LSquare:        "LSquare",
+	RSquare:        "RSquare",
+	Type:           "TokenType",
+	Let:            "Let",
+	Extend:         "Extend",
+	Return:         "Return",
+	While:          "While",
+	Mut:            "Mut",
+	Lazy:           "Lazy",
+	Open:           "Open",
+	Struct:         "Struct",
+	Namespace:      "Namespace",
+	Import:         "Import",
+	If:             "If",
+	Else:           "Else",
+	Match:          "Match",
+	As:             "As",
+	Is:             "Is",
+	Try:            "Try",
+	Add:            "Add",
+	Subtract:       "Subtract",
+	Multiply:       "Multiply",
+	Slash:          "Slash",
+	Mod:            "Mod",
+	And:            "And",
+	Or:             "Or",
+	Xor:            "Xor",
+	Equals:         "Equals",
+	NotEquals:      "NotEquals",
+	GreaterEqual:   "GreaterEqual",
+	LesserEqual:    "LesserEqual",
+	Not:            "Not",
+	Equal:          "Equal",
+	Arrow:          "Arrow",
+	Dot:            "Dot",
+	BooleanTrue:    "True",
+	BooleanFalse:   "False",
+	String:         "String",
+	Char:           "Char",
+	DecimalInt:     "DecimalInt",
+	BinaryInt:      "BinaryInt",
+	HexadecimalInt: "HexadecimalInt",
+	Float:          "Float",
 
 	Comma: "Comma",
 	Colon: "Colon",
 
 	Identifier: "Identifier",
 	//Underscore: "Underscore",
-}
-
-var IllegalIdentifierChars = map[int]struct{}{
-	',':  {},
-	'.':  {},
-	':':  {},
-	'#':  {},
-	'[':  {},
-	']':  {},
-	'(':  {},
-	')':  {},
-	'{':  {},
-	'}':  {},
-	'"':  {},
-	'>':  {},
-	'<':  {},
-	' ':  {},
-	'\n': {},
-	'\r': {},
-	'\t': {},
 }

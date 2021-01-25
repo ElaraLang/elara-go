@@ -12,9 +12,9 @@ type Parser struct {
 	infixParslets     map[lexer.TokenType]infixParslet
 }
 
-func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
+func NewParser(tokens []lexer.Token, channel chan lexer.Token) *Parser {
 	tape := NewTokenTape(tokens, channel)
-	p := Parser{Tape: &tape}
+	p := &Parser{Tape: &tape}
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
@@ -46,7 +46,7 @@ func (p *Parser) registerStatement(tokenType lexer.TokenType, function statement
 	p.statementParslets[tokenType] = function
 }
 
-func (p *Parser) parseStatement() ast.Statement {
+func (p *Parser) ParseStatement() ast.Statement {
 	parseStmt := p.statementParslets[p.Tape.Current().TokenType]
 	if parseStmt == nil {
 		return p.parseExpressionStatement()

@@ -37,7 +37,7 @@ func (p *AlgebraicType) TokenValue() string {
 	return p.Token.String()
 }
 func (p *AlgebraicType) ToString() string {
-	return "(" + p.Left.ToString() + " " + string(p.Operation.Text) + " " + p.Right.ToString() + ")"
+	return "(" + p.Left.ToString() + " " + string(p.Operation.Data) + " " + p.Right.ToString() + ")"
 }
 
 func (p *ContractualType) typeNode() {}

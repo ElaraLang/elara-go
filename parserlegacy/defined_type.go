@@ -15,7 +15,7 @@ func (p *Parser) definedTypes() (types []DefinedType) {
 		typ := p.primaryContract(true)
 		id := p.consume(lexer.Identifier, "Expected identifier for type in defined type contract")
 		dTyp := DefinedType{
-			Identifier: string(id.Text),
+			Identifier: string(id.Data),
 			DefType:    typ,
 		}
 		types = append(types, dTyp)

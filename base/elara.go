@@ -1,15 +1,16 @@
 package base
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/mholt/archiver"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/user"
 	"path"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -18,12 +19,13 @@ func ExecuteFull(fileName string, scriptMode bool) {
 
 	input := loadFile(fileName)
 	start := time.Now()
-	_, lexTime, parseTime, execTime := Execute(&fileName, string(input), scriptMode)
+	res, lexTime, parseTime, execTime := Execute(&fileName, input, scriptMode)
 
 	totalTime := time.Since(start)
 
 	fmt.Println("===========================")
 	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
+	fmt.Printf("Res: %s\n", res)
 	fmt.Println("===========================")
 }
 
@@ -90,16 +92,19 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	content := loadFile(path)
-	Execute(&path, string(content), false)
+	Execute(&path, content, false)
 	return nil
 }
 
-func loadFile(fileName string) []byte {
-
-	input, err := ioutil.ReadFile(fileName)
-
-	if err != nil {
-		panic(err)
-	}
-	return input
+func loadFile(fileName string) chan rune {
+	out := make(chan rune)
+	go func() {
+		reader := strings.NewReader(fileName)
+		scanner := bufio.NewScanner(reader)
+		scanner.Split(bufio.ScanRunes)
+		for scanner.Scan() {
+			out <- rune(scanner.Text()[0])
+		}
+	}()
+	return out
 }

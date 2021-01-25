@@ -78,7 +78,7 @@ func (p *Parser) parseContract() ast.Contract {
 		Token: id,
 		Identifier: ast.Identifier{
 			Token: id,
-			Name:  string(id.Text),
+			Name:  string(id.Data),
 		},
 		Type: typ,
 	}
@@ -88,7 +88,7 @@ func (p *Parser) parsePrimaryType() ast.Type {
 	idTok := p.Tape.Consume(lexer.Identifier)
 	id := ast.Identifier{
 		Token: idTok,
-		Name:  string(idTok.Text),
+		Name:  string(idTok.Data),
 	}
 	return &ast.PrimaryType{
 		Token:      idTok,

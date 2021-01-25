@@ -38,7 +38,7 @@ func NewReplTokenTape(channel chan lexer.Token) TokenTape {
 func (tStream *TokenTape) tokenAt(index int) lexer.Token {
 	if index >= len(tStream.tokens) {
 		if !tStream.isRepl {
-			return lexer.CreateBlankToken(lexer.EOF)
+			return lexer.EOF_TOKEN
 		}
 		// If in a REPL, try to read further from the channel
 		required := index - len(tStream.tokens) + 1

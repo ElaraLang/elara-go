@@ -57,3 +57,13 @@ func JoinStringConditionally(mapping map[string]bool, separator string) string {
 	}
 	return output
 }
+
+func ToChannel(input string) chan rune {
+	channel := make(chan rune)
+	go func() {
+		for _, s := range input {
+			channel <- s
+		}
+	}()
+	return channel
+}

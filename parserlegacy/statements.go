@@ -17,7 +17,7 @@ type BlockStmt struct {
 type VarDefStmt struct {
 	Mutable    bool
 	Lazy       bool
-	Restricted bool
+	Open       bool
 	Identifier string
 	Type       Type
 	Value      Expr
@@ -101,10 +101,10 @@ func (p *Parser) statement() Stmt {
 func (p *Parser) varDefStatement() Stmt {
 	p.consume(lexer.Let, "Expected variable declaration to start with let")
 
-	properties := p.parseProperties(lexer.Mut, lexer.Lazy, lexer.Restricted)
+	properties := p.parseProperties(lexer.Mut, lexer.Lazy, lexer.Open)
 	mut := properties[0]
 	lazy := properties[1]
-	restricted := properties[2]
+	open := properties[2]
 
 	id := p.consume(lexer.Identifier, "Expected identifier for variable declaration")
 	var typ Type
@@ -126,8 +126,8 @@ func (p *Parser) varDefStatement() Stmt {
 	return VarDefStmt{
 		Mutable:    mut,
 		Lazy:       lazy,
-		Restricted: restricted,
-		Identifier: string(id.Text),
+		Open:       open,
+		Identifier: string(id.Data),
 		Type:       typ,
 		Value:      expr,
 	}
@@ -199,7 +199,7 @@ func (p *Parser) blockedDeclaration(errors *[]ParseError) (s Stmt) {
 func (p *Parser) structStatement() Stmt {
 	p.consume(lexer.Struct, "Expected struct start to begin with `struct` keyword")
 	return StructDefStmt{
-		Identifier:   string(p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Text),
+		Identifier:   string(p.consume(lexer.Identifier, "Expected identifier after `struct` keyword").Data),
 		StructFields: p.structFields(),
 	}
 }
@@ -224,10 +224,10 @@ func (p *Parser) extendStatement() Stmt {
 	next := p.peek()
 	if next.TokenType == lexer.As {
 		p.advance()
-		alias = string(p.consume(lexer.Identifier, "Expected identifier for extend alias").Text)
+		alias = string(p.consume(lexer.Identifier, "Expected identifier for extend alias").Data)
 	}
 	return ExtendStmt{
-		Identifier: string(id.Text),
+		Identifier: string(id.Data),
 		Body:       p.blockStatement(),
 		Alias:      alias,
 	}

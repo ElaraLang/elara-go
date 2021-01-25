@@ -22,7 +22,7 @@ var namespaceRegex, _ = regexp.Compile(".+/.+")
 func (p *Parser) parseFileMeta() (NamespaceStmt, ImportStmt) {
 	p.consume(lexer.Namespace, "Expected file namespace declaration!")
 	nsToken := p.consume(lexer.Identifier, "Expected valid namespace!")
-	ns := string(nsToken.Text)
+	ns := string(nsToken.Data)
 	if !namespaceRegex.MatchString(ns) {
 		panic(ParseError{
 			token:   nsToken,
@@ -34,7 +34,7 @@ func (p *Parser) parseFileMeta() (NamespaceStmt, ImportStmt) {
 	var impNs string
 	for p.match(lexer.Import) {
 		importToken := p.consume(lexer.Identifier, "Expected valid namespace to import!")
-		impNs = string(importToken.Text)
+		impNs = string(importToken.Data)
 		if !namespaceRegex.MatchString(impNs) {
 			panic(ParseError{
 				token:   nsToken,

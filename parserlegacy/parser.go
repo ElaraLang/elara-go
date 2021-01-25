@@ -5,7 +5,7 @@ import (
 	"github.com/ElaraLang/elara/lexer"
 )
 
-type Scanner = lexer.TokenReader
+type Scanner = lexer.Lexer
 type Token = lexer.Token
 type TokenType = lexer.TokenType
 
@@ -180,8 +180,9 @@ func (p *Parser) insertBlankType(index int, value ...TokenType) {
 	for i := range value {
 		blankTokens[i] = Token{
 			TokenType: value[i],
-			Text:      nil,
-			Position:  lexer.CreatePosition(-1, 1),
+			Data:      nil,
+			Line:      -1,
+			Col:       1,
 		}
 	}
 	p.insert(index, blankTokens...)

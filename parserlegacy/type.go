@@ -76,10 +76,10 @@ func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 		p.advance()
 		collType := p.consume(lexer.Identifier, "Expected identifier after [ for collection type")
 		p.consume(lexer.RSquare, "Expected ] after [ for collection type")
-		return CollectionTypeContract{ElemType: ElementaryTypeContract{Identifier: string(collType.Text)}}
+		return CollectionTypeContract{ElemType: ElementaryTypeContract{Identifier: string(collType.Data)}}
 	}
 	if p.peek().TokenType == lexer.Identifier {
-		name := string(p.advance().Text)
+		name := string(p.advance().Data)
 		return ElementaryTypeContract{Identifier: name}
 	} else if p.check(lexer.LParen) {
 		isFunc := p.isFuncDef()

@@ -33,7 +33,7 @@ func (e *IfExpression) TokenValue() string {
 	return e.Token.String()
 }
 func (e *IfExpression) ToString() string {
-	return string(e.Token.Text) + " " +
+	return string(e.Token.Data) + " " +
 		e.Condition.ToString() + " {\n" +
 		e.MainBranch.ToString() + "\n} else {\n" +
 		e.ElseBranch.ToString() + "\n}"

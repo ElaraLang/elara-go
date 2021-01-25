@@ -58,7 +58,7 @@ func (p *Parser) functionArgument() FunctionArgument {
 	return FunctionArgument{
 		Lazy:    lazy,
 		Type:    typ,
-		Name:    string(id.Text),
+		Name:    string(id.Data),
 		Default: def,
 	}
 }
