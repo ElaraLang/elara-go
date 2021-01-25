@@ -17,6 +17,7 @@ func (p *Parser) initPrefixParselets() {
 	p.registerPrefix(lexer.BooleanFalse, p.parseBoolean)
 	p.registerPrefix(lexer.Subtract, p.parseUnaryExpression)
 	p.registerPrefix(lexer.Not, p.parseUnaryExpression)
+	p.registerPrefix(lexer.If, p.parseUnaryExpression)
 }
 
 func (p *Parser) parseIfExpression() ast.Expression {
