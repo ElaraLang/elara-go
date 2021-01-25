@@ -6,6 +6,7 @@ import (
 )
 
 type Parser struct {
+	Output             chan ast.Statement
 	Tape               *TokenTape
 	statementParslets  map[lexer.TokenType]statementParslet
 	prefixParslets     map[lexer.TokenType]prefixParslet
@@ -14,25 +15,12 @@ type Parser struct {
 	infixTypeParslets  map[lexer.TokenType]infixTypeParslet
 }
 
-func NewParser(tokens []lexer.Token, channel chan lexer.Token) Parser {
-	tape := NewTokenTape(tokens, channel)
-	p := Parser{Tape: &tape}
+func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement) Parser {
+	tape := NewTokenTape(inputChannel)
+	p := Parser{Output: outputChannel, Tape: &tape}
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
-	return p
-}
-
-func NewReplParser(channel chan lexer.Token) Parser {
-	tape := NewReplTokenTape(channel)
-	p := Parser{Tape: &tape}
-
-	p.initPrefixParselets()
-	p.initInfixParselets()
-	p.initStatementParselets()
-
-	p.initTypePrefixParselets()
-	p.initTypeInfixParselets()
 	return p
 }
 
@@ -88,5 +76,18 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseType(precedence int) ast.Type {
-	return nil // TODO
+	parsePrefixType := p.prefixTypeParslets[p.Tape.Current().TokenType]
+	if parsePrefixType == nil {
+		// panic
+		return nil
+	}
+	typ := parsePrefixType()
+	for !p.Tape.ValidationPeek(0, lexer.NEWLINE) && precedence < typePrecedenceOf(p.Tape.Current().TokenType) {
+		infix := p.infixTypeParslets[p.Tape.Current().TokenType]
+		if infix == nil {
+			return typ
+		}
+		typ = infix(typ)
+	}
+	return typ
 }
