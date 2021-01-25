@@ -14,5 +14,5 @@ func (t Token) String() string {
 	if t.Data != nil {
 		data = fmt.Sprintf("(%s)", string(t.Data))
 	}
-	return fmt.Sprintf("%s %s at %d:%d", t.TokenType.String(), data, t.Line, t.Col)
+	return fmt.Sprintf("%s%s at %d:%d", t.TokenType.String(), data, t.Line, t.Col)
 }

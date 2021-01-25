@@ -52,8 +52,13 @@ func (l *Lexer) readToken() (TokenType, []rune) {
 	switch char {
 	case eof:
 		return EOF, nil
+	case '\t':
+		l.col += 4
+		return l.readToken()
 	case ' ': //Skip whitespace
 		return l.readToken()
+	case '.':
+		return Dot, nil
 	case '(':
 		return LParen, nil
 	case ')':
@@ -63,8 +68,18 @@ func (l *Lexer) readToken() (TokenType, []rune) {
 	case '}':
 		return RBrace, nil
 	case '<':
+		next := l.tape.peek()
+		if next == '=' {
+			l.next()
+			return LesserEqual, nil
+		}
 		return LAngle, nil
 	case '>':
+		next := l.tape.peek()
+		if next == '=' {
+			l.next()
+			return GreaterEqual, nil
+		}
 		return RAngle, nil
 	case '[':
 		return LSquare, nil
@@ -83,11 +98,42 @@ func (l *Lexer) readToken() (TokenType, []rune) {
 	case ',':
 		return Comma, nil
 	case '!':
+		next := l.tape.peek()
+		if next == '=' {
+			l.next()
+			return NotEquals, nil
+		}
 		return Not, nil
 	case '%':
 		return Mod, nil
 	case '^':
 		return Xor, nil
+	case '=':
+		next := l.tape.peek()
+		if next == '=' {
+			l.next()
+			return Equals, nil
+		}
+		if next == '>' {
+			l.next()
+			return Arrow, nil
+		}
+		return Equal, nil
+	case '&':
+		next := l.tape.peek()
+		if next == '&' {
+			l.next()
+			return And, nil
+		}
+		return TypeAnd, nil
+	case '|':
+		next := l.tape.peek()
+		if next == '|' {
+			l.next()
+			return Or, nil
+		}
+		return TypeOr, nil
+
 	case '\n':
 		l.col = 0
 		l.line++
@@ -102,7 +148,7 @@ func (l *Lexer) readToken() (TokenType, []rune) {
 	if isDecimalDigit(char) {
 		return l.readNumberLiteral(char)
 	}
-	return l.readKeywordOrIdentifier()
+	return l.readKeywordOrIdentifier(char)
 }
 
 // Called after the lexer encounters a ' symbol, attempts to read a char literal
@@ -141,12 +187,17 @@ func (l *Lexer) readChar() rune {
 // Called after the lexer encounters a " symbol, attempts to read a string literal
 func (l *Lexer) readStringLiteral() []rune {
 	runes := make([]rune, 0)
-	c := l.next()
-	for c != '"' {
-		runes = append(runes, c)
+
+	for {
+		c := l.tape.peek()
 		if c == eof {
 			panic("Unclosed string literal")
 		}
+		l.next()
+		if c == '"' {
+			break
+		}
+		runes = append(runes, c)
 	}
 	return runes
 }
@@ -176,8 +227,11 @@ func (l *Lexer) readNumberLiteral(first rune) (numType TokenType, digits []rune)
 				break
 			}
 			numType = Float
+			digits = append(digits, next)
+			l.next()
+			continue
 		}
-		if next == ' ' || next == eof {
+		if isWhitespace(next) {
 			break
 		}
 		if !isDecimalDigit(next) {
@@ -196,7 +250,7 @@ func (l *Lexer) readHexInt() (TokenType, []rune) {
 		if next == '.' {
 			panic("Hexadecimal float literals are not supported")
 		}
-		if next == ' ' || next == eof {
+		if isWhitespace(next) {
 			break
 		}
 		if !isHexDigit(next) {
@@ -216,7 +270,7 @@ func (l *Lexer) readBinaryInt() (TokenType, []rune) {
 		if next == '.' {
 			panic("Binary float literals are not supported")
 		}
-		if next == ' ' || next == eof {
+		if isWhitespace(next) {
 			break
 		}
 		if !isBinaryDigit(next) {
@@ -229,11 +283,11 @@ func (l *Lexer) readBinaryInt() (TokenType, []rune) {
 	return BinaryInt, runes
 }
 
-func (l *Lexer) readKeywordOrIdentifier() (TokenType, []rune) {
-	buffer := make([]rune, 0)
+func (l *Lexer) readKeywordOrIdentifier(prev rune) (TokenType, []rune) {
+	buffer := []rune{prev}
 	for {
 		next := l.tape.peek()
-		if isIllegalIdentifierChar(next) {
+		if isWhitespace(next) || isIllegalIdentifierChar(next) {
 			break
 		}
 		buffer = append(buffer, next)
@@ -256,7 +310,6 @@ func (l *Lexer) readKeywordOrIdentifier() (TokenType, []rune) {
 		return While, nil
 	case "lazy":
 		return Lazy, nil
-
 	case "struct":
 		return Struct, nil
 	case "namespace":
@@ -277,6 +330,12 @@ func (l *Lexer) readKeywordOrIdentifier() (TokenType, []rune) {
 		return Is, nil
 	case "open":
 		return Open, nil
+	case "try":
+		return Try, nil
+	case "true":
+		return BooleanTrue, nil
+	case "false":
+		return BooleanFalse, nil
 	default:
 		return Identifier, buffer
 	}
