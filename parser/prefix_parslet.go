@@ -19,6 +19,37 @@ func (p *Parser) initPrefixParselets() {
 	p.registerPrefix(lexer.Not, p.parseUnaryExpression)
 }
 
+func (p *Parser) parseIfExpression() ast.Expression {
+	operator := p.Tape.Consume(lexer.If)
+	condition := p.parseExpression(LOWEST)
+	var mainBranch ast.Statement
+	var elseBranch ast.Statement
+	if p.Tape.Match(lexer.Arrow) {
+		mainBranch = p.parseExpressionStatement()
+	} else {
+		mainBranch = p.parseBlockStatement()
+	}
+	if p.Tape.Match(lexer.Else) {
+		switch p.Tape.Current().TokenType {
+		case lexer.Arrow:
+			p.Tape.Match(lexer.Arrow)
+			fallthrough
+		case lexer.If:
+			elseBranch = p.parseExpressionStatement()
+		default:
+			elseBranch = p.parseBlockStatement()
+
+		}
+	}
+
+	return &ast.IfExpression{
+		Token:      operator,
+		Condition:  condition,
+		MainBranch: mainBranch,
+		ElseBranch: elseBranch,
+	}
+}
+
 func (p *Parser) parseUnaryExpression() ast.Expression {
 	operator := p.Tape.Consume(lexer.Dot)
 	expr := p.parseExpression(PREFIX)
