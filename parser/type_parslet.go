@@ -19,6 +19,7 @@ func (p *Parser) parseFunctionType() ast.Type {
 			// panic
 		}
 	}
+	p.Tape.Expect(lexer.RParen)
 	p.Tape.Expect(lexer.Arrow)
 
 	retType := p.parseType()
