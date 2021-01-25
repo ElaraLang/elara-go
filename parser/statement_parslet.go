@@ -21,13 +21,13 @@ func (p *Parser) parseLetStatement() ast.Statement {
 	var varType ast.Type
 	var value ast.Expression
 	if p.Tape.ValidationPeek(0, lexer.LParen) {
-		value = p.parseExpression(LOWEST)
+		value = p.parseExpression(Lowest)
 	} else {
 		if p.Tape.ValidationPeek(0, lexer.Colon) {
-			varType = p.parseType(TYPE_LOWEST)
+			varType = p.parseType(TypeLowest)
 		}
 		p.Tape.Expect(lexer.Equal)
-		value = p.parseExpression(LOWEST)
+		value = p.parseExpression(Lowest)
 	}
 	return &ast.DeclarationStatement{
 		Token:      token,
@@ -42,7 +42,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 
 func (p *Parser) parseWhileStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.While)
-	condition := p.parseExpression(LOWEST)
+	condition := p.parseExpression(Lowest)
 	var body ast.Statement
 	if p.Tape.Match(lexer.Arrow) {
 		body = p.parseExpressionStatement()
@@ -58,7 +58,7 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 
 func (p *Parser) parseReturnStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Return)
-	value := p.parseExpression(LOWEST)
+	value := p.parseExpression(Lowest)
 	return &ast.ReturnStatement{
 		Token: token,
 		Value: value,
@@ -101,6 +101,6 @@ func (p *Parser) parseBlockStatement() ast.Statement {
 func (p *Parser) parseExpressionStatement() ast.Statement {
 	return &ast.ExpressionStatement{
 		Token:      p.Tape.Current(),
-		Expression: p.parseExpression(LOWEST),
+		Expression: p.parseExpression(Lowest),
 	}
 }

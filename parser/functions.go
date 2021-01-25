@@ -23,7 +23,7 @@ outer:
 
 			continue
 		}
-		typ := p.parseType(TYPE_LOWEST)
+		typ := p.parseType(TypeLowest)
 		id := p.Tape.Consume(lexer.Identifier)
 		param := ast.Parameter{
 			Type:       typ,
@@ -47,9 +47,9 @@ func (p *Parser) parseFunctionCallArguments() []ast.Expression {
 	if p.Tape.ValidationPeek(0, lexer.RParen) {
 		return args
 	}
-	args = append(args, p.parseExpression(LOWEST))
+	args = append(args, p.parseExpression(Lowest))
 	for p.Tape.Match(lexer.Comma) {
-		args = append(args, p.parseExpression(LOWEST))
+		args = append(args, p.parseExpression(Lowest))
 	}
 	return args
 }

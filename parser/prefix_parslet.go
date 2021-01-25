@@ -22,7 +22,7 @@ func (p *Parser) initPrefixParselets() {
 
 func (p *Parser) parseIfExpression() ast.Expression {
 	operator := p.Tape.Consume(lexer.If)
-	condition := p.parseExpression(LOWEST)
+	condition := p.parseExpression(Lowest)
 	var mainBranch ast.Statement
 	var elseBranch ast.Statement
 	if p.Tape.Match(lexer.Arrow) {
@@ -53,7 +53,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 
 func (p *Parser) parseUnaryExpression() ast.Expression {
 	operator := p.Tape.Consume(lexer.Dot)
-	expr := p.parseExpression(PREFIX)
+	expr := p.parseExpression(Prefix)
 	return &ast.UnaryExpression{
 		Token:    operator,
 		Operator: operator,
@@ -111,7 +111,7 @@ func (p *Parser) parseFunction() ast.Expression {
 	var typ ast.Type
 
 	if !p.Tape.ValidationPeek(0, lexer.LBrace) {
-		typ = p.parseType(TYPE_LOWEST)
+		typ = p.parseType(TypeLowest)
 	}
 
 	body := p.parseStatement()
@@ -125,7 +125,7 @@ func (p *Parser) parseFunction() ast.Expression {
 
 func (p *Parser) parseGroupExpression() ast.Expression {
 	p.Tape.Expect(lexer.LParen)
-	expr := p.parseExpression(LOWEST)
+	expr := p.parseExpression(Lowest)
 	p.Tape.Expect(lexer.RParen)
 	return expr
 }

@@ -8,9 +8,9 @@ import (
 func (p *Parser) parseMapEntries() []ast.Entry {
 	entries := make([]ast.Entry, 0)
 	for !p.Tape.ValidationPeek(0, lexer.RBrace) {
-		key := p.parseExpression(LOWEST)
+		key := p.parseExpression(Lowest)
 		p.Tape.Expect(lexer.Equal)
-		value := p.parseExpression(LOWEST)
+		value := p.parseExpression(Lowest)
 		entries = append(entries, ast.Entry{Key: key, Value: value})
 	}
 	return entries

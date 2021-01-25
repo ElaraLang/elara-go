@@ -7,55 +7,57 @@ import (
 const (
 	_ int = iota
 	// Expression precedences
-	LOWEST
-	EQUALS
-	COMPARISON
-	SUM
-	PRODUCT
-	PREFIX
-	INVOKE
+	Lowest
+	Assign
+	Equals
+	Comparison
+	Sum
+	Product
+	Prefix
+	Invoke
 
 	// Type precedences
-	TYPE_LOWEST
-	TYPE_UNION
-	TYPE_INTERSECTION
-	TYPE_MAP
-	TYPE_PROPERTY
+	TypeLowest
+	TypeUnion
+	TypeIntersection
+	TypeMap
+	TypeProperty
 )
 
 var precedences = map[lexer.TokenType]int{
-	lexer.Equals:       EQUALS,
-	lexer.NotEquals:    EQUALS,
-	lexer.GreaterEqual: COMPARISON,
-	lexer.LesserEqual:  COMPARISON,
-	lexer.LAngle:       COMPARISON,
-	lexer.RAngle:       COMPARISON,
-	lexer.Add:          SUM,
-	lexer.Subtract:     SUM,
-	lexer.Multiply:     PRODUCT,
-	lexer.Slash:        PRODUCT,
-	lexer.Dot:          INVOKE,
-	lexer.LParen:       INVOKE,
-	lexer.LSquare:      INVOKE,
+	lexer.Equal:        Assign,
+	lexer.Equals:       Equals,
+	lexer.NotEquals:    Equals,
+	lexer.GreaterEqual: Comparison,
+	lexer.LesserEqual:  Comparison,
+	lexer.LAngle:       Comparison,
+	lexer.RAngle:       Comparison,
+	lexer.Add:          Sum,
+	lexer.Subtract:     Sum,
+	lexer.Multiply:     Product,
+	lexer.Slash:        Product,
+	lexer.Dot:          Invoke,
+	lexer.LParen:       Invoke,
+	lexer.LSquare:      Invoke,
 }
 
 var typePrecedences = map[lexer.TokenType]int{
-	lexer.TypeAnd: TYPE_UNION,
-	lexer.TypeOr:  TYPE_INTERSECTION,
-	lexer.Colon:   TYPE_MAP,
-	lexer.Dot:     TYPE_PROPERTY,
+	lexer.TypeAnd: TypeUnion,
+	lexer.TypeOr:  TypeIntersection,
+	lexer.Colon:   TypeMap,
+	lexer.Dot:     TypeProperty,
 }
 
 func precedenceOf(tok lexer.TokenType) int {
 	if value, contains := precedences[tok]; contains {
 		return value
 	}
-	return LOWEST
+	return Lowest
 }
 
 func typePrecedenceOf(tok lexer.TokenType) int {
 	if value, contains := typePrecedences[tok]; contains {
 		return value
 	}
-	return TYPE_LOWEST
+	return TypeLowest
 }

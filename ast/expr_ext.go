@@ -4,6 +4,19 @@ import (
 	"strconv"
 )
 
+func (e *AssignmentExpression) expressionNode() {}
+func (e *AssignmentExpression) TokenValue() string {
+	return e.Token.String()
+}
+func (e *AssignmentExpression) ToString() string {
+	lhs := ""
+	if e.Context != nil {
+		lhs += e.Context.ToString() + "."
+	}
+	lhs += e.Variable.Name
+	return "(" + lhs + " = " + e.Value.ToString() + ")"
+}
+
 func (e *BinaryExpression) expressionNode() {}
 func (e *BinaryExpression) TokenValue() string {
 	return e.Token.String()
@@ -55,20 +68,12 @@ func (e *CallExpression) ToString() string {
 	return "(" + e.Expression.ToString() + ")(" + joinToString(e.Arguments, ", ") + ")"
 }
 
-func (e *TypeCastExpression) expressionNode() {}
-func (e *TypeCastExpression) TokenValue() string {
+func (e *TypeOperationExpression) expressionNode() {}
+func (e *TypeOperationExpression) TokenValue() string {
 	return e.Token.String()
 }
-func (e *TypeCastExpression) ToString() string {
-	return "(" + e.Expression.ToString() + ") as (" + e.Type.ToString() + ")"
-}
-
-func (e *TypeCheckExpression) expressionNode() {}
-func (e *TypeCheckExpression) TokenValue() string {
-	return e.Token.String()
-}
-func (e *TypeCheckExpression) ToString() string {
-	return "(" + e.Expression.ToString() + ") is (" + e.Type.ToString() + ")"
+func (e *TypeOperationExpression) ToString() string {
+	return "(" + e.Expression.ToString() + ") " + string(e.Operation.Text) + " (" + e.Type.ToString() + ")"
 }
 
 func (e *FunctionLiteral) expressionNode() {}

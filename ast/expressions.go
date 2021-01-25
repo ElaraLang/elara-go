@@ -4,6 +4,13 @@ import (
 	"github.com/ElaraLang/elara/lexer"
 )
 
+type AssignmentExpression struct {
+	Token    lexer.Token
+	Context  Expression
+	Variable Identifier
+	Value    Expression
+}
+
 type BinaryExpression struct {
 	Token    lexer.Token
 	Left     Expression
@@ -42,15 +49,10 @@ type CallExpression struct {
 	Arguments  []Expression
 }
 
-type TypeCastExpression struct {
+type TypeOperationExpression struct {
 	Token      lexer.Token
 	Expression Expression
-	Type       Type
-}
-
-type TypeCheckExpression struct {
-	Token      lexer.Token
-	Expression Expression
+	Operation  lexer.Token
 	Type       Type
 }
 
