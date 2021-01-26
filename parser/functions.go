@@ -36,7 +36,7 @@ outer:
 		case lexer.Comma:
 			p.Tape.advance()
 		default:
-			// Panic
+			p.error(id, "Parameter separator missing!")
 		}
 	}
 	return params

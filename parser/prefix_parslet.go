@@ -70,7 +70,7 @@ func (p *Parser) parseInteger() ast.Expression {
 	token := p.Tape.Consume(lexer.Int)
 	value, err := strconv.ParseInt(string(token.Text), 10, 64)
 	if err != nil {
-		// panic
+		p.error(token, "Error parsing integer token!")
 	}
 	return &ast.IntegerLiteral{Token: token, Value: value}
 }
@@ -79,7 +79,7 @@ func (p *Parser) parseFloat() ast.Expression {
 	token := p.Tape.Consume(lexer.Float)
 	value, err := strconv.ParseFloat(string(token.Text), 10)
 	if err != nil {
-		// panic
+		p.error(token, "Error parsing float token!")
 	}
 	return &ast.FloatLiteral{Token: token, Value: value}
 }

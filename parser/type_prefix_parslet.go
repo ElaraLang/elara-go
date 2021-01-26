@@ -21,7 +21,7 @@ func (p *Parser) parseFunctionType() ast.Type {
 		param := p.parseType(TypeLowest)
 		params = append(params, param)
 		if !(p.Tape.Match(lexer.Comma) || p.Tape.ValidateHead(lexer.RParen)) {
-			// panic
+			p.error(tok, "Parameter separator missing for function Type!")
 		}
 	}
 	p.Tape.Expect(lexer.RParen)
@@ -61,7 +61,7 @@ func (p *Parser) parseContractualType() ast.Type {
 		contract := p.parseContract()
 		contracts = append(contracts, contract)
 		if !(p.Tape.Match(lexer.Comma) || p.Tape.ValidateHead(lexer.RBrace)) {
-			// panic
+			p.error(tok, " Type contract separator missing!")
 		}
 	}
 	p.Tape.Expect(lexer.RBrace)

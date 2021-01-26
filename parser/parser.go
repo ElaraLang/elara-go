@@ -6,7 +6,8 @@ import (
 )
 
 type Parser struct {
-	Output             chan ast.Statement
+	OutputChannel      chan ast.Statement
+	ErrorChannel       chan ParseError
 	Tape               *TokenTape
 	statementParslets  map[lexer.TokenType]statementParslet
 	prefixParslets     map[lexer.TokenType]prefixParslet
@@ -15,9 +16,9 @@ type Parser struct {
 	infixTypeParslets  map[lexer.TokenType]infixTypeParslet
 }
 
-func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement) Parser {
+func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement, errorChannel chan ParseError) Parser {
 	tape := NewTokenTape(inputChannel)
-	p := Parser{Output: outputChannel, Tape: &tape}
+	p := Parser{OutputChannel: outputChannel, ErrorChannel: errorChannel, Tape: &tape}
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
@@ -25,12 +26,23 @@ func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement) 
 }
 
 func (p *Parser) Parse() {
-	if p.Tape.isClosed() {
-		p.Tape.unwind()
+	if p.Tape.IsClosed() {
+		p.Tape.Unwind()
 	}
 	for !p.Tape.ValidateHead(lexer.EOF) {
-		p.Output <- p.parseStatement()
-		p.Tape.Expect(lexer.EOF, lexer.NEWLINE)
+		p.parseSafely()
+	}
+}
+
+func (p *Parser) parseSafely() {
+	defer p.handleParseError()
+
+	p.OutputChannel <- p.parseStatement()
+
+	if !p.Tape.Match(lexer.NEWLINE, lexer.EOF) &&
+		len(p.Tape.tokens) > 0 &&
+		!p.Tape.ValidationPeek(-1, lexer.NEWLINE) {
+		p.error(p.Tape.Current(), expect("NEWLINE", "end of statement"))
 	}
 }
 
@@ -71,7 +83,7 @@ func (p *Parser) parseStatement() ast.Statement {
 func (p *Parser) parseExpression(precedence int) ast.Expression {
 	parsePrefix := p.prefixParslets[p.Tape.Current().TokenType]
 	if parsePrefix == nil {
-		// panic
+		p.error(p.Tape.Current(), "Invalid Token found at expression")
 		return nil
 	}
 	expr := parsePrefix()
@@ -88,7 +100,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 func (p *Parser) parseType(precedence int) ast.Type {
 	parsePrefixType := p.prefixTypeParslets[p.Tape.Current().TokenType]
 	if parsePrefixType == nil {
-		// panic
+		p.error(p.Tape.Current(), "Invalid Token found at type")
 		return nil
 	}
 	typ := parsePrefixType()

@@ -40,7 +40,7 @@ func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
 		id := left.(*ast.Identifier)
 		identifier = *id
 	default:
-		// panic
+		p.error(opening, "Invalid LHS for assignment!")
 	}
 	value := p.parseExpression(Lowest)
 	return &ast.AssignmentExpression{

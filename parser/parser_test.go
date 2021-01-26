@@ -9,7 +9,7 @@ import (
 func TestBasicParsing(t *testing.T) {
 	code := "let a = 5 * 3 + 3 * 8"
 	tokens := lexer.Lex(code)
-	parser := NewParser(make(chan lexer.Token), make(chan ast.Statement))
+	parser := NewParser(make(chan lexer.Token), make(chan ast.Statement), make(chan ParseError))
 	go parser.parseStatement()
 	for _, v := range tokens {
 		parser.Tape.Channel <- v

@@ -2,7 +2,7 @@ package parser
 
 import "github.com/ElaraLang/elara/lexer"
 
-// TokenTape represents an intermediate structure between the lexer and parser
+// TokenTape represents an intermediate structure between the lexer and Parser
 // It handles reading from lexer through channel if needed
 // Channel is the channel it would listen to if isRepl is true
 type TokenTape struct {
@@ -20,16 +20,26 @@ func NewTokenTape(channel chan lexer.Token) TokenTape {
 	}
 }
 
-func (tStream *TokenTape) isClosed() bool {
+// IsClosed checks where the token will continue to read
+// If true, use Unwind to open the tape for writing
+func (tStream *TokenTape) IsClosed() bool {
 	if len(tStream.tokens) < 1 {
 		return false
 	}
 	return tStream.tokens[len(tStream.tokens)-1].TokenType == lexer.EOF
 }
 
-func (tStream *TokenTape) unwind() {
+// Unwind cleans cached tokens and resets tape head
+func (tStream *TokenTape) Unwind() {
 	tStream.tokens = []lexer.Token{}
 	tStream.index = 0
+}
+
+// skipLineBreaks moves head to the first non-NEWLINE token with index >= current index
+func (tStream *TokenTape) skipLineBreaks() {
+	for tStream.Current().TokenType == lexer.NEWLINE {
+		tStream.advance()
+	}
 }
 
 // tokenAt returns the token at specified index
@@ -116,10 +126,9 @@ func (tStream *TokenTape) ConsumeAny() lexer.Token {
 }
 
 // Consume attempts to match current token with any of the provided token types and returns the same
-// It fails with a parser error if none found
+// It fails with a Parser error if none found
 func (tStream *TokenTape) Consume(tokenType ...lexer.TokenType) lexer.Token {
 	cur := tStream.Current()
-	tStream.advance()
 	found := false
 	for _, typ := range tokenType {
 		if cur.TokenType == typ {
@@ -128,8 +137,9 @@ func (tStream *TokenTape) Consume(tokenType ...lexer.TokenType) lexer.Token {
 		}
 	}
 	if !found {
-		// panic()
+		panic(NewParseError(cur, "Invalid token consumed by tape!"))
 	}
+	tStream.advance()
 	return cur
 }
 
@@ -163,7 +173,7 @@ func (tStream *TokenTape) FindDepthClosingIndex(opening lexer.TokenType, closing
 		case closing:
 			depth--
 		case lexer.EOF:
-			// panic
+			panic(NewParseError(tStream.tokenAt(tStream.index+offset), "Token Stream ended unexpectedly!"))
 		}
 		if depth == 0 {
 			break
