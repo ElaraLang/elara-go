@@ -60,7 +60,7 @@ type TypeStatement struct {
 
 type GenerifiedStatement struct {
 	Token     lexer.Token
-	Contracts NamedContract
+	Contract  NamedContract
 	Statement Statement
 }
 

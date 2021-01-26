@@ -97,7 +97,7 @@ func (s *GenerifiedStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *GenerifiedStatement) ToString() string {
-	return "<" + joinToString(s.Contracts, " ") + ">\n" + s.Statement.ToString()
+	return "<" + joinToString(s.Contract, " ") + ">\n" + s.Statement.ToString()
 }
 
 func (s *ReturnStatement) statementNode() {}
