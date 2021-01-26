@@ -11,7 +11,7 @@ func (p *Parser) initStatementParselets() {
 	p.registerStatement(lexer.While, p.parseWhileStatement)
 	p.registerStatement(lexer.Return, p.parseReturnStatement)
 	p.registerStatement(lexer.Extend, p.parseExtendStatement)
-	// p.registerStatement(lexer.LBrace, p.parseBlockStatement)
+
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
@@ -108,5 +108,26 @@ func (p *Parser) parseExpressionStatement() ast.Statement {
 	return &ast.ExpressionStatement{
 		Token:      p.Tape.Current(),
 		Expression: p.parseExpression(Lowest),
+	}
+}
+
+func (p *Parser) parseTypeStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.Type)
+	id := p.Tape.Consume(lexer.Identifier)
+	p.Tape.Expect(lexer.Equal)
+	internalAlias := p.Tape.Consume(lexer.Identifier)
+	p.Tape.skipLineBreaks()
+	typeContract := p.parseType(TypeLowest)
+	return &ast.TypeStatement{
+		Token: token,
+		Identifier: ast.Identifier{
+			Token: id,
+			Name:  string(id.Data),
+		},
+		InternalId: ast.Identifier{
+			Token: internalAlias,
+			Name:  string(internalAlias.Data),
+		},
+		Contract: typeContract,
 	}
 }

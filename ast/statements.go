@@ -54,6 +54,7 @@ type BlockStatement struct {
 type TypeStatement struct {
 	Token      lexer.Token
 	Identifier Identifier
+	InternalId Identifier
 	Contract   Type
 }
 
