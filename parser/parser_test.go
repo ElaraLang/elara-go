@@ -8,48 +8,35 @@ import (
 )
 
 func TestBasicParsing(t *testing.T) {
-	code := "let a = 5 * 3 + 3 * 8\n"
-	tokens := lexer.Lex(code)
+	code := `
+				let a = 3.00 \n
+				print(a + 0.01) \n
+			`
+
+	runeChannel := make(chan rune)
 	inputChannel := make(chan lexer.Token)
 	outChannel := make(chan ast.Statement)
 	errChannel := make(chan ParseError)
+
 	parser := NewParser(inputChannel, outChannel, errChannel)
-	go postLexedTokens(inputChannel, tokens)
+	go postRunes(runeChannel, code)
+	go lexer.Lex(runeChannel, inputChannel)
 	go parser.Parse()
 	stmt, err := collectParserResult(&parser)
 	close(inputChannel)
 	close(outChannel)
 	close(errChannel)
+	close(runeChannel)
 	printStmt(&stmt)
 	printError(&err)
 }
 
-func TestMap(t *testing.T) {
-	code := "{ \"Something\"= 45}\n"
-	tokens := lexer.Lex(code)
-	inputChannel := make(chan lexer.Token)
-	outChannel := make(chan ast.Statement)
-	errChannel := make(chan ParseError)
-	parser := NewParser(inputChannel, outChannel, errChannel)
-	go postLexedTokens(inputChannel, tokens)
-	go parser.Parse()
-	stmt, err := collectParserResult(&parser)
-	close(inputChannel)
-	close(outChannel)
-	close(errChannel)
-	printStmt(&stmt)
-	printError(&err)
-}
-
-func postLexedTokens(inChannel chan lexer.Token, tokens []lexer.Token) {
-	for _, v := range tokens {
+func postRunes(inChannel chan rune, code string) {
+	inp := []rune(code)
+	for _, v := range inp {
 		inChannel <- v
 	}
-	inChannel <- lexer.Token{
-		TokenType: lexer.EOF,
-		Text:      nil,
-		Position:  lexer.Position{},
-	}
+	inChannel <- rune(-1)
 }
 
 func printStmt(s *[]ast.Statement) {
