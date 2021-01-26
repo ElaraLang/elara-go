@@ -13,8 +13,9 @@ func (p *Parser) initStatementParselets() {
 	p.registerStatement(lexer.Extend, p.parseExtendStatement)
 	p.registerStatement(lexer.Type, p.parseTypeStatement)
 	p.registerStatement(lexer.Hash, p.parseGenerifiedStatement)
-	p.registerStatement(lexer.Namespace, p.parseNamespace)
-	p.registerStatement(lexer.Import, p.parseImport)
+	p.registerStatement(lexer.Namespace, p.parseNamespaceStatement)
+	p.registerStatement(lexer.Import, p.parseImportStatement)
+	p.registerStatement(lexer.Struct, p.parseStructStatement)
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
@@ -162,7 +163,7 @@ func (p *Parser) parseGenerifiedStatement() ast.Statement {
 	}
 }
 
-func (p *Parser) parseNamespace() ast.Statement {
+func (p *Parser) parseNamespaceStatement() ast.Statement {
 	tok := p.Tape.Consume(lexer.Namespace)
 	mod := p.parseModule()
 	return &ast.NamespaceStatement{
@@ -171,7 +172,7 @@ func (p *Parser) parseNamespace() ast.Statement {
 	}
 }
 
-func (p *Parser) parseImport() ast.Statement {
+func (p *Parser) parseImportStatement() ast.Statement {
 	tok := p.Tape.Consume(lexer.Import)
 	mod := p.parseModule()
 	return &ast.ImportStatement{
