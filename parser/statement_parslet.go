@@ -13,6 +13,8 @@ func (p *Parser) initStatementParselets() {
 	p.registerStatement(lexer.Extend, p.parseExtendStatement)
 	p.registerStatement(lexer.Type, p.parseTypeStatement)
 	p.registerStatement(lexer.Hash, p.parseGenerifiedStatement)
+	p.registerStatement(lexer.Namespace, p.parseNamespace)
+	p.registerStatement(lexer.Import, p.parseImport)
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
