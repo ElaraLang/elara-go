@@ -15,7 +15,7 @@ type ParseError struct {
 }
 
 func (pe ParseError) Error() string {
-	return fmt.Sprintf("Parse Error: %s at %s", pe.message, pe.token.String())
+	return fmt.Sprintf("Parse ErrorChannel: %s at %s", pe.message, pe.token.String())
 }
 
 type Parser struct {

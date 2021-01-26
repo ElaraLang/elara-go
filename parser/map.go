@@ -8,10 +8,15 @@ import (
 func (p *Parser) parseMapEntries() []ast.Entry {
 	entries := make([]ast.Entry, 0)
 	for !p.Tape.ValidationPeek(0, lexer.RBrace) {
-		key := p.parseExpression(LOWEST)
-		p.Tape.Expect(lexer.Colon)
-		value := p.parseExpression(LOWEST)
+		if len(entries) > 0 {
+			p.Tape.Expect(lexer.Comma)
+		}
+		p.Tape.skipLineBreaks()
+		key := p.parseExpression(CastAs)
+		p.Tape.Expect(lexer.Equal)
+		value := p.parseExpression(Lowest)
 		entries = append(entries, ast.Entry{Key: key, Value: value})
+		p.Tape.skipLineBreaks()
 	}
 	return entries
 }

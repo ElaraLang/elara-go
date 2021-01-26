@@ -14,7 +14,7 @@ var BooleanType = NewEmptyType("Boolean")
 var CharType = NewEmptyType("Char")
 
 var StringType = NewCollectionTypeOf(CharType)
-var OutputType = NewEmptyType("Output")
+var OutputType = NewEmptyType("OutputChannel")
 
 var types = []Type{
 	AnyType,

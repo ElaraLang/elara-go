@@ -11,29 +11,30 @@ func (p *Parser) initStatementParselets() {
 	p.registerStatement(lexer.While, p.parseWhileStatement)
 	p.registerStatement(lexer.Return, p.parseReturnStatement)
 	p.registerStatement(lexer.Extend, p.parseExtendStatement)
-	p.registerStatement(lexer.LBrace, p.parseBlockStatement)
+	// p.registerStatement(lexer.LBrace, p.parseBlockStatement)
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Let)
-	prop := p.Tape.MatchInorderedSequence(lexer.Mut, lexer.Lazy, lexer.Open)
+	prop := p.Tape.MatchInorderedSequence(lexer.Mut, lexer.Lazy, lexer.Restricted)
 	id := p.parseIdentifier()
 	var varType ast.Type
 	var value ast.Expression
 	if p.Tape.ValidationPeek(0, lexer.LParen) {
-		value = p.parseExpression(LOWEST)
+		value = p.parseExpression(Lowest)
 	} else {
 		if p.Tape.ValidationPeek(0, lexer.Colon) {
-			varType = p.parseType()
+			varType = p.parseType(TypeLowest)
 		}
 		p.Tape.Expect(lexer.Equal)
-		value = p.parseExpression(LOWEST)
+		p.Tape.skipLineBreaks()
+		value = p.parseExpression(Lowest)
 	}
 	return &ast.DeclarationStatement{
 		Token:      token,
 		Mutable:    prop[lexer.Mut],
 		Lazy:       prop[lexer.Lazy],
-		Open:       prop[lexer.Open], // TODO:: Introduce OPEN token to lexer
+		Open:       prop[lexer.Restricted], // TODO:: Introduce OPEN token to lexer
 		Identifier: id,
 		Type:       varType,
 		Value:      value,
@@ -42,11 +43,12 @@ func (p *Parser) parseLetStatement() ast.Statement {
 
 func (p *Parser) parseWhileStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.While)
-	condition := p.parseExpression(LOWEST)
+	condition := p.parseExpression(Lowest)
 	var body ast.Statement
 	if p.Tape.Match(lexer.Arrow) {
 		body = p.parseExpressionStatement()
 	} else {
+		p.Tape.skipLineBreaks()
 		body = p.parseBlockStatement()
 	}
 	return &ast.WhileStatement{
@@ -58,7 +60,8 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 
 func (p *Parser) parseReturnStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Return)
-	value := p.parseExpression(LOWEST)
+	p.Tape.skipLineBreaks()
+	value := p.parseExpression(Lowest)
 	return &ast.ReturnStatement{
 		Token: token,
 		Value: value,
@@ -77,6 +80,7 @@ func (p *Parser) parseExtendStatement() ast.Statement {
 			Name:  "this",
 		}
 	}
+	p.Tape.skipLineBreaks()
 	body := p.parseBlockStatement()
 	return &ast.ExtendStatement{
 		Token:      token,
@@ -88,9 +92,11 @@ func (p *Parser) parseExtendStatement() ast.Statement {
 
 func (p *Parser) parseBlockStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.LBrace)
+	p.Tape.skipLineBreaks()
 	block := make([]ast.Statement, 0)
-	for p.Tape.Match(lexer.RBrace) {
-		block = append(block, p.ParseStatement())
+	for !p.Tape.Match(lexer.RBrace) {
+		block = append(block, p.parseStatement())
+		p.Tape.skipLineBreaks()
 	}
 	return &ast.BlockStatement{
 		Token: token,
@@ -101,6 +107,6 @@ func (p *Parser) parseBlockStatement() ast.Statement {
 func (p *Parser) parseExpressionStatement() ast.Statement {
 	return &ast.ExpressionStatement{
 		Token:      p.Tape.Current(),
-		Expression: p.parseExpression(LOWEST),
+		Expression: p.parseExpression(Lowest),
 	}
 }
