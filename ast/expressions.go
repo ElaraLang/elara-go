@@ -7,7 +7,7 @@ import (
 type AssignmentExpression struct {
 	Token    lexer.Token
 	Context  Expression
-	Variable Identifier
+	Variable IdentifierLiteral
 	Value    Expression
 }
 
@@ -27,7 +27,7 @@ type UnaryExpression struct {
 type PropertyExpression struct {
 	Token    lexer.Token
 	Context  Expression
-	Variable Identifier
+	Variable IdentifierLiteral
 }
 
 type IfExpression struct {
@@ -98,4 +98,10 @@ type MapLiteral struct {
 type CollectionLiteral struct {
 	Token    lexer.Token
 	Elements []Expression
+}
+
+// IdentifierLiteral represents an identifier leaf used by the syntax tree to represent a "Name"
+type IdentifierLiteral struct {
+	Token lexer.Token
+	Name  string
 }

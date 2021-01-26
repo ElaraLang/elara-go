@@ -140,10 +140,10 @@ func (e *StringLiteral) ToString() string {
 	return e.Value
 }
 
-func (e *Identifier) expressionNode() {}
-func (e *Identifier) TokenValue() string {
+func (e *IdentifierLiteral) expressionNode() {}
+func (e *IdentifierLiteral) TokenValue() string {
 	return e.Token.String()
 }
-func (e *Identifier) ToString() string {
+func (e *IdentifierLiteral) ToString() string {
 	return e.Name
 }

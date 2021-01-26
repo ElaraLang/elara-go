@@ -8,6 +8,7 @@ import (
 
 func (p *Parser) initPrefixParselets() {
 	p.prefixParslets = make(map[lexer.TokenType]prefixParslet, 0)
+	p.registerPrefix(lexer.Identifier, p.parseIdentifier)
 	p.registerPrefix(lexer.LSquare, p.parseCollection)
 	p.registerPrefix(lexer.LBrace, p.parseMap)
 	p.registerPrefix(lexer.DecimalInt, p.parseInteger)
@@ -66,9 +67,9 @@ func (p *Parser) parseUnaryExpression() ast.Expression {
 	}
 }
 
-func (p *Parser) parseIdentifier() ast.Identifier {
+func (p *Parser) parseIdentifier() ast.Expression {
 	token := p.Tape.Consume(lexer.Identifier)
-	return ast.Identifier{Token: token, Name: string(token.Data)}
+	return &ast.IdentifierLiteral{Token: token, Name: string(token.Data)}
 }
 
 func (p *Parser) parseInteger() ast.Expression {

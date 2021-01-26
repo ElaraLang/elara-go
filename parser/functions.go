@@ -17,7 +17,7 @@ outer:
 			id := p.Tape.Consume(lexer.Identifier)
 			param := ast.Parameter{
 				Type:       nil,
-				Identifier: ast.Identifier{Token: id, Name: id.String()},
+				Identifier: ast.IdentifierLiteral{Token: id, Name: id.String()},
 			}
 			params = append(params, param)
 			p.Tape.Expect(lexer.Comma)
@@ -28,7 +28,7 @@ outer:
 		id := p.Tape.Consume(lexer.Identifier)
 		param := ast.Parameter{
 			Type:       typ,
-			Identifier: ast.Identifier{Token: id, Name: id.String()},
+			Identifier: ast.IdentifierLiteral{Token: id, Name: id.String()},
 		}
 		params = append(params, param)
 		switch p.Tape.Current().TokenType {

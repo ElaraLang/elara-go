@@ -8,10 +8,7 @@ import (
 )
 
 func TestBasicParsing(t *testing.T) {
-	code := `
-				let a = 3.00 \n
-				print(a + 0.01) \n
-			`
+	code := "let n = 3\n" + "print(n)\n"
 
 	runeChannel := make(chan rune)
 	inputChannel := make(chan lexer.Token)

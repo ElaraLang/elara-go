@@ -10,14 +10,14 @@ func (p *Parser) parseStructFields() *[]ast.StructField {
 	p.Tape.skipLineBreaks()
 	for p.Tape.ValidateHead(lexer.RBrace) {
 		var typ ast.Type
-		var id ast.Identifier
+		var id ast.IdentifierLiteral
 		var def ast.Expression
 		prop := p.Tape.MatchUnorderedSequence(lexer.Mut, lexer.Open)
 		if p.Tape.ValidationPeek(1, lexer.Equal) {
-			id = p.parseIdentifier()
+			id = *p.parseIdentifier().(*ast.IdentifierLiteral)
 		} else {
 			typ = p.parseType(TypeLowest)
-			id = p.parseIdentifier()
+			id = *p.parseIdentifier().(*ast.IdentifierLiteral)
 		}
 
 		if p.Tape.Match(lexer.Equal) {

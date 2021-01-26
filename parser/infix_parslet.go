@@ -31,14 +31,14 @@ func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
 	opening := p.Tape.Consume(lexer.Equal)
 	p.Tape.skipLineBreaks()
 	var context ast.Expression
-	var identifier ast.Identifier
+	var identifier ast.IdentifierLiteral
 	switch left.(type) {
 	case *ast.PropertyExpression:
 		prop := left.(*ast.PropertyExpression)
 		context = prop.Context
 		identifier = prop.Variable
-	case *ast.Identifier:
-		id := left.(*ast.Identifier)
+	case *ast.IdentifierLiteral:
+		id := left.(*ast.IdentifierLiteral)
 		identifier = *id
 	default:
 		p.error(opening, "Invalid LHS for assignment!")
@@ -105,7 +105,7 @@ func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
 
 func (p *Parser) parsePropertyExpression(left ast.Expression) ast.Expression {
 	token := p.Tape.Consume(lexer.Dot)
-	right := p.parseIdentifier()
+	right := *p.parseIdentifier().(*ast.IdentifierLiteral)
 	return &ast.PropertyExpression{
 		Token:    token,
 		Context:  left,

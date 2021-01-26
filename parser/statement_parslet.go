@@ -21,7 +21,7 @@ func (p *Parser) initStatementParselets() {
 func (p *Parser) parseLetStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Let)
 	prop := p.Tape.MatchUnorderedSequence(lexer.Mut, lexer.Lazy, lexer.Open)
-	id := p.parseIdentifier()
+	id := *p.parseIdentifier().(*ast.IdentifierLiteral)
 	var varType ast.Type
 	var value ast.Expression
 	if p.Tape.ValidationPeek(0, lexer.LParen) {
@@ -75,11 +75,11 @@ func (p *Parser) parseReturnStatement() ast.Statement {
 func (p *Parser) parseExtendStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Extend)
 	id := p.parseIdentifier()
-	var alias ast.Identifier
+	var alias ast.IdentifierLiteral
 	if p.Tape.Match(lexer.As) {
-		alias = p.parseIdentifier()
+		alias = *p.parseIdentifier().(*ast.IdentifierLiteral)
 	} else {
-		alias = ast.Identifier{
+		alias = ast.IdentifierLiteral{
 			Token: token,
 			Name:  "this",
 		}
@@ -88,7 +88,7 @@ func (p *Parser) parseExtendStatement() ast.Statement {
 	body := p.parseBlockStatement()
 	return &ast.ExtendStatement{
 		Token:      token,
-		Identifier: id,
+		Identifier: *id.(*ast.IdentifierLiteral),
 		Alias:      alias,
 		Body:       body,
 	}
@@ -130,11 +130,11 @@ func (p *Parser) parseTypeStatement() ast.Statement {
 	typeContract := p.parseType(TypeLowest)
 	return &ast.TypeStatement{
 		Token: token,
-		Identifier: ast.Identifier{
+		Identifier: ast.IdentifierLiteral{
 			Token: id,
 			Name:  string(id.Data),
 		},
-		InternalId: ast.Identifier{
+		InternalId: ast.IdentifierLiteral{
 			Token: id,
 			Name:  internalAlias,
 		},
@@ -153,7 +153,7 @@ func (p *Parser) parseGenerifiedStatement() ast.Statement {
 		Token: token,
 		Contract: ast.NamedContract{
 			Token: token,
-			Identifier: ast.Identifier{
+			Identifier: ast.IdentifierLiteral{
 				Token: id,
 				Name:  string(id.Data),
 			},
@@ -182,12 +182,12 @@ func (p *Parser) parseImportStatement() ast.Statement {
 }
 
 func (p *Parser) parseModule() *ast.Module {
-	baseTok := p.parseIdentifier()
-	idSlice := make([]ast.Identifier, 1)
+	baseTok := *p.parseIdentifier().(*ast.IdentifierLiteral)
+	idSlice := make([]ast.IdentifierLiteral, 1)
 	idSlice[0] = baseTok
 	mod := baseTok.Name
 	for p.Tape.Match(lexer.Slash) {
-		subId := p.parseIdentifier()
+		subId := *p.parseIdentifier().(*ast.IdentifierLiteral)
 		mod += "/" + subId.Name
 		idSlice = append(idSlice, subId)
 	}
@@ -207,7 +207,7 @@ func (p *Parser) parseStructStatement() ast.Statement {
 	p.Tape.Expect(lexer.RBrace)
 	return &ast.StructDefStatement{
 		Token: token,
-		Id: ast.Identifier{
+		Id: ast.IdentifierLiteral{
 			Token: id,
 			Name:  string(id.Data),
 		},

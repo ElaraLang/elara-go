@@ -22,14 +22,14 @@ type DeclarationStatement struct {
 	Mutable    bool
 	Lazy       bool
 	Open       bool
-	Identifier Identifier
+	Identifier IdentifierLiteral
 	Type       Type
 	Value      Expression
 }
 
 type StructDefStatement struct {
 	Token  lexer.Token
-	Id     Identifier
+	Id     IdentifierLiteral
 	Fields []StructField
 }
 
@@ -41,8 +41,8 @@ type WhileStatement struct {
 
 type ExtendStatement struct {
 	Token      lexer.Token
-	Identifier Identifier
-	Alias      Identifier
+	Identifier IdentifierLiteral
+	Alias      IdentifierLiteral
 	Body       *BlockStatement
 }
 
@@ -53,8 +53,8 @@ type BlockStatement struct {
 
 type TypeStatement struct {
 	Token      lexer.Token
-	Identifier Identifier
-	InternalId Identifier
+	Identifier IdentifierLiteral
+	InternalId IdentifierLiteral
 	Contract   Type
 }
 

@@ -858,7 +858,7 @@ func ExpressionToCommand(expr ast.Expression) Command {
 func NamedExpressionToCommand(expr ast.Expression, name *string) Command {
 
 	switch t := expr.(type) {
-	case *ast.Identifier:
+	case *ast.IdentifierLiteral:
 		return &VariableCommand{Variable: t.Name}
 
 	case *ast.CallExpression:

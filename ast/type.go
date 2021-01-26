@@ -4,7 +4,7 @@ import "github.com/ElaraLang/elara/lexer"
 
 type Contract struct {
 	Token      lexer.Token
-	Identifier Identifier
+	Identifier IdentifierLiteral
 	Type       Type
 }
 
@@ -39,5 +39,5 @@ type MapType struct {
 
 type PrimaryType struct {
 	Token      lexer.Token
-	Identifier Identifier
+	Identifier IdentifierLiteral
 }

@@ -7,7 +7,7 @@ import "github.com/ElaraLang/elara/lexer"
 // Represented as Root / Sub or just Root if Sub is not provided
 type Module struct {
 	Pkg    string
-	PkgIds []Identifier
+	PkgIds []IdentifierLiteral
 }
 
 func (m *Module) ToString() string {
@@ -16,7 +16,7 @@ func (m *Module) ToString() string {
 
 type Parameter struct {
 	Type       Type
-	Identifier Identifier
+	Identifier IdentifierLiteral
 }
 
 func (p *Parameter) ToString() string {
@@ -42,7 +42,7 @@ type StructField struct {
 	Lazy       bool
 	Open       bool
 	Type       Type
-	Identifier Identifier
+	Identifier IdentifierLiteral
 	Default    Expression
 }
 
@@ -52,6 +52,6 @@ func (p *StructField) ToString() string {
 
 type NamedContract struct {
 	Token      lexer.Token
-	Identifier Identifier
+	Identifier IdentifierLiteral
 	Type       Type
 }
