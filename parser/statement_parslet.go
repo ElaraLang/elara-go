@@ -115,7 +115,13 @@ func (p *Parser) parseTypeStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Type)
 	id := p.Tape.Consume(lexer.Identifier)
 	p.Tape.Expect(lexer.Equal)
-	internalAlias := p.Tape.Consume(lexer.Identifier)
+	var internalAlias string
+	if p.Tape.ValidationPeek(1, lexer.Where) {
+		internalAlias = string(p.Tape.Consume(lexer.Identifier).Data)
+		p.Tape.Expect(lexer.Where)
+	} else {
+		internalAlias = string(id.Data)
+	}
 	p.Tape.skipLineBreaks()
 	typeContract := p.parseType(TypeLowest)
 	return &ast.TypeStatement{
@@ -125,8 +131,8 @@ func (p *Parser) parseTypeStatement() ast.Statement {
 			Name:  string(id.Data),
 		},
 		InternalId: ast.Identifier{
-			Token: internalAlias,
-			Name:  string(internalAlias.Data),
+			Token: id,
+			Name:  internalAlias,
 		},
 		Contract: typeContract,
 	}
