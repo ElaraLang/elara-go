@@ -31,6 +31,7 @@ const (
 var precedences = map[lexer.TokenType]int{
 	lexer.Equal:        Assign,
 	lexer.As:           CastAs,
+	lexer.Is:           CheckIs,
 	lexer.Or:           LogicOr,
 	lexer.And:          LogicAnd,
 	lexer.Equals:       Equals,
