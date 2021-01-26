@@ -14,6 +14,8 @@ type Parser struct {
 	infixParslets      map[lexer.TokenType]infixParslet
 	prefixTypeParslets map[lexer.TokenType]prefixTypeParslet
 	infixTypeParslets  map[lexer.TokenType]infixTypeParslet
+
+	fileName string
 }
 
 func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement, errorChannel chan ParseError) Parser {
@@ -27,7 +29,8 @@ func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement, 
 	return p
 }
 
-func (p *Parser) Parse() {
+func (p *Parser) Parse(fileName string) {
+	p.fileName = fileName
 	if p.Tape.IsClosed() {
 		p.Tape.Unwind()
 	}

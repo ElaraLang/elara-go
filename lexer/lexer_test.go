@@ -25,10 +25,11 @@ const everySymbol = `
 	`
 
 func BenchmarkLexer(t *testing.B) {
+	t.ReportAllocs()
 	for i := 0; i < t.N; i++ {
 		input := everySymbol
 		inputChan := make(chan rune, len(input)/10)
-		outputChan := make(chan Token, 10)
+		outputChan := make(chan Token, len(input)/10)
 		go Lex(inputChan, outputChan)
 		go func() {
 			for _, c := range input {

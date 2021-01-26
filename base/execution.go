@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-func Execute(fileName *string, code chan rune, scriptMode bool) (results ast.Statement, lexTime, parseTime, execTime time.Duration) {
-	output := make(chan lexer.Token)
-	go lexer.Lex(code, output)
-
+func Execute(fileName string, code chan rune, scriptMode bool) (results ast.Statement, lexTime, parseTime, execTime time.Duration) {
+	lexerOutput := make(chan lexer.Token)
 	parserOutput := make(chan ast.Statement)
 	parseErrors := make(chan parser.ParseError)
-	psr := parser.NewParser(output, parserOutput, parseErrors)
-	go psr.Parse()
+	go lexer.Lex(code, lexerOutput)
+
+	psr := parser.NewParser(lexerOutput, parserOutput, parseErrors)
+	go psr.Parse(fileName)
 
 	//if len(parseErrors) != 0 {
 	//	file := "Unknown File"
