@@ -57,6 +57,8 @@ func (l *Lexer) readToken() (TokenType, []rune) {
 		return l.readToken()
 	case ' ': //Skip whitespace
 		return l.readToken()
+	case '#':
+		return Hash, nil
 	case '.':
 		return Dot, nil
 	case '(':

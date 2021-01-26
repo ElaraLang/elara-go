@@ -131,3 +131,24 @@ func (p *Parser) parseTypeStatement() ast.Statement {
 		Contract: typeContract,
 	}
 }
+
+func (p *Parser) parseGenerifiedStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.Hash)
+	id := p.Tape.Consume(lexer.Identifier)
+	p.Tape.Expect(lexer.Equal)
+	internalAlias := p.Tape.Consume(lexer.Identifier)
+	p.Tape.skipLineBreaks()
+	typeContract := p.parseType(TypeLowest)
+	return &ast.TypeStatement{
+		Token: token,
+		Identifier: ast.Identifier{
+			Token: id,
+			Name:  string(id.Data),
+		},
+		InternalId: ast.Identifier{
+			Token: internalAlias,
+			Name:  string(internalAlias.Data),
+		},
+		Contract: typeContract,
+	}
+}

@@ -66,6 +66,7 @@ const (
 	Equal // =
 	Arrow // =>
 	Dot   // .
+	Hash
 
 	//Literals
 	BooleanTrue
@@ -133,6 +134,7 @@ var tokenNames = map[TokenType]string{
 	Equal:          "Equal",
 	Arrow:          "Arrow",
 	Dot:            "Dot",
+	Hash:           "Hash",
 	BooleanTrue:    "True",
 	BooleanFalse:   "False",
 	String:         "String",
