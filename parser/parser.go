@@ -24,6 +24,16 @@ func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement) 
 	return p
 }
 
+func (p *Parser) Parse() {
+	if p.Tape.isClosed() {
+		p.Tape.unwind()
+	}
+	for !p.Tape.ValidateHead(lexer.EOF) {
+		p.Output <- p.parseStatement()
+		p.Tape.Expect(lexer.EOF, lexer.NEWLINE)
+	}
+}
+
 type (
 	statementParslet  func() ast.Statement
 	prefixParslet     func() ast.Expression

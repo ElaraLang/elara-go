@@ -20,6 +20,18 @@ func NewTokenTape(channel chan lexer.Token) TokenTape {
 	}
 }
 
+func (tStream *TokenTape) isClosed() bool {
+	if len(tStream.tokens) < 1 {
+		return false
+	}
+	return tStream.tokens[len(tStream.tokens)-1].TokenType == lexer.EOF
+}
+
+func (tStream *TokenTape) unwind() {
+	tStream.tokens = []lexer.Token{}
+	tStream.index = 0
+}
+
 // tokenAt returns the token at specified index
 // attempts to read tokens from channel if And only if isRepl is true and index is not on tape
 func (tStream *TokenTape) tokenAt(index int) lexer.Token {
