@@ -20,7 +20,7 @@ func (p *Parser) initPrefixParselets() {
 	p.registerPrefix(lexer.BooleanFalse, p.parseBoolean)
 	p.registerPrefix(lexer.Subtract, p.parseUnaryExpression)
 	p.registerPrefix(lexer.Not, p.parseUnaryExpression)
-	p.registerPrefix(lexer.If, p.parseUnaryExpression)
+	p.registerPrefix(lexer.If, p.parseIfExpression)
 }
 
 func (p *Parser) parseIfExpression() ast.Expression {
@@ -115,12 +115,16 @@ func (p *Parser) parseFunction() ast.Expression {
 	p.Tape.Expect(lexer.Arrow)
 	p.Tape.skipLineBreaks()
 	var typ ast.Type
-
+	var body ast.Statement
 	if !p.Tape.ValidationPeek(0, lexer.LBrace) {
 		typ = p.parseType(TypeLowest)
 	}
-
-	body := p.parseStatement()
+	p.Tape.skipLineBreaks()
+	if p.Tape.ValidateHead(lexer.LBrace) {
+		body = p.parseBlockStatement()
+	} else {
+		body = p.parseExpressionStatement()
+	}
 	return &ast.FunctionLiteral{
 		Token:      token,
 		ReturnType: typ,

@@ -18,7 +18,7 @@ func TestBasicParsing(t *testing.T) {
 	parser := NewParser(inputChannel, outChannel, errChannel)
 	go postRunes(runeChannel, code)
 	go lexer.Lex(runeChannel, inputChannel)
-	go parser.Parse()
+	go parser.Parse("testCase")
 	stmt, err := collectParserResult(&parser)
 	close(inputChannel)
 	close(outChannel)

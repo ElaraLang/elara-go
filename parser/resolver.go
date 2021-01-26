@@ -56,7 +56,7 @@ func (p *Parser) functionGroupResolver() map[*resolver]*prefixParslet {
 
 func isFunctionDefinition(p *Parser) bool {
 	closingIndex := p.Tape.FindDepthClosingIndex(lexer.LParen, lexer.RParen)
-	return p.Tape.ValidationPeek(closingIndex+1, lexer.Arrow)
+	return p.Tape.ValidationPeek(closingIndex+1-p.Tape.index, lexer.Arrow)
 }
 
 func not(predicate func(p *Parser) bool) func(p *Parser) bool {

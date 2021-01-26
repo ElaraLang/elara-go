@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/ElaraLang/elara/lexer"
+import (
+	"github.com/ElaraLang/elara/lexer"
+)
 
 // TokenTape represents an intermediate structure between the lexer and Parser
 // It handles reading from lexer through channel if needed
@@ -166,7 +168,7 @@ func (tStream *TokenTape) FindDepthClosingIndex(opening lexer.TokenType, closing
 	if !tStream.ValidateHead(opening) {
 		return tStream.index
 	}
-	offset := 0
+	offset := 1
 	depth := 1
 	for {
 		switch tStream.tokenAt(tStream.index + offset).TokenType {

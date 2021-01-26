@@ -15,7 +15,7 @@ type Parser struct {
 	prefixTypeParslets map[lexer.TokenType]prefixTypeParslet
 	infixTypeParslets  map[lexer.TokenType]infixTypeParslet
 
-	fileName string
+	fileName *string
 }
 
 func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement, errorChannel chan ParseError) Parser {
@@ -30,7 +30,7 @@ func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement, 
 }
 
 func (p *Parser) Parse(fileName string) {
-	p.fileName = fileName
+	p.fileName = &fileName
 	if p.Tape.IsClosed() {
 		p.Tape.Unwind()
 	}
@@ -79,6 +79,7 @@ func (p *Parser) registerStatement(tokenType lexer.TokenType, function statement
 }
 
 func (p *Parser) parseStatement() ast.Statement {
+	p.Tape.skipLineBreaks()
 	parseStmt := p.statementParslets[p.Tape.Current().TokenType]
 	if parseStmt == nil {
 		return p.parseExpressionStatement()
@@ -87,6 +88,7 @@ func (p *Parser) parseStatement() ast.Statement {
 }
 
 func (p *Parser) parseExpression(precedence int) ast.Expression {
+	p.Tape.skipLineBreaks()
 	parsePrefix := p.prefixParslets[p.Tape.Current().TokenType]
 	if parsePrefix == nil {
 		p.error(p.Tape.Current(), "Invalid Token found at expression")
@@ -105,6 +107,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 }
 
 func (p *Parser) parseType(precedence int) ast.Type {
+	p.Tape.skipLineBreaks()
 	parsePrefixType := p.prefixTypeParslets[p.Tape.Current().TokenType]
 	if parsePrefixType == nil {
 		p.error(p.Tape.Current(), "Invalid Token found at type")

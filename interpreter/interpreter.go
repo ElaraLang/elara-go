@@ -48,6 +48,9 @@ func (s *Interpreter) Exec(scriptMode bool) {
 		case err := <-s.parseErrors:
 			_, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err))
 			return
+		default:
+			return
 		}
+
 	}
 }

@@ -217,6 +217,8 @@ func (l *Lexer) readNumberLiteral(first rune) (numType TokenType, digits []rune)
 		case 'b':
 			l.next()
 			return l.readBinaryInt()
+		default:
+			digits = append(digits, first)
 		}
 	} else {
 		digits = append(digits, first)
