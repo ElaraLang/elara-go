@@ -1,10 +1,4 @@
-namespace test/lol
 import elara/std
-
-struct Person {
-    String name
-    Int age
-}
 
 let a = 3.00
 print(a + 0.01)

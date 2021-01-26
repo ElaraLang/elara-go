@@ -34,7 +34,7 @@ func BenchmarkLexer(t *testing.B) {
 			for _, c := range input {
 				inputChan <- c
 			}
-			inputChan <- eof //Signal to the channel that the input has terminated
+			inputChan <- Eof //Signal to the channel that the input has terminated
 		}()
 
 		for {
@@ -55,7 +55,7 @@ func testLex(input string) []Token {
 		for _, c := range input {
 			inputChan <- c
 		}
-		inputChan <- eof //Signal to the channel that the input has terminated
+		inputChan <- Eof //Signal to the channel that the input has terminated
 	}()
 	output := make([]Token, 0)
 	for {

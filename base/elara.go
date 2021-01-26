@@ -10,7 +10,6 @@ import (
 	"os/user"
 	"path"
 	"path/filepath"
-	"strings"
 	"time"
 )
 
@@ -92,18 +91,26 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	content := loadFile(path)
-	Execute(&path, content, false)
+	Execute(&path, content, true)
 	return nil
 }
 
 func loadFile(fileName string) chan rune {
 	out := make(chan rune)
 	go func() {
-		reader := strings.NewReader(fileName)
-		scanner := bufio.NewScanner(reader)
-		scanner.Split(bufio.ScanRunes)
-		for scanner.Scan() {
-			out <- rune(scanner.Text()[0])
+		file, err := os.Open(fileName)
+		if err != nil {
+			panic(err)
+		}
+		defer file.Close()
+		scanner := bufio.NewReader(file)
+		for {
+			byte, err := scanner.ReadByte()
+			if err != nil {
+				out <- -1
+				break
+			}
+			out <- rune(byte)
 		}
 	}()
 	return out

@@ -18,7 +18,7 @@ func NewLexer(tape *RuneTape) *Lexer {
 	}
 }
 
-const eof = rune(-1)
+const Eof = rune(-1)
 
 func (l *Lexer) next() rune {
 	l.col++
@@ -50,7 +50,7 @@ func Lex(input chan rune, output chan Token) {
 func (l *Lexer) readToken() (TokenType, []rune) {
 	char := l.next()
 	switch char {
-	case eof:
+	case Eof:
 		return EOF, nil
 	case '\t':
 		l.col += 4
@@ -192,7 +192,7 @@ func (l *Lexer) readStringLiteral() []rune {
 
 	for {
 		c := l.tape.peek()
-		if c == eof {
+		if c == Eof {
 			panic("Unclosed string literal")
 		}
 		l.next()
@@ -233,11 +233,8 @@ func (l *Lexer) readNumberLiteral(first rune) (numType TokenType, digits []rune)
 			l.next()
 			continue
 		}
-		if isWhitespace(next) {
+		if isWhitespace(next) || !isDecimalDigit(next) {
 			break
-		}
-		if !isDecimalDigit(next) {
-			panic("Illegal symbol in decimal number literal " + string(next))
 		}
 		digits = append(digits, next)
 		l.next()

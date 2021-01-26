@@ -17,7 +17,7 @@ func isIllegalIdentifierChar(n rune) bool {
 }
 
 func isWhitespace(n rune) bool {
-	return n == ' ' || n == '\n' || n == eof
+	return n == ' ' || n == '\n' || n == Eof
 }
 
 var illegalIdentifiers = map[rune]struct{}{

@@ -94,7 +94,7 @@ func (p *Parser) parseExtendStatement() ast.Statement {
 	}
 }
 
-func (p *Parser) parseBlockStatement() ast.Statement {
+func (p *Parser) parseBlockStatement() *ast.BlockStatement {
 	token := p.Tape.Consume(lexer.LBrace)
 	p.Tape.skipLineBreaks()
 	block := make([]ast.Statement, 0)

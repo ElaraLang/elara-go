@@ -2,8 +2,8 @@ package interpreter
 
 import (
 	"fmt"
+	"github.com/ElaraLang/elara/ast"
 	"github.com/ElaraLang/elara/lexer"
-	"github.com/ElaraLang/elara/parserlegacy"
 	"reflect"
 )
 
@@ -130,12 +130,11 @@ func (t *IntersectionType) Accepts(otherType Type, ctx *Context) bool {
 }
 
 type DefinedType struct {
-	name  string
 	parts map[string]Type
 }
 
 func (t *DefinedType) Name() string {
-	return t.name
+	return "TODO DefinedType name"
 }
 func (t *DefinedType) Accepts(other Type, ctx *Context) bool {
 	asStruct, isStruct := other.(*StructType)
@@ -156,19 +155,19 @@ func (t *DefinedType) Accepts(other Type, ctx *Context) bool {
 	return true
 }
 
-func FromASTType(astType parserlegacy.Type, ctx *Context) Type {
+func FromASTType(astType ast.Type, ctx *Context) Type {
 	switch t := astType.(type) {
-	case parserlegacy.ElementaryTypeContract:
-		found := ctx.FindType(t.Identifier)
+	case *ast.PrimaryType:
+		found := ctx.FindType(t.Identifier.Name)
 		if found != nil {
 			return found
 		}
-		return NewEmptyType(t.Identifier)
+		return NewEmptyType(t.Identifier.Name)
 
-	case parserlegacy.InvocableTypeContract:
+	case *ast.FunctionType:
 		returned := FromASTType(t.ReturnType, ctx)
-		args := make([]Parameter, len(t.Args))
-		for i, arg := range t.Args {
+		args := make([]Parameter, len(t.ParamTypes))
+		for i, arg := range t.ParamTypes {
 			argType := FromASTType(arg, ctx)
 			args[i] = Parameter{
 				Name: fmt.Sprintf("arg%d", i),
@@ -182,35 +181,34 @@ func FromASTType(astType parserlegacy.Type, ctx *Context) Type {
 		}
 		return NewSignatureFunctionType(signature)
 
-	case parserlegacy.CollectionTypeContract:
-		elemType := FromASTType(t.ElemType, ctx)
+	case *ast.CollectionType:
+		elemType := FromASTType(t.Type, ctx)
 		return &CollectionType{
 			ElementType: elemType,
 		}
 
-	case parserlegacy.BinaryTypeContract:
-		switch t.TypeOp {
+	case *ast.AlgebraicType:
+		switch t.Operation.TokenType {
 		case lexer.TypeAnd:
 			return &IntersectionType{
-				a: FromASTType(t.Lhs, ctx),
-				b: FromASTType(t.Rhs, ctx),
+				a: FromASTType(t.Left, ctx),
+				b: FromASTType(t.Right, ctx),
 			}
 		case lexer.TypeOr:
 			return &UnionType{
-				a: FromASTType(t.Lhs, ctx),
-				b: FromASTType(t.Rhs, ctx),
+				a: FromASTType(t.Left, ctx),
+				b: FromASTType(t.Right, ctx),
 			}
 		}
-	case parserlegacy.DefinedTypeContract:
-		parts := make(map[string]Type, len(t.DefType))
-		for _, definedType := range t.DefType {
-			parts[definedType.Identifier] = FromASTType(definedType.DefType, ctx)
+	case *ast.ContractualType:
+		parts := make(map[string]Type, len(t.Contracts))
+		for _, definedType := range t.Contracts {
+			parts[definedType.Identifier.Name] = FromASTType(definedType.Type, ctx)
 		}
 		return &DefinedType{
-			name:  t.Name,
 			parts: parts,
 		}
-	case parserlegacy.MapTypeContract:
+	case *ast.MapType:
 		keyType := FromASTType(t.KeyType, ctx)
 		valueType := FromASTType(t.ValueType, ctx)
 		return &MapType{
