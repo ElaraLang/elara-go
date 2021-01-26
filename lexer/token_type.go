@@ -30,6 +30,7 @@ const (
 	Extend
 	Return
 	While
+	Where
 	Mut
 	Lazy
 	Open
@@ -106,6 +107,7 @@ var tokenNames = map[TokenType]string{
 	Extend:         "Extend",
 	Return:         "Return",
 	While:          "While",
+	Where:          "Where",
 	Mut:            "Mut",
 	Lazy:           "Lazy",
 	Open:           "Open",

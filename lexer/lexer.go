@@ -310,6 +310,8 @@ func (l *Lexer) readKeywordOrIdentifier(prev rune) (TokenType, []rune) {
 		return Return, nil
 	case "while":
 		return While, nil
+	case "where":
+		return Where, nil
 	case "lazy":
 		return Lazy, nil
 	case "struct":

@@ -32,6 +32,7 @@ var illegalIdentifiers = map[rune]struct{}{
 	']':  {},
 	',':  {},
 	'.':  {},
+	'#':  {},
 	'\n': {},
 	'\'': {},
 	'"':  {},
