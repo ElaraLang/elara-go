@@ -11,10 +11,7 @@ type Module struct {
 }
 
 func (m *Module) ToString() string {
-	if &m.Sub != nil {
-		return m.Root.Name
-	}
-	return m.Root.Name + "/" + m.Sub.Name
+	return m.Pkg
 }
 
 type Parameter struct {
