@@ -19,7 +19,7 @@ func (p *Parser) initStatementParselets() {
 
 func (p *Parser) parseLetStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Let)
-	prop := p.Tape.MatchInorderedSequence(lexer.Mut, lexer.Lazy, lexer.Open)
+	prop := p.Tape.MatchUnorderedSequence(lexer.Mut, lexer.Lazy, lexer.Open)
 	id := p.parseIdentifier()
 	var varType ast.Type
 	var value ast.Expression
@@ -193,5 +193,23 @@ func (p *Parser) parseModule() *ast.Module {
 	return &ast.Module{
 		Pkg:    mod,
 		PkgIds: idSlice,
+	}
+}
+
+func (p *Parser) parseStructStatement() ast.Statement {
+	token := p.Tape.Consume(lexer.Struct)
+	id := p.Tape.Consume(lexer.Identifier)
+	p.Tape.skipLineBreaks()
+	p.Tape.Expect(lexer.LBrace)
+	fields := p.parseStructFields()
+	p.Tape.skipLineBreaks()
+	p.Tape.Expect(lexer.RBrace)
+	return &ast.StructDefStatement{
+		Token: token,
+		Id: ast.Identifier{
+			Token: id,
+			Name:  string(id.Data),
+		},
+		Fields: *fields,
 	}
 }

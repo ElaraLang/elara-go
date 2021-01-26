@@ -143,7 +143,7 @@ func (tStream *TokenTape) Consume(tokenType ...lexer.TokenType) lexer.Token {
 	return cur
 }
 
-func (tStream *TokenTape) MatchInorderedSequence(tokenType ...lexer.TokenType) map[lexer.TokenType]bool {
+func (tStream *TokenTape) MatchUnorderedSequence(tokenType ...lexer.TokenType) map[lexer.TokenType]bool {
 	result := map[lexer.TokenType]bool{}
 	for _, v := range tokenType {
 		result[v] = false

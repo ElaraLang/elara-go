@@ -38,8 +38,12 @@ func (p *Entry) ToString() string {
 }
 
 type StructField struct {
+	Mutable    bool
+	Lazy       bool
+	Open       bool
 	Type       Type
 	Identifier Identifier
+	Default    Expression
 }
 
 func (p *StructField) ToString() string {
