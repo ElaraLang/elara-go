@@ -18,7 +18,7 @@ func ExecuteFull(fileName string, scriptMode bool) {
 
 	input := loadFile(fileName)
 	start := time.Now()
-	res, lexTime, parseTime, execTime := Execute(&fileName, input, scriptMode)
+	res, lexTime, parseTime, execTime := Execute(fileName, input, scriptMode)
 
 	totalTime := time.Since(start)
 
@@ -91,7 +91,7 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	content := loadFile(path)
-	Execute(&path, content, true)
+	Execute(path, content, true)
 	return nil
 }
 
