@@ -88,7 +88,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 		return nil
 	}
 	expr := parsePrefix()
-	for !p.Tape.ValidationPeek(0, lexer.NEWLINE) && precedence < precedenceOf(p.Tape.Current().TokenType) {
+	for !p.Tape.ValidationPeek(0, lexer.NEWLINE, lexer.EOF) && precedence < precedenceOf(p.Tape.Current().TokenType) {
 		p.Tape.skipLineBreaks()
 		infix := p.infixParslets[p.Tape.Current().TokenType]
 		if infix == nil {

@@ -12,10 +12,11 @@ func (p *Parser) parseMapEntries() []ast.Entry {
 			p.Tape.Expect(lexer.Comma)
 		}
 		p.Tape.skipLineBreaks()
-		key := p.parseExpression(Lowest)
+		key := p.parseExpression(CastAs)
 		p.Tape.Expect(lexer.Equal)
 		value := p.parseExpression(Lowest)
 		entries = append(entries, ast.Entry{Key: key, Value: value})
+		p.Tape.skipLineBreaks()
 	}
 	return entries
 }

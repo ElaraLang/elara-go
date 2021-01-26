@@ -20,9 +20,25 @@ func TestBasicParsing(t *testing.T) {
 	close(inputChannel)
 	close(outChannel)
 	close(errChannel)
+	printStmt(&stmt)
+	printError(&err)
+}
 
-	fmt.Println(stmt[0].ToString())
-	fmt.Println(err)
+func TestMap(t *testing.T) {
+	code := "{ \"Something\"= 45}\n"
+	tokens := lexer.Lex(code)
+	inputChannel := make(chan lexer.Token)
+	outChannel := make(chan ast.Statement)
+	errChannel := make(chan ParseError)
+	parser := NewParser(inputChannel, outChannel, errChannel)
+	go postLexedTokens(inputChannel, tokens)
+	go parser.Parse()
+	stmt, err := collectParserResult(&parser)
+	close(inputChannel)
+	close(outChannel)
+	close(errChannel)
+	printStmt(&stmt)
+	printError(&err)
 }
 
 func postLexedTokens(inChannel chan lexer.Token, tokens []lexer.Token) {
@@ -33,5 +49,17 @@ func postLexedTokens(inChannel chan lexer.Token, tokens []lexer.Token) {
 		TokenType: lexer.EOF,
 		Text:      nil,
 		Position:  lexer.Position{},
+	}
+}
+
+func printStmt(s *[]ast.Statement) {
+	for _, v := range *s {
+		fmt.Println(v.ToString())
+	}
+}
+
+func printError(s *[]ParseError) {
+	for _, v := range *s {
+		fmt.Println(v.ErrorToken.String() + " " + v.Message)
 	}
 }

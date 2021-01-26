@@ -11,7 +11,7 @@ func (p *Parser) initStatementParselets() {
 	p.registerStatement(lexer.While, p.parseWhileStatement)
 	p.registerStatement(lexer.Return, p.parseReturnStatement)
 	p.registerStatement(lexer.Extend, p.parseExtendStatement)
-	p.registerStatement(lexer.LBrace, p.parseBlockStatement)
+	// p.registerStatement(lexer.LBrace, p.parseBlockStatement)
 }
 
 func (p *Parser) parseLetStatement() ast.Statement {

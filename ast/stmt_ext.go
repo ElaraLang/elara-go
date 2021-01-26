@@ -23,7 +23,7 @@ func (s *ExpressionStatement) TokenValue() string {
 	return s.Token.String()
 }
 func (s *ExpressionStatement) ToString() string {
-	return s.ToString()
+	return s.Expression.ToString()
 }
 
 func (s *DeclarationStatement) statementNode() {}

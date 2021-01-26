@@ -8,6 +8,8 @@ import (
 
 func (p *Parser) initPrefixParselets() {
 	p.prefixParslets = make(map[lexer.TokenType]prefixParslet, 0)
+	p.registerPrefix(lexer.LSquare, p.parseCollection)
+	p.registerPrefix(lexer.LBrace, p.parseMap)
 	p.registerPrefix(lexer.Int, p.parseInteger)
 	p.registerPrefix(lexer.Float, p.parseFloat)
 	p.registerPrefix(lexer.Char, p.parseChar)
