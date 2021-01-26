@@ -159,3 +159,27 @@ func (p *Parser) parseGenerifiedStatement() ast.Statement {
 		Statement: stmt,
 	}
 }
+
+func (p *Parser) parseNamespace() ast.Statement {
+	tok := p.Tape.Consume(lexer.Namespace)
+
+	return &ast.NamespaceStatement{
+		Token:  tok,
+		Module: ast.Module{},
+	}
+}
+func (p *Parser) parseModule() *ast.Module {
+	baseTok := p.parseIdentifier()
+	idSlice := make([]ast.Identifier, 1)
+	idSlice[0] = baseTok
+	mod := baseTok.Name
+	for p.Tape.Match(lexer.Slash) {
+		subId := p.parseIdentifier()
+		mod += "/" + subId.Name
+		idSlice = append(idSlice, subId)
+	}
+	return &ast.Module{
+		Pkg:    mod,
+		PkgIds: idSlice,
+	}
+}

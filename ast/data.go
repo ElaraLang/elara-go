@@ -6,8 +6,8 @@ import "github.com/ElaraLang/elara/lexer"
 // Helps segregate different components and avoid identifier conflicts
 // Represented as Root / Sub or just Root if Sub is not provided
 type Module struct {
-	Root Identifier
-	Sub  Identifier
+	Pkg    string
+	PkgIds []Identifier
 }
 
 func (m *Module) ToString() string {
