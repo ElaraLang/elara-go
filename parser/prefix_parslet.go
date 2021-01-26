@@ -65,7 +65,7 @@ func (p *Parser) parseUnaryExpression() ast.Expression {
 }
 
 func (p *Parser) parseIdentifier() ast.Identifier {
-	token := p.Tape.Consume(lexer.Int)
+	token := p.Tape.Consume(lexer.Identifier)
 	return ast.Identifier{Token: token, Name: string(token.Text)}
 }
 
