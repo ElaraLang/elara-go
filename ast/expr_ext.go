@@ -73,7 +73,7 @@ func (e *TypeOperationExpression) TokenValue() string {
 	return e.Token.String()
 }
 func (e *TypeOperationExpression) ToString() string {
-	return "(" + e.Expression.ToString() + ") " + string(e.Operation.Text) + " (" + e.Type.ToString() + ")"
+	return "(" + e.Expression.ToString() + ") " + string(e.Operation.Data) + " (" + e.Type.ToString() + ")"
 }
 
 func (e *FunctionLiteral) expressionNode() {}

@@ -16,7 +16,7 @@ func (p *Parser) initStatementParselets() {
 
 func (p *Parser) parseLetStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Let)
-	prop := p.Tape.MatchInorderedSequence(lexer.Mut, lexer.Lazy, lexer.Restricted)
+	prop := p.Tape.MatchInorderedSequence(lexer.Mut, lexer.Lazy, lexer.Open)
 	id := p.parseIdentifier()
 	var varType ast.Type
 	var value ast.Expression
@@ -34,7 +34,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 		Token:      token,
 		Mutable:    prop[lexer.Mut],
 		Lazy:       prop[lexer.Lazy],
-		Open:       prop[lexer.Restricted], // TODO:: Introduce OPEN token to lexer
+		Open:       prop[lexer.Open], // TODO:: Introduce OPEN token to lexer
 		Identifier: id,
 		Type:       varType,
 		Value:      value,
