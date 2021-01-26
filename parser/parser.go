@@ -22,6 +22,8 @@ func NewParser(inputChannel chan lexer.Token, outputChannel chan ast.Statement, 
 	p.initPrefixParselets()
 	p.initInfixParselets()
 	p.initStatementParselets()
+	p.initTypePrefixParselets()
+	p.initTypeInfixParselets()
 	return p
 }
 

@@ -163,7 +163,9 @@ func (tStream *TokenTape) Expect(tokenType ...lexer.TokenType) {
 
 // FindDepthClosingIndex finds index of the closing type provided at the same depth
 func (tStream *TokenTape) FindDepthClosingIndex(opening lexer.TokenType, closing lexer.TokenType) int {
-	tStream.Expect(opening)
+	if !tStream.ValidateHead(opening) {
+		return tStream.index
+	}
 	offset := 0
 	depth := 1
 	for {
