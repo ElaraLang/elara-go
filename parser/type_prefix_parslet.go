@@ -56,6 +56,7 @@ func (p *Parser) parseCollectionType() ast.Type {
 func (p *Parser) parseContractualType() ast.Type {
 	tok := p.Tape.Consume(lexer.Type)
 	p.Tape.Expect(lexer.LBrace)
+	p.Tape.skipLineBreaks()
 	contracts := make([]ast.Contract, 0)
 	for !p.Tape.ValidateHead(lexer.RBrace) {
 		contract := p.parseContract()
@@ -63,6 +64,7 @@ func (p *Parser) parseContractualType() ast.Type {
 		if !(p.Tape.Match(lexer.Comma) || p.Tape.ValidateHead(lexer.RBrace)) {
 			p.error(tok, " Type contract separator missing!")
 		}
+		p.Tape.skipLineBreaks()
 	}
 	p.Tape.Expect(lexer.RBrace)
 	return &ast.ContractualType{

@@ -20,7 +20,8 @@ outer:
 				Identifier: ast.Identifier{Token: id, Name: id.String()},
 			}
 			params = append(params, param)
-
+			p.Tape.Expect(lexer.Comma)
+			p.Tape.skipLineBreaks()
 			continue
 		}
 		typ := p.parseType(TypeLowest)
@@ -35,6 +36,7 @@ outer:
 			break outer
 		case lexer.Comma:
 			p.Tape.advance()
+			p.Tape.skipLineBreaks()
 		default:
 			p.error(id, "Parameter separator missing!")
 		}
@@ -49,6 +51,7 @@ func (p *Parser) parseFunctionCallArguments() []ast.Expression {
 	}
 	args = append(args, p.parseExpression(Lowest))
 	for p.Tape.Match(lexer.Comma) {
+		p.Tape.skipLineBreaks()
 		args = append(args, p.parseExpression(Lowest))
 	}
 	return args

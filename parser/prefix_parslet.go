@@ -28,8 +28,10 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	if p.Tape.Match(lexer.Arrow) {
 		mainBranch = p.parseExpressionStatement()
 	} else {
+		p.Tape.skipLineBreaks()
 		mainBranch = p.parseBlockStatement()
 	}
+	p.Tape.skipLineBreaks()
 	if p.Tape.Match(lexer.Else) {
 		switch p.Tape.Current().TokenType {
 		case lexer.Arrow:
@@ -38,6 +40,7 @@ func (p *Parser) parseIfExpression() ast.Expression {
 		case lexer.If:
 			elseBranch = p.parseExpressionStatement()
 		default:
+			p.Tape.skipLineBreaks()
 			elseBranch = p.parseBlockStatement()
 
 		}
@@ -107,7 +110,7 @@ func (p *Parser) parseFunction() ast.Expression {
 	params := p.parseFunctionParameters()
 	p.Tape.Expect(lexer.RParen)
 	p.Tape.Expect(lexer.Arrow)
-
+	p.Tape.skipLineBreaks()
 	var typ ast.Type
 
 	if !p.Tape.ValidationPeek(0, lexer.LBrace) {
@@ -125,21 +128,27 @@ func (p *Parser) parseFunction() ast.Expression {
 
 func (p *Parser) parseGroupExpression() ast.Expression {
 	p.Tape.Expect(lexer.LParen)
+	p.Tape.skipLineBreaks()
 	expr := p.parseExpression(Lowest)
+	p.Tape.skipLineBreaks()
 	p.Tape.Expect(lexer.RParen)
 	return expr
 }
 
 func (p *Parser) parseCollection() ast.Expression {
 	tok := p.Tape.Consume(lexer.LSquare)
+	p.Tape.skipLineBreaks()
 	elements := p.parseCollectionElements()
+	p.Tape.skipLineBreaks()
 	p.Tape.Expect(lexer.RSquare)
 	return &ast.CollectionLiteral{Token: tok, Elements: elements}
 }
 
 func (p *Parser) parseMap() ast.Expression {
 	tok := p.Tape.Consume(lexer.LBrace)
+	p.Tape.skipLineBreaks()
 	elements := p.parseMapEntries()
+	p.Tape.skipLineBreaks()
 	p.Tape.Consume(lexer.RBrace)
 	return &ast.MapLiteral{Token: tok, Entries: elements}
 }

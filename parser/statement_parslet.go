@@ -27,6 +27,7 @@ func (p *Parser) parseLetStatement() ast.Statement {
 			varType = p.parseType(TypeLowest)
 		}
 		p.Tape.Expect(lexer.Equal)
+		p.Tape.skipLineBreaks()
 		value = p.parseExpression(Lowest)
 	}
 	return &ast.DeclarationStatement{
@@ -47,6 +48,7 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 	if p.Tape.Match(lexer.Arrow) {
 		body = p.parseExpressionStatement()
 	} else {
+		p.Tape.skipLineBreaks()
 		body = p.parseBlockStatement()
 	}
 	return &ast.WhileStatement{
@@ -58,6 +60,7 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 
 func (p *Parser) parseReturnStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Return)
+	p.Tape.skipLineBreaks()
 	value := p.parseExpression(Lowest)
 	return &ast.ReturnStatement{
 		Token: token,
@@ -77,6 +80,7 @@ func (p *Parser) parseExtendStatement() ast.Statement {
 			Name:  "this",
 		}
 	}
+	p.Tape.skipLineBreaks()
 	body := p.parseBlockStatement()
 	return &ast.ExtendStatement{
 		Token:      token,
@@ -88,9 +92,11 @@ func (p *Parser) parseExtendStatement() ast.Statement {
 
 func (p *Parser) parseBlockStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.LBrace)
+	p.Tape.skipLineBreaks()
 	block := make([]ast.Statement, 0)
-	for p.Tape.Match(lexer.RBrace) {
+	for !p.Tape.Match(lexer.RBrace) {
 		block = append(block, p.parseStatement())
+		p.Tape.skipLineBreaks()
 	}
 	return &ast.BlockStatement{
 		Token: token,

@@ -36,6 +36,7 @@ func (p *Parser) Parse() {
 
 func (p *Parser) parseSafely() {
 	defer p.handleParseError()
+	p.Tape.skipLineBreaks()
 
 	p.OutputChannel <- p.parseStatement()
 
@@ -88,6 +89,7 @@ func (p *Parser) parseExpression(precedence int) ast.Expression {
 	}
 	expr := parsePrefix()
 	for !p.Tape.ValidationPeek(0, lexer.NEWLINE) && precedence < precedenceOf(p.Tape.Current().TokenType) {
+		p.Tape.skipLineBreaks()
 		infix := p.infixParslets[p.Tape.Current().TokenType]
 		if infix == nil {
 			return expr

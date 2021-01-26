@@ -29,6 +29,7 @@ func (p *Parser) initInfixParselets() {
 
 func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
 	opening := p.Tape.Consume(lexer.Equal)
+	p.Tape.skipLineBreaks()
 	var context ast.Expression
 	var identifier ast.Identifier
 	switch left.(type) {
@@ -53,6 +54,7 @@ func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
 
 func (p *Parser) parseTypeOperation(left ast.Expression) ast.Expression {
 	operation := p.Tape.ConsumeAny()
+	p.Tape.skipLineBreaks()
 	typ := p.parseType(TypeLowest)
 	return &ast.TypeOperationExpression{
 		Token:      operation,
@@ -64,7 +66,9 @@ func (p *Parser) parseTypeOperation(left ast.Expression) ast.Expression {
 
 func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
 	opening := p.Tape.Consume(lexer.LParen)
+	p.Tape.skipLineBreaks()
 	args := p.parseFunctionCallArguments()
+	p.Tape.skipLineBreaks()
 	p.Tape.Expect(lexer.RParen)
 	return &ast.CallExpression{
 		Token:      opening,
@@ -75,7 +79,9 @@ func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
 
 func (p *Parser) parseAccessOperator(left ast.Expression) ast.Expression {
 	opening := p.Tape.Consume(lexer.LSquare)
+	p.Tape.skipLineBreaks()
 	index := p.parseExpression(Lowest)
+	p.Tape.skipLineBreaks()
 	p.Tape.Expect(lexer.RSquare)
 	return &ast.AccessExpression{
 		Token:      opening,
@@ -87,6 +93,7 @@ func (p *Parser) parseAccessOperator(left ast.Expression) ast.Expression {
 func (p *Parser) parseBinaryExpression(left ast.Expression) ast.Expression {
 	operator := p.Tape.ConsumeAny()
 	precedence := precedenceOf(operator.TokenType)
+	p.Tape.skipLineBreaks()
 	right := p.parseExpression(precedence)
 	return &ast.BinaryExpression{
 		Token:    operator,

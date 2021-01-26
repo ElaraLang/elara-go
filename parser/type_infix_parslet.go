@@ -15,6 +15,7 @@ func (p *Parser) initTypeInfixParselets() {
 func (p *Parser) parseAlgebraicType(left ast.Type) ast.Type {
 	operator := p.Tape.ConsumeAny()
 	precedence := typePrecedenceOf(operator.TokenType)
+	p.Tape.skipLineBreaks()
 	right := p.parseType(precedence)
 	return &ast.AlgebraicType{
 		Token:     operator,
