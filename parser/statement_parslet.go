@@ -162,12 +162,22 @@ func (p *Parser) parseGenerifiedStatement() ast.Statement {
 
 func (p *Parser) parseNamespace() ast.Statement {
 	tok := p.Tape.Consume(lexer.Namespace)
-
+	mod := p.parseModule()
 	return &ast.NamespaceStatement{
 		Token:  tok,
-		Module: ast.Module{},
+		Module: *mod,
 	}
 }
+
+func (p *Parser) parseImport() ast.Statement {
+	tok := p.Tape.Consume(lexer.Import)
+	mod := p.parseModule()
+	return &ast.ImportStatement{
+		Token:  tok,
+		Module: *mod,
+	}
+}
+
 func (p *Parser) parseModule() *ast.Module {
 	baseTok := p.parseIdentifier()
 	idSlice := make([]ast.Identifier, 1)
