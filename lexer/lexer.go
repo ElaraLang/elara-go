@@ -55,6 +55,8 @@ func (l *Lexer) readToken() (TokenType, []rune) {
 	case '\t':
 		l.col += 4
 		return l.readToken()
+	case '\r':
+		return l.readToken()
 	case ' ': //Skip whitespace
 		return l.readToken()
 	case '#':

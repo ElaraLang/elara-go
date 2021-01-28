@@ -49,7 +49,6 @@ func (s *Interpreter) Exec(scriptMode bool) {
 			_, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err))
 			return
 		default:
-			return
 		}
 
 	}

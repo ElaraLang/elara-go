@@ -25,6 +25,6 @@ let daves = produceDaves(2147483647)
 	`
 	base.LoadStdLib()
 	for i := 0; i < b.N; i++ {
-		base.Execute(nil, code, false)
+		//base.Execute("", code, false)
 	}
 }

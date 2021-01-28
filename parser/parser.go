@@ -36,7 +36,9 @@ func (p *Parser) Parse(fileName string) {
 	}
 	for !p.Tape.ValidateHead(lexer.EOF) {
 		p.parseSafely()
+		p.Tape.skipLineBreaks()
 	}
+	close(p.OutputChannel)
 }
 
 func (p *Parser) parseSafely() {

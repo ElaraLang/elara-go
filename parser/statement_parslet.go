@@ -65,7 +65,10 @@ func (p *Parser) parseWhileStatement() ast.Statement {
 func (p *Parser) parseReturnStatement() ast.Statement {
 	token := p.Tape.Consume(lexer.Return)
 	p.Tape.skipLineBreaks()
-	value := p.parseExpression(Lowest)
+	var value ast.Expression
+	if !p.Tape.ValidateHead(lexer.RBrace, lexer.EOF) {
+		value = p.parseExpression(Lowest)
+	}
 	return &ast.ReturnStatement{
 		Token: token,
 		Value: value,
