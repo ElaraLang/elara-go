@@ -11,6 +11,9 @@ func (p *Parser) initPrefixParselets() {
 	p.registerPrefix(lexer.Identifier, p.parseIdentifier)
 	p.registerPrefix(lexer.LSquare, p.parseCollection)
 	p.registerPrefix(lexer.LBrace, p.parseMap)
+	p.registerPrefix(lexer.BinaryInt, p.parseInteger)
+	p.registerPrefix(lexer.OctalInt, p.parseInteger)
+	p.registerPrefix(lexer.HexadecimalInt, p.parseInteger)
 	p.registerPrefix(lexer.DecimalInt, p.parseInteger)
 	p.registerPrefix(lexer.Float, p.parseFloat)
 	p.registerPrefix(lexer.Char, p.parseChar)
@@ -73,12 +76,30 @@ func (p *Parser) parseIdentifier() ast.Expression {
 }
 
 func (p *Parser) parseInteger() ast.Expression {
-	token := p.Tape.Consume(lexer.DecimalInt)
-	value, err := strconv.ParseInt(string(token.Data), 10, 64)
+	token := p.Tape.ConsumeAny()
+	base := baseOf(token.TokenType)
+	if base < 2 {
+		p.error(token, "Invalid integer token received!")
+	}
+	value, err := strconv.ParseInt(string(token.Data), base, 64)
 	if err != nil {
 		p.error(token, "Error parsing integer token!")
 	}
 	return &ast.IntegerLiteral{Token: token, Value: value}
+}
+
+func baseOf(tokenType lexer.TokenType) int {
+	switch tokenType {
+	case lexer.HexadecimalInt:
+		return 16
+	case lexer.DecimalInt:
+		return 10
+	case lexer.OctalInt:
+		return 8
+	case lexer.BinaryInt:
+		return 2
+	}
+	return -1
 }
 
 func (p *Parser) parseFloat() ast.Expression {
