@@ -1,4 +1,17 @@
 import elara/std
 
-let a = 3
-print(a)
+struct Person {
+    String name
+    Int age
+}
+
+let daveFactory = () => { Person("Dave", 50) }
+
+let produceDaves(Int amount) => {
+    let factories = [daveFactory] * amount
+    factories.map(run)
+}
+
+let daves = produceDaves(50)
+
+print("50 daves coming right up!")

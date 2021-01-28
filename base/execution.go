@@ -5,10 +5,9 @@ import (
 	"github.com/ElaraLang/elara/interpreter"
 	"github.com/ElaraLang/elara/lexer"
 	"github.com/ElaraLang/elara/parser"
-	"time"
 )
 
-func Execute(fileName string, code chan rune, scriptMode bool) (results ast.Statement, lexTime, parseTime, execTime time.Duration) {
+func Execute(fileName string, code chan rune, scriptMode bool) {
 	lexerOutput := make(chan lexer.Token)
 	parserOutput := make(chan ast.Statement)
 	parseErrors := make(chan parser.ParseError)

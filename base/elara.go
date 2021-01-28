@@ -18,13 +18,12 @@ func ExecuteFull(fileName string, scriptMode bool) {
 
 	input := loadFile(fileName)
 	start := time.Now()
-	res, lexTime, parseTime, execTime := Execute(fileName, input, scriptMode)
+	Execute(fileName, input, scriptMode)
 
 	totalTime := time.Since(start)
 
 	fmt.Println("===========================")
-	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
-	fmt.Printf("Res: %s\n", res)
+	fmt.Printf("Executed in %s.\n", totalTime)
 	fmt.Println("===========================")
 }
 
@@ -91,7 +90,7 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 		return nil
 	}
 	content := loadFile(path)
-	Execute(path, content, true)
+	Execute(path, content, false)
 	return nil
 }
 

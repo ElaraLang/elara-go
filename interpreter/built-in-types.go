@@ -55,10 +55,7 @@ func Init(context *Context) {
 			this := ctx.FindParameter(0)
 			otherParam := ctx.FindParameter(1)
 			concatenated := this.Value.(*Collection).elemsAsString() + util.Stringify(otherParam.Value)
-			return NonReturningValue(&Value{
-				Type:  StringType,
-				Value: concatenated,
-			})
+			return NonReturningValue(StringValue(concatenated))
 		}),
 		name: &stringPlusName,
 	}
@@ -93,10 +90,7 @@ func Init(context *Context) {
 			otherParam := ctx.FindParameter(1)
 
 			concatenated := ctx.Stringify(this) + otherParam.Value.(*Collection).elemsAsString()
-			return NonReturningValue(&Value{
-				Type:  StringType,
-				Value: concatenated,
-			})
+			return NonReturningValue(StringValue(concatenated))
 		}),
 		name: &anyPlusName,
 	}
