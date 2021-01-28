@@ -994,11 +994,20 @@ func NamedExpressionToCommand(expr ast.Expression, name *string) Command {
 			elseBranch: elseBranch,
 		}
 
-	//case *ast..TypeCheckExpr:
-	//	return &TypeCheckCommand{
-	//		expression: ExpressionToCommand(t.Expr),
-	//		checkType:  t.Type,
-	//	}
+	case *ast.TypeOperationExpression:
+		switch t.Operation.TokenType {
+		case lexer.Is:
+			return &TypeCheckCommand{
+				expression: ExpressionToCommand(t.Expression),
+				checkType:  t.Type,
+			}
+		case lexer.As:
+			return &TypeCheckCommand{ // TODO:: Add the type cast command
+				expression: ExpressionToCommand(t.Expression),
+				checkType:  t.Type,
+			}
+
+		}
 
 	case *ast.CollectionLiteral:
 		elements := make([]Command, len(t.Elements))

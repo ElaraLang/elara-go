@@ -23,7 +23,7 @@ func ExecuteFull(fileName string, scriptMode bool) {
 	totalTime := time.Since(start)
 
 	fmt.Println("===========================")
-	fmt.Printf("Executed in %s.\n", totalTime)
+	fmt.Printf("Executed in %d micro seconds.\n", totalTime.Microseconds())
 	fmt.Println("===========================")
 }
 
