@@ -218,8 +218,10 @@ func (l *Lexer) readNumberLiteral(first rune) (numType TokenType, digits []rune)
 			l.next()
 			return l.readBinaryInt()
 		default:
-			l.next()
-			return l.readOctalInt()
+			if isDecimalDigit(next) {
+				return l.readOctalInt()
+			}
+			digits = append(digits, first)
 		}
 	} else {
 		digits = append(digits, first)
