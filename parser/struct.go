@@ -8,7 +8,7 @@ import (
 func (p *Parser) parseStructFields() *[]ast.StructField {
 	fields := make([]ast.StructField, 0)
 	p.Tape.skipLineBreaks()
-	for p.Tape.ValidateHead(lexer.RBrace) {
+	for !p.Tape.ValidateHead(lexer.RBrace) {
 		var typ ast.Type
 		var id ast.IdentifierLiteral
 		var def ast.Expression
