@@ -28,7 +28,7 @@ outer:
 		id := p.Tape.Consume(lexer.Identifier)
 		param := ast.Parameter{
 			Type:       typ,
-			Identifier: ast.IdentifierLiteral{Token: id, Name: id.String()},
+			Identifier: ast.IdentifierLiteral{Token: id, Name: string(id.Data)},
 		}
 		params = append(params, param)
 		switch p.Tape.Current().TokenType {
