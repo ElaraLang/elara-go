@@ -76,6 +76,7 @@ const (
 	Char
 	DecimalInt
 	BinaryInt
+	OctalInt
 	HexadecimalInt
 	Float
 
@@ -144,6 +145,7 @@ var tokenNames = map[TokenType]string{
 	DecimalInt:     "DecimalInt",
 	BinaryInt:      "BinaryInt",
 	HexadecimalInt: "HexadecimalInt",
+	OctalInt:       "OctalInt",
 	Float:          "Float",
 
 	Comma: "Comma",

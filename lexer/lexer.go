@@ -169,7 +169,6 @@ func (l *Lexer) readChar() rune {
 	char := l.next()
 	if char == '\\' {
 		escape := l.next()
-		l.col++
 		switch escape {
 		case 'n':
 			char = '\n'
@@ -193,11 +192,10 @@ func (l *Lexer) readStringLiteral() []rune {
 	runes := make([]rune, 0)
 
 	for {
-		c := l.tape.peek()
+		c := l.readChar()
 		if c == Eof {
 			panic("Unclosed string literal")
 		}
-		l.next()
 		if c == '"' {
 			break
 		}
@@ -220,7 +218,8 @@ func (l *Lexer) readNumberLiteral(first rune) (numType TokenType, digits []rune)
 			l.next()
 			return l.readBinaryInt()
 		default:
-			digits = append(digits, first)
+			l.next()
+			return l.readOctalInt()
 		}
 	} else {
 		digits = append(digits, first)
@@ -245,6 +244,7 @@ func (l *Lexer) readNumberLiteral(first rune) (numType TokenType, digits []rune)
 	}
 	return numType, digits
 }
+
 func (l *Lexer) readHexInt() (TokenType, []rune) {
 	runes := make([]rune, 0)
 
@@ -253,11 +253,8 @@ func (l *Lexer) readHexInt() (TokenType, []rune) {
 		if next == '.' {
 			panic("Hexadecimal float literals are not supported")
 		}
-		if isWhitespace(next) {
+		if isWhitespace(next) || !isHexDigit(next) {
 			break
-		}
-		if !isHexDigit(next) {
-			panic("Illegal symbol in hexadecimal number literal " + string(next))
 		}
 		runes = append(runes, next)
 		l.next()
@@ -265,6 +262,7 @@ func (l *Lexer) readHexInt() (TokenType, []rune) {
 
 	return HexadecimalInt, runes
 }
+
 func (l *Lexer) readBinaryInt() (TokenType, []rune) {
 	runes := make([]rune, 0)
 
@@ -273,11 +271,26 @@ func (l *Lexer) readBinaryInt() (TokenType, []rune) {
 		if next == '.' {
 			panic("Binary float literals are not supported")
 		}
-		if isWhitespace(next) {
+		if isWhitespace(next) || !isBinaryDigit(next) {
 			break
 		}
-		if !isBinaryDigit(next) {
-			panic("Illegal symbol in binary number literal " + string(next))
+		runes = append(runes, next)
+		l.next()
+	}
+
+	return BinaryInt, runes
+}
+
+func (l *Lexer) readOctalInt() (TokenType, []rune) {
+	runes := make([]rune, 0)
+
+	for {
+		next := l.tape.peek()
+		if next == '.' {
+			panic("Octal float literals are not supported")
+		}
+		if isWhitespace(next) || !isOctalDigit(next) {
+			break
 		}
 		runes = append(runes, next)
 		l.next()
