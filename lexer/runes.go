@@ -6,9 +6,12 @@ func isHexDigit(n rune) bool {
 func isBinaryDigit(n rune) bool {
 	return n == '0' || n == '1'
 }
+func isOctalDigit(n rune) bool {
+	return n >= '0' && n <= '7'
+}
 
 func isDecimalDigit(n rune) bool {
-	return n >= '0' && n <= '9'
+	return isBinaryDigit(n) || isOctalDigit(n) || n >= '8' && n <= '9'
 }
 
 func isIllegalIdentifierChar(n rune) bool {
