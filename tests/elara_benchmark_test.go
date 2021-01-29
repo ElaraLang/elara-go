@@ -1,7 +1,6 @@
 package tests
 
 import (
-	"github.com/ElaraLang/elara/base"
 	"testing"
 )
 
@@ -21,10 +20,7 @@ let produceDaves(Int amount) => {
     factories.map(run)
 }
 
-let daves = produceDaves(2147483647)
+let daves = produceDaves(50)
 	`
-	base.LoadStdLib()
-	for i := 0; i < b.N; i++ {
-		//base.Execute("", code, false)
-	}
+	executeTest(code)
 }

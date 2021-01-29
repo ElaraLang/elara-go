@@ -16,18 +16,6 @@ func Execute(fileName string, code chan rune, scriptMode bool) {
 	psr := parser.NewParser(lexerOutput, parserOutput, parseErrors)
 	go psr.Parse(fileName)
 
-	//if len(parseErrors) != 0 {
-	//	file := "Unknown File"
-	//	if fileName != nil {
-	//		file = *fileName
-	//	}
-	//	_, _ = os.Stderr.WriteString(fmt.Sprintf("Syntax Errors found in %s: \n", file))
-	//	for err := range parseErrors {
-	//		_, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err))
-	//	}
-	//	return
-	//}
-
 	interpreterOutput := make(chan *interpreter.Value)
 	evaluator := interpreter.NewInterpreter(parserOutput, parseErrors, interpreterOutput)
 

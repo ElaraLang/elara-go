@@ -8,3 +8,4 @@ let fact(Int n) => {
 }
 
 print(fact(50))
+
