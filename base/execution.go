@@ -7,7 +7,7 @@ import (
 	"github.com/ElaraLang/elara/parser"
 )
 
-func Execute(fileName string, code chan rune, scriptMode bool) {
+func Execute(fileName string, code chan rune, scriptMode bool, io interpreter.IO) {
 	lexerOutput := make(chan lexer.Token)
 	parserOutput := make(chan ast.Statement)
 	parseErrors := make(chan parser.ParseError)
@@ -17,7 +17,7 @@ func Execute(fileName string, code chan rune, scriptMode bool) {
 	go psr.Parse(fileName)
 
 	interpreterOutput := make(chan *interpreter.Value)
-	evaluator := interpreter.NewInterpreter(parserOutput, parseErrors, interpreterOutput)
+	evaluator := interpreter.NewInterpreter(parserOutput, parseErrors, interpreterOutput, io)
 
 	evaluator.Exec(scriptMode)
 	return

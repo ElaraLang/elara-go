@@ -21,6 +21,7 @@ let produceDaves(Int amount) => {
 }
 
 let daves = produceDaves(50)
+print(daves)
 	`
 	executeTest(code)
 }

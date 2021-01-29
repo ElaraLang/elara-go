@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/ElaraLang/elara/ast"
 	"github.com/ElaraLang/elara/parser"
-	"os"
 	"reflect"
 )
 
@@ -15,7 +14,8 @@ type Interpreter struct {
 	context     *Context
 }
 
-func NewInterpreter(code chan ast.Statement, parseErrors chan parser.ParseError, output chan *Value) *Interpreter {
+func NewInterpreter(code chan ast.Statement, parseErrors chan parser.ParseError, output chan *Value, io IO) *Interpreter {
+	globalContext.io = io
 	return &Interpreter{
 		lines:       code,
 		parseErrors: parseErrors,
@@ -24,7 +24,8 @@ func NewInterpreter(code chan ast.Statement, parseErrors chan parser.ParseError,
 	}
 }
 func NewEmptyInterpreter() *Interpreter {
-	return NewInterpreter(nil, nil, nil)
+	globalContext.io = NewSysIO()
+	return NewInterpreter(nil, nil, nil, globalContext.io)
 }
 
 func (s *Interpreter) ResetLines(lines chan ast.Statement) {
@@ -43,10 +44,12 @@ func (s *Interpreter) Exec(scriptMode bool) {
 			//s.output <- res
 			if scriptMode {
 				formatted := s.context.Stringify(res) + " " + reflect.TypeOf(res).String()
-				fmt.Println(formatted)
+				s.context.io.Println(formatted)
+				//fmt.Println(formatted)
 			}
 		case err := <-s.parseErrors:
-			_, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err))
+			s.context.io.Error(fmt.Sprintf("%s\n", err))
+			// _, _ = os.Stderr.WriteString(fmt.Sprintf("%s\n", err))
 			return
 		default:
 		}

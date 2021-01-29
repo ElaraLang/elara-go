@@ -19,6 +19,7 @@ type Context struct {
 	types      map[string]Type
 	parent     *Context
 	function   *Function //Will only be nil if this is a Function scope
+	io         IO
 }
 
 var globalContext = &Context{

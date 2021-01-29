@@ -64,6 +64,7 @@ func (c *Context) Cleanup() {
 
 func NewContext(init bool) *Context {
 	c := contextPool.Get().(*Context)
+	c.io = globalContext.io
 	if !init {
 		return c
 	}
@@ -128,7 +129,8 @@ func NewContext(init bool) *Context {
 			response, err := http.Get(requestURL)
 
 			if err != nil {
-				fmt.Print(err.Error())
+				ctx.io.Print(err.Error())
+				//fmt.Print(err.Error())
 				os.Exit(1)
 			}
 

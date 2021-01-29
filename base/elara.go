@@ -3,6 +3,7 @@ package base
 import (
 	"bufio"
 	"fmt"
+	"github.com/ElaraLang/elara/interpreter"
 	"github.com/mholt/archiver"
 	"io"
 	"net/http"
@@ -14,11 +15,11 @@ import (
 )
 
 func ExecuteFull(fileName string, scriptMode bool) {
-	LoadStdLib()
-
+	ioDelegate := interpreter.NewSysIO()
+	LoadStdLib(ioDelegate)
 	input := loadFile(fileName)
 	start := time.Now()
-	Execute(fileName, input, scriptMode)
+	Execute(fileName, input, scriptMode, ioDelegate)
 
 	totalTime := time.Since(start)
 
@@ -27,7 +28,7 @@ func ExecuteFull(fileName string, scriptMode bool) {
 	fmt.Println("===========================")
 }
 
-func LoadStdLib() {
+func LoadStdLib(io interpreter.IO) {
 	usr, err := user.Current()
 	if err != nil {
 		panic(err)
@@ -46,7 +47,7 @@ func LoadStdLib() {
 	}
 	downloadStandardLibrary(filePath)
 
-	filepath.Walk(elaraPath, loadWalkedFile)
+	filepath.Walk(elaraPath, loadWalkedFile(io))
 }
 
 func downloadStandardLibrary(to string) {
@@ -78,20 +79,21 @@ func downloadStandardLibrary(to string) {
 		panic(err)
 	}
 }
-
-func loadWalkedFile(path string, info os.FileInfo, err error) error {
-	if err != nil {
-		panic(err)
-	}
-	if info.IsDir() {
+func loadWalkedFile(io interpreter.IO) func(path string, info os.FileInfo, err error) error {
+	return func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			panic(err)
+		}
+		if info.IsDir() {
+			return nil
+		}
+		if filepath.Ext(path) != ".elr" {
+			return nil
+		}
+		content := loadFile(path)
+		Execute(path, content, false, io)
 		return nil
 	}
-	if filepath.Ext(path) != ".elr" {
-		return nil
-	}
-	content := loadFile(path)
-	Execute(path, content, false)
-	return nil
 }
 
 func loadFile(fileName string) chan rune {

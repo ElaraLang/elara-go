@@ -1,7 +1,6 @@
 package interpreter
 
 import (
-	"fmt"
 	"github.com/ElaraLang/elara/util"
 )
 
@@ -232,8 +231,8 @@ func Init(context *Context) {
 		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
 			value := ctx.FindParameter(1)
 			asString := ctx.Stringify(value)
-
-			fmt.Printf("%s", asString)
+			ctx.io.Printf("%s", asString)
+			//fmt.Printf("%s", asString)
 			return NonReturningValue(UnitValue())
 		}),
 		name: &outputWriteName,
