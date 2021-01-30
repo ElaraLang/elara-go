@@ -8,6 +8,7 @@ const (
 	_ int = iota
 	// Expression precedences
 	Lowest
+	InfixCall
 	Assign
 	CastAs
 	CheckIs
@@ -29,6 +30,7 @@ const (
 )
 
 var precedences = map[lexer.TokenType]int{
+	lexer.Identifier:   InfixCall,
 	lexer.Equal:        Assign,
 	lexer.As:           CastAs,
 	lexer.Is:           CheckIs,

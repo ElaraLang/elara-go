@@ -95,6 +95,19 @@ func (tStream *TokenTape) ValidateHead(tokenType ...lexer.TokenType) bool {
 	return tStream.ValidationPeek(0, tokenType...)
 }
 
+// ValidateHead validates if any of the provided token is at current head
+func (tStream *TokenTape) ValidateActualHead(tokenType ...lexer.TokenType) bool {
+	offset := 0
+	for {
+		if tStream.ValidationPeek(offset, lexer.NEWLINE) {
+			offset++
+		} else {
+			break
+		}
+	}
+	return tStream.ValidationPeek(offset, tokenType...)
+}
+
 // ValidationPeek peeks by given amount and validates if the provided token is at that index
 func (tStream *TokenTape) ValidationPeek(amount int, tokenType ...lexer.TokenType) bool {
 	actual := tStream.Peek(amount).TokenType

@@ -137,7 +137,8 @@ func (p *Parser) parseFunction() ast.Expression {
 	p.Tape.skipLineBreaks()
 	var typ ast.Type
 	var body ast.Statement
-	if !p.Tape.ValidationPeek(0, lexer.LBrace) {
+	// !p.Tape.ValidationPeek(0, lexer.LBrace)
+	if p.isReturnTypeProvided() {
 		typ = p.parseType(TypeLowest)
 	}
 	p.Tape.skipLineBreaks()

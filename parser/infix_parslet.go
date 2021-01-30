@@ -25,6 +25,7 @@ func (p *Parser) initInfixParselets() {
 	p.registerInfix(lexer.Equal, p.parseAssignment)
 	p.registerInfix(lexer.Is, p.parseTypeOperation)
 	p.registerInfix(lexer.As, p.parseTypeOperation)
+	p.registerInfix(lexer.Identifier, p.parseInfixFunctionCall)
 }
 
 func (p *Parser) parseAssignment(left ast.Expression) ast.Expression {
@@ -74,6 +75,24 @@ func (p *Parser) parseFunctionCall(left ast.Expression) ast.Expression {
 		Token:      opening,
 		Expression: left,
 		Arguments:  args,
+	}
+}
+
+func (p *Parser) parseInfixFunctionCall(left ast.Expression) ast.Expression {
+	function := p.Tape.Consume(lexer.Identifier)
+	p.Tape.skipLineBreaks()
+	arg := p.parseExpression(Lowest)
+	return &ast.CallExpression{
+		Token: function,
+		Expression: &ast.PropertyExpression{
+			Token:   function,
+			Context: left,
+			Variable: ast.IdentifierLiteral{
+				Token: function,
+				Name:  string(function.Data),
+			},
+		},
+		Arguments: []ast.Expression{arg},
 	}
 }
 

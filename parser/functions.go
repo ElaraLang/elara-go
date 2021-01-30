@@ -56,3 +56,15 @@ func (p *Parser) parseFunctionCallArguments() []ast.Expression {
 	}
 	return args
 }
+
+func (p *Parser) isReturnTypeProvided() bool {
+	if p.Tape.ValidateActualHead(lexer.LBrace) {
+		return false
+	}
+	offset := 0
+	for !p.Tape.ValidationPeek(offset, lexer.NEWLINE, lexer.EOF) {
+		offset++
+	}
+
+	return p.Tape.ValidationPeek(offset-1, lexer.LBrace)
+}
