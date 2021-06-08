@@ -14,18 +14,20 @@ import (
 )
 
 func ExecuteFull(fileName string, scriptMode bool) {
-	loadStdLib()
+	LoadStdLib()
 
-	_, input := loadFile(fileName)
+	input := loadFile(fileName)
 	start := time.Now()
 	_, lexTime, parseTime, execTime := Execute(&fileName, string(input), scriptMode)
 
 	totalTime := time.Since(start)
 
+	fmt.Println("===========================")
 	fmt.Printf("Lexing took %s\nParsing took %s\nExecution took %s\nExecuted in %s.\n", lexTime, parseTime, execTime, totalTime)
+	fmt.Println("===========================")
 }
 
-func loadStdLib() {
+func LoadStdLib() {
 	usr, err := user.Current()
 	if err != nil {
 		panic(err)
@@ -44,7 +46,7 @@ func loadStdLib() {
 	}
 	downloadStandardLibrary(filePath)
 
-	filepath.Walk(filePath, loadWalkedFile)
+	filepath.Walk(elaraPath, loadWalkedFile)
 }
 
 func downloadStandardLibrary(to string) {
@@ -84,20 +86,20 @@ func loadWalkedFile(path string, info os.FileInfo, err error) error {
 	if info.IsDir() {
 		return nil
 	}
-	if filepath.Ext(path) != ".el" {
+	if filepath.Ext(path) != ".elr" {
 		return nil
 	}
-	_, content := loadFile(path)
+	content := loadFile(path)
 	Execute(&path, string(content), false)
 	return nil
 }
 
-func loadFile(fileName string) (string, []byte) {
+func loadFile(fileName string) []byte {
 
 	input, err := ioutil.ReadFile(fileName)
 
 	if err != nil {
 		panic(err)
 	}
-	return fileName, input
+	return input
 }

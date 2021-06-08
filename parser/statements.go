@@ -42,6 +42,7 @@ type WhileStmt struct {
 type ExtendStmt struct {
 	Identifier string
 	Body       BlockStmt
+	Alias      string
 }
 type TypeStmt struct {
 	Identifier string
@@ -135,8 +136,7 @@ func (p *Parser) varDefStatement() Stmt {
 func (p *Parser) whileStatement() Stmt {
 	p.consume(lexer.While, "Expected while at beginning of while loop")
 	expr := p.expression()
-	p.consume(lexer.Arrow, "Expected arrow after condition for while loop")
-	body := p.statement()
+	body := p.blockStatement()
 	return WhileStmt{
 		Condition: expr,
 		Body:      body,
@@ -146,8 +146,8 @@ func (p *Parser) whileStatement() Stmt {
 func (p *Parser) ifStatement() (stmt Stmt) {
 	p.consume(lexer.If, "Expected if at beginning of if statement")
 	condition := p.logicalOr()
-	p.consume(lexer.Arrow, "Expected arrow after condition for if statement")
-	mainBranch := p.statement()
+	p.cleanNewLines()
+	mainBranch := p.blockStatement()
 	p.cleanNewLines()
 
 	var elseBranch Stmt
@@ -155,8 +155,7 @@ func (p *Parser) ifStatement() (stmt Stmt) {
 		if p.check(lexer.If) {
 			elseBranch = p.ifStatement()
 		} else {
-			p.consume(lexer.Arrow, "Expected arrow after condition for else statement")
-			elseBranch = p.statement()
+			elseBranch = p.blockStatement()
 		}
 	}
 	stmt = IfElseStmt{
@@ -176,7 +175,7 @@ func (p *Parser) blockStatement() BlockStmt {
 		declaration := p.blockedDeclaration(&errors)
 		result = append(result, declaration)
 	}
-	p.consume(lexer.RBrace, "Expected } at beginning of block")
+	p.consume(lexer.RBrace, "Expected } at end of block")
 	if len(errors) > 0 {
 		panic(errors)
 	}
@@ -207,7 +206,10 @@ func (p *Parser) structStatement() Stmt {
 
 func (p *Parser) returnStatement() Stmt {
 	p.consume(lexer.Return, "Expected return")
-	expr := p.expression()
+	var expr Expr
+	if p.peek().TokenType != lexer.NEWLINE {
+		expr = p.expression()
+	}
 	return ReturnStmt{Returning: expr}
 }
 
@@ -218,8 +220,15 @@ func (p *Parser) exprStatement() Stmt {
 func (p *Parser) extendStatement() Stmt {
 	p.consume(lexer.Extend, "Expected 'extend'")
 	id := p.consumeValidIdentifier("Expected struct name to extend")
+	alias := "this" //
+	next := p.peek()
+	if next.TokenType == lexer.As {
+		p.advance()
+		alias = string(p.consume(lexer.Identifier, "Expected identifier for extend alias").Text)
+	}
 	return ExtendStmt{
 		Identifier: string(id.Text),
 		Body:       p.blockStatement(),
+		Alias:      alias,
 	}
 }

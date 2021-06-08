@@ -24,6 +24,15 @@ type BinaryTypeContract struct {
 	Rhs    Type
 }
 
+type CollectionTypeContract struct {
+	ElemType Type
+}
+
+type MapTypeContract struct {
+	KeyType   Type
+	ValueType Type
+}
+
 func (p *Parser) typeContract() (contract Type) {
 	return p.contractualOr(false)
 }
@@ -34,7 +43,7 @@ func (p *Parser) typeContractDefinable() (contract Type) {
 
 func (p *Parser) contractualOr(allowDef bool) (contract Type) {
 	contract = p.contractualAnd(allowDef)
-	for p.match(lexer.Or) {
+	for p.match(lexer.TypeOr) {
 		op := p.previous()
 		rhs := p.contractualAnd(allowDef)
 		contract = BinaryTypeContract{
@@ -49,7 +58,7 @@ func (p *Parser) contractualOr(allowDef bool) (contract Type) {
 func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
 	contract = p.primaryContract(allowDef)
 
-	for p.match(lexer.And) {
+	for p.match(lexer.TypeAnd) {
 		op := p.previous()
 		rhs := p.primaryContract(allowDef)
 
@@ -63,13 +72,21 @@ func (p *Parser) contractualAnd(allowDef bool) (contract Type) {
 }
 
 func (p *Parser) primaryContract(allowDef bool) (contract Type) {
-
+	if p.peek().TokenType == lexer.LSquare {
+		p.advance()
+		collType := p.consume(lexer.Identifier, "Expected identifier after [ for collection type")
+		p.consume(lexer.RSquare, "Expected ] after [ for collection type")
+		return CollectionTypeContract{ElemType: ElementaryTypeContract{Identifier: string(collType.Text)}}
+	}
 	if p.peek().TokenType == lexer.Identifier {
-		return ElementaryTypeContract{Identifier: string(p.advance().Text)}
-	} else if p.match(lexer.LParen) {
+		name := string(p.advance().Text)
+		return ElementaryTypeContract{Identifier: name}
+	} else if p.check(lexer.LParen) {
 		isFunc := p.isFuncDef()
 		if isFunc {
 			args := make([]Type, 0)
+			p.consume(lexer.LParen, "Function type args not started properly with '('")
+
 			for !p.check(lexer.RParen) {
 				argTyp := p.typeContract()
 				args = append(args, argTyp)
@@ -88,8 +105,42 @@ func (p *Parser) primaryContract(allowDef bool) (contract Type) {
 		} else {
 			contract = p.contractualOr(allowDef)
 
-			p.consume(lexer.RBrace, "contract group not closed. Expected '}'")
+			p.consume(lexer.LParen, "contract group not closed. Expected '}'")
 			return
+		}
+	}
+	if p.peek().TokenType == lexer.LBrace {
+		p.advance()
+		//Peek until reaching a closing brace
+		count := 0
+		seenColon := false
+		for {
+			count++
+			next := p.advance().TokenType
+			if next == lexer.Colon {
+				seenColon = true
+			}
+			if next == lexer.RBrace {
+				break
+			}
+		}
+		for i := 0; i < count; i++ {
+			p.reverse()
+		}
+		if !seenColon { //it's not a map type
+			p.reverse() // Undo the lbrace read
+			return p.definedContract(allowDef)
+		}
+
+		keyType := p.typeContract()
+		p.consume(lexer.Colon, "Expected colon in map type")
+		valueType := p.typeContract()
+
+		p.consume(lexer.RBrace, "Expected closing brace for map type contract")
+
+		return MapTypeContract{
+			KeyType:   keyType,
+			ValueType: valueType,
 		}
 	}
 	return p.definedContract(allowDef)
@@ -110,3 +161,5 @@ func (t ElementaryTypeContract) typeOf() {}
 func (t BinaryTypeContract) typeOf()     {}
 func (t InvocableTypeContract) typeOf()  {}
 func (t DefinedTypeContract) typeOf()    {}
+func (t CollectionTypeContract) typeOf() {}
+func (t MapTypeContract) typeOf()        {}

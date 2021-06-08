@@ -22,7 +22,7 @@ func NewReplSession() ReplSession {
 }
 
 func (repl *ReplSession) Execute(input string) interface{} {
-	tokens := lexer.Lex(&replFile, input)
+	tokens := lexer.Lex(input)
 	repl.Parser.Reset(tokens)
 	result, err := repl.Parser.Parse()
 	if len(err) > 0 {

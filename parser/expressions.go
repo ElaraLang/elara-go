@@ -76,8 +76,20 @@ type CollectionExpr struct {
 	Elements []Expr
 }
 
+type MapExpr struct {
+	Entries []MapEntry
+}
+
+type MapEntry struct {
+	Key   Expr
+	Value Expr
+}
+
 type StringLiteralExpr struct {
 	Value string
+}
+type CharLiteralExpr struct {
+	Value rune
 }
 
 type IntegerLiteralExpr struct {
@@ -95,7 +107,9 @@ type BooleanLiteralExpr struct {
 func (FuncDefExpr) exprNode()        {}
 func (AccessExpr) exprNode()         {}
 func (CollectionExpr) exprNode()     {}
+func (MapExpr) exprNode()            {}
 func (StringLiteralExpr) exprNode()  {}
+func (CharLiteralExpr) exprNode()    {}
 func (IntegerLiteralExpr) exprNode() {}
 func (FloatLiteralExpr) exprNode()   {}
 func (BooleanLiteralExpr) exprNode() {}
@@ -278,20 +292,7 @@ func (p *Parser) unary() (expr Expr) {
 }
 
 func (p *Parser) invoke() (expr Expr) {
-	expr = p.invokeProvided(nil)
-	return
-}
-
-func (p *Parser) invokeProvided(provided Expr) (expr Expr) {
-	if provided == nil {
-		if p.check(lexer.LParen) && p.isFuncDef() {
-			expr = p.funDef()
-		} else {
-			expr = p.primary()
-		}
-	} else {
-		expr = provided
-	}
+	expr = p.funDef()
 
 	for p.match(lexer.LParen, lexer.Dot, lexer.LSquare) {
 		switch p.previous().TokenType {
@@ -328,7 +329,8 @@ func (p *Parser) funDef() Expr {
 		args := p.functionArguments()
 		var typ Type
 		p.consume(lexer.Arrow, "Expected arrow at function definition")
-		if p.check(lexer.Identifier) {
+
+		if p.check(lexer.Identifier) && p.isBlockPresent() {
 			typ = p.typeContract()
 		}
 		return FuncDefExpr{
@@ -337,6 +339,10 @@ func (p *Parser) funDef() Expr {
 			Statement:  p.statement(),
 		}
 	case lexer.LBrace:
+		mapExpr := p.tryParseMapLiteral()
+		if mapExpr != nil {
+			return mapExpr
+		}
 		if p.previous().TokenType == lexer.Arrow {
 			panic(ParseError{
 				token:   tok,
@@ -360,6 +366,59 @@ func (p *Parser) funDef() Expr {
 	}
 }
 
+func (p *Parser) tryParseMapLiteral() Expr {
+	p.advance()
+	//Peek until reaching a closing brace
+	count := 0
+	seenColon := false
+	for {
+		count++
+		next := p.advance().TokenType
+		if next == lexer.Colon {
+			seenColon = true
+			break
+		}
+		if next == lexer.RBrace {
+			break
+		}
+	}
+	for i := 0; i < count; i++ {
+		p.reverse()
+	}
+	p.reverse()     // Undo the lbrace read
+	if !seenColon { //it's not a map literal
+		return nil
+	}
+	return p.mapLiteral()
+}
+
+func (p *Parser) mapLiteral() Expr {
+	p.consume(lexer.LBrace, "Expected { in map literal")
+	p.cleanNewLines()
+	consumeEntry := func() (Expr, Expr) {
+		key := p.expression()
+		p.consume(lexer.Colon, "Expected colon between map literal key and value")
+		val := p.expression()
+		return key, val
+	}
+	entries := make([]MapEntry, 0)
+
+	for {
+		if p.peek().TokenType == lexer.RBrace {
+			break
+		}
+		key, val := consumeEntry()
+		entries = append(entries, MapEntry{key, val})
+		if p.peek().TokenType == lexer.Comma {
+			p.advance()
+		}
+		//p.consume(lexer.Comma, "Expected comma after map literal entry")
+		p.cleanNewLines()
+	}
+	p.consume(lexer.RBrace, "Expected } to close map literal")
+	return MapExpr{Entries: entries}
+}
+
 func (p *Parser) collection() (expr Expr) {
 	if p.match(lexer.LSquare) {
 		col := make([]Expr, 0)
@@ -370,12 +429,12 @@ func (p *Parser) collection() (expr Expr) {
 				break
 			}
 		}
-		expr = CollectionExpr{
+		p.consume(lexer.RSquare, "Expected ']' at end of collection literal")
+		return CollectionExpr{
 			Elements: col,
 		}
-	} else {
-		expr = p.primary()
 	}
+	expr = p.primary()
 	return
 }
 
@@ -390,6 +449,10 @@ func (p *Parser) primary() (expr Expr) {
 
 		expr = StringLiteralExpr{Value: text}
 		break
+	case lexer.Char:
+		charTok := p.consume(lexer.Char, "Expected char")
+		char := charTok.Text[0]
+		expr = CharLiteralExpr{Value: char}
 	case lexer.BooleanTrue:
 		p.consume(lexer.BooleanTrue, "Expected BooleanTrue")
 		expr = BooleanLiteralExpr{Value: true}

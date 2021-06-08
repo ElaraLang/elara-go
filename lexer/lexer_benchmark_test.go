@@ -21,6 +21,6 @@ var code = strings.Repeat(`
 
 func BenchmarkEverySymbol(b *testing.B) {
 	for n := 0; n < b.N; n++ {
-		_ = Lex(nil, code)
+		_ = Lex(code)
 	}
 }

@@ -37,7 +37,7 @@ func (p *Parser) genericContract() (typContract GenericContract) {
 func (p *Parser) typeStatement() (typStmt Stmt) {
 	p.consume(lexer.Type, "Expected 'type' at the start of type declaration")
 	id := p.consume(lexer.Identifier, "Expected identifier for type")
-	p.consume(lexer.Arrow, "Expected arrow after type identifier")
+	p.consume(lexer.Equal, "Expected equals after type identifier")
 	contract := p.typeContractDefinable()
 	typStmt = TypeStmt{
 		Identifier: string(id.Text),

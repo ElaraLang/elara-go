@@ -6,11 +6,24 @@ import (
 )
 
 func BenchmarkElara(b *testing.B) {
-	code := `let fact = (Int n) => {
-	    if n == 1 => return 1
-	    return n * fact(n - 1)
-	}
-	fact(8)`
+	code := `namespace test/lol
+	import elara/std
+	
+struct Person {
+    String name
+    Int age
+}
+
+let daveFactory = () => { Person("Dave", 50) }
+
+let produceDaves(Int amount) => {
+    let factories = [daveFactory] * amount
+    factories.map(run)
+}
+
+let daves = produceDaves(2147483647)
+	`
+	base.LoadStdLib()
 	for i := 0; i < b.N; i++ {
 		base.Execute(nil, code, false)
 	}

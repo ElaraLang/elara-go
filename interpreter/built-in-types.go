@@ -3,353 +3,338 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/util"
-	"strconv"
 )
 
-var AnyType = EmptyType("Any")
-var UnitType = EmptyType("Unit")
+var AnyType = NewEmptyType("Any")
+var UnitType = NewEmptyType("Unit")
 
-var IntType = EmptyType("Int")
-var FloatType = EmptyType("Float")
-var BooleanType = EmptyType("Boolean")
-var StringType = EmptyType("String")
-var OutputType = EmptyType("Output")
+var FloatType = NewEmptyType("Float")
+var BooleanType = NewEmptyType("Boolean")
 
-var types = map[string]*Type{
-	"Any":  AnyType,
-	"Unit": UnitType,
+var CharType = NewEmptyType("Char")
 
-	"Int":     IntType,
-	"Float":   FloatType,
-	"Boolean": BooleanType,
-	"String":  StringType,
-	"Output":  OutputType,
+var StringType = NewCollectionTypeOf(CharType)
+var OutputType = NewEmptyType("Output")
+
+var types = []Type{
+	AnyType,
+	UnitType,
+	IntType,
+	FloatType,
+	BooleanType,
+	StringType,
+	CharType,
+	OutputType,
 }
 
-func BuiltInTypeByName(name string) *Type {
-	return types[name]
-}
-
-var isInitialized = false
-
-func Init() {
-	if isInitialized {
-		return
+func Init(context *Context) {
+	for _, t := range types {
+		context.types[t.Name()] = t
 	}
-	isInitialized = true
-	StringType.variables = convert(map[string]Function{
-		"plus": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *StringType,
-					},
-				},
-				ReturnType: *StringType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				concatenated := ctx.receiver.Value.(string) + util.Stringify(parameter.Value)
-				return &Value{
-					Type:  StringType,
-					Value: concatenated,
-				}
-			}),
-		},
-		"to-int": {
-			Signature: Signature{
-				Parameters: []Parameter{},
-				ReturnType: *IntType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				value, err := strconv.ParseInt(ctx.receiver.Value.(string), 10, 64)
-				if err != nil {
-					panic(err)
-				}
-				return &Value{
-					Type:  IntType,
-					Value: value,
-				}
-			}),
-		},
-		"equals": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *StringType,
-					},
-				},
-				ReturnType: *BooleanType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				eq := ctx.receiver.Value.(string) == parameter.Value
-				return &Value{
-					Type:  BooleanType,
-					Value: eq,
-				}
-			}),
-		},
-	})
+	context.types["String"] = StringType
 
-	BooleanType.variables = convert(map[string]Function{
-		"and": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *BooleanType,
-					},
-				},
-				ReturnType: *BooleanType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				and := ctx.receiver.Value.(bool) && parameter.Value.(bool)
-				return &Value{
-					Type:  BooleanType,
-					Value: and,
-				}
-			}),
-		},
-		"not": {
-			Signature: Signature{
-				Parameters: []Parameter{},
-				ReturnType: *BooleanType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				return &Value{
-					Type:  BooleanType,
-					Value: !ctx.receiver.Value.(bool),
-				}
-			}),
-		},
-		"plus": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *AnyType,
-					},
-				},
-				ReturnType: *StringType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				thisStr := util.Stringify(ctx.receiver.Value)
-				otherStr := util.Stringify(parameter.Value)
-				return StringValue(thisStr + otherStr)
-			}),
-		},
-	})
+	InitInts(context)
 
-	intAdd := Function{
+	stringPlusName := "plus"
+	stringPlus := &Function{
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
-					Name: "value",
-					Type: *IntType,
+					Name:     "this",
+					Type:     StringType,
+					Position: 0,
 				},
-			},
-			ReturnType: *IntType,
+				{
+					Name:     "other",
+					Type:     AnyType,
+					Position: 1,
+				}},
+			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(intAdd),
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			this := ctx.FindParameter(0)
+			otherParam := ctx.FindParameter(1)
+			concatenated := this.Value.(*Collection).elemsAsString() + util.Stringify(otherParam.Value)
+			return NonReturningValue(&Value{
+				Type:  StringType,
+				Value: concatenated,
+			})
+		}),
+		name: &stringPlusName,
 	}
-	floatAdd := Function{
+	stringPlusType := NewFunctionType(stringPlus)
+	context.DefineVariable(&Variable{
+		Name:    stringPlusName,
+		Mutable: false,
+		Type:    stringPlusType,
+		Value: &Value{
+			Type:  stringPlusType,
+			Value: stringPlus,
+		},
+	})
+
+	anyPlusName := "plus"
+	anyPlus := &Function{
 		Signature: Signature{
 			Parameters: []Parameter{
 				{
-					Name: "value",
-					Type: *IntType,
+					Name: "this",
+					Type: AnyType,
+				},
+				{
+					Name:     "other",
+					Type:     StringType,
+					Position: 1,
+				}},
+			ReturnType: StringType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			this := ctx.FindParameter(0)
+			otherParam := ctx.FindParameter(1)
+
+			concatenated := ctx.Stringify(this) + otherParam.Value.(*Collection).elemsAsString()
+			return NonReturningValue(&Value{
+				Type:  StringType,
+				Value: concatenated,
+			})
+		}),
+		name: &anyPlusName,
+	}
+	anyPlusType := NewFunctionType(anyPlus)
+	context.DefineVariable(&Variable{
+		Name:    anyPlusName,
+		Mutable: false,
+		Type:    anyPlusType,
+		Value: &Value{
+			Type:  anyPlusType,
+			Value: anyPlus,
+		},
+	})
+
+	define(context, "toString", &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: AnyType,
 				},
 			},
-			ReturnType: *FloatType,
+			ReturnType: StringType,
 		},
-		Body: NewAbstractCommand(func(ctx *Context) *Value {
-			parameter := ctx.FindParameter("value")
-			asInt, isInt := parameter.Value.(int64)
-			if isInt {
-				result := ctx.receiver.Value.(float64) + float64(asInt)
-				return &Value{
-					Type:  FloatType,
-					Value: result,
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			this := ctx.FindParameter(0)
+			return NonReturningValue(StringValue(ctx.Stringify(this)))
+		}),
+	})
+
+	colPlusName := "plus"
+	colPlus := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: NewCollectionTypeOf(AnyType),
+				},
+				{
+					Name:     "other",
+					Type:     NewCollectionTypeOf(AnyType),
+					Position: 1,
+				},
+			},
+			ReturnType: NewCollectionTypeOf(AnyType),
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			this := ctx.FindParameter(0).Value.(*Collection)
+			other := ctx.FindParameter(1).Value.(*Collection)
+
+			elems := make([]*Value, len(this.Elements)+len(other.Elements))
+			for i, element := range this.Elements {
+				elems[i] = element
+			}
+			for i, element := range other.Elements {
+				elems[i+len(this.Elements)] = element
+			}
+
+			newCol := &Collection{
+				ElementType: this.ElementType,
+				Elements:    elems,
+			}
+			return NonReturningValue(&Value{
+				Type:  NewCollectionType(newCol),
+				Value: newCol,
+			})
+		}),
+		name: &colPlusName,
+	}
+	colPlusType := NewFunctionType(colPlus)
+	context.DefineVariable(&Variable{
+		Name:    colPlusName,
+		Mutable: false,
+		Type:    colPlusType,
+		Value: &Value{
+			Type:  colPlusType,
+			Value: colPlus,
+		},
+	})
+
+	define(context, "times", &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: NewCollectionTypeOf(AnyType),
+				},
+				{
+					Name:     "other",
+					Type:     IntType,
+					Position: 1,
+				},
+			},
+			ReturnType: NewCollectionTypeOf(AnyType),
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			thisParam := ctx.FindParameter(0)
+			this := thisParam.Value.(*Collection)
+			amount := ctx.FindParameter(1).Value.(int64)
+			if amount == 1 {
+				return NonReturningValue(thisParam)
+			}
+
+			currentElemLength := len(this.Elements)
+			newSize := int64(currentElemLength) * amount
+			newColl := make([]*Value, newSize)
+			for i := int64(0); i < newSize; i++ {
+				index := i % amount
+				if currentElemLength == 1 {
+					index = 0
 				}
-			} else {
-				asFloat, isFloat := parameter.Value.(float64)
-				if isFloat {
-					result := ctx.receiver.Value.(float64) + asFloat
-					return &Value{
-						Type:  FloatType,
-						Value: result,
-					}
-				} else {
-					//TODO
-					//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
-					result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
-					return &Value{
-						Type:  StringType,
-						Value: result,
-					}
+				newColl[i] = this.Elements[index]
+			}
+
+			collection := &Collection{
+				ElementType: this.ElementType,
+				Elements:    newColl,
+			}
+			return NonReturningValue(NewValue(NewCollectionType(collection), collection))
+		}),
+	})
+
+	outputWriteName := "write"
+	outputWrite := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: OutputType,
+				},
+				{
+					Name:     "value",
+					Type:     AnyType,
+					Position: 1,
+				},
+			},
+			ReturnType: UnitType,
+		},
+		Body: NewAbstractCommand(func(ctx *Context) *ReturnedValue {
+			value := ctx.FindParameter(1)
+			asString := ctx.Stringify(value)
+
+			fmt.Printf("%s", asString)
+			return NonReturningValue(UnitValue())
+		}),
+		name: &outputWriteName,
+	}
+	outputWriteType := NewFunctionType(stringPlus)
+	context.DefineVariable(&Variable{
+		Name:    outputWriteName,
+		Mutable: false,
+		Type:    outputWriteType,
+		Value: &Value{
+			Type:  outputWriteType,
+			Value: outputWrite,
+		},
+	})
+
+	anyEqualsName := "equals"
+	anyEquals := &Function{
+		Signature: Signature{
+			Parameters: []Parameter{
+				{
+					Name: "this",
+					Type: AnyType,
+				},
+				{
+					Name:     "other",
+					Type:     AnyType,
+					Position: 1,
+				},
+			},
+			ReturnType: BooleanType,
+		},
+		name: &anyEqualsName,
+		Body: NewAbstractCommand(func(c *Context) *ReturnedValue {
+			this := c.FindParameter(0).Value
+			other := c.FindParameter(1)
+			value := false
+			switch a := this.(type) {
+			case *Collection:
+				value = a.Equals(c, other)
+			case *Instance:
+				value = a.Equals(c, other)
+			case int64:
+				asI64, isI64 := other.Value.(int64)
+				if isI64 && a == asI64 {
+					value = true
+				}
+			case float64:
+				asF64, isF64 := other.Value.(float64)
+				if isF64 && a == asF64 {
+					value = true
 				}
 			}
+			if value == false {
+				value = this == other
+			}
+			return NonReturningValue(BooleanValue(value))
 		}),
 	}
-
-	IntType.variables = convert(map[string]Function{
-		"plus": intAdd,
-		"add":  intAdd,
-		"minus": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *IntType,
-					},
-				},
-				ReturnType: *IntType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				result := ctx.receiver.Value.(int64) - parameter.Value.(int64)
-				return &Value{
-					Type:  IntType,
-					Value: result,
-				}
-			}),
-		},
-		"times": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *IntType,
-					},
-				},
-				ReturnType: *IntType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				result := ctx.receiver.Value.(int64) * parameter.Value.(int64)
-				return &Value{
-					Type:  IntType,
-					Value: result,
-				}
-			}),
-		},
-		"divide": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *IntType,
-					},
-				},
-				ReturnType: *IntType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				result := ctx.receiver.Value.(int64) / parameter.Value.(int64)
-				return &Value{
-					Type:  IntType,
-					Value: result,
-				}
-			}),
-		},
-		"equals": {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *IntType,
-					},
-				},
-				ReturnType: *BooleanType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				result := ctx.receiver.Value.(int64) == parameter.Value.(int64)
-				return &Value{
-					Type:  BooleanType,
-					Value: result,
-				}
-			}),
-		},
-	})
-
-	FloatType.variables = convert(map[string]Function{
-		"plus": floatAdd,
-		"add":  floatAdd,
-	})
-
-	printlnName := "write"
-	OutputType.variables = convert(map[string]Function{
-		printlnName: {
-			Signature: Signature{
-				Parameters: []Parameter{
-					{
-						Name: "value",
-						Type: *AnyType,
-					},
-				},
-				ReturnType: *UnitType,
-			},
-			Body: NewAbstractCommand(func(ctx *Context) *Value {
-				parameter := ctx.FindParameter("value")
-				fmt.Printf(util.Stringify(parameter.Value))
-				return UnitValue()
-			}),
-			name: &printlnName,
+	anyEqualsType := NewFunctionType(anyEquals)
+	context.DefineVariable(&Variable{
+		Name:    anyEqualsName,
+		Mutable: false,
+		Type:    anyEqualsType,
+		Value: &Value{
+			Type:  anyEqualsType,
+			Value: anyEquals,
 		},
 	})
 }
 
-func convert(functions map[string]Function) *VariableMap {
-	m := NewVariableMap()
-	for name, function := range functions {
-		t := FunctionType(&function)
-		if function.name == nil {
-			function.name = &name
-		}
-		m.Set(name, &Variable{
-			Name:    name,
-			Mutable: false,
-			Type:    *t,
-			Value: &Value{
-				Type:  t,
-				Value: function,
-			},
-		})
-	}
-	return m
-}
-
-func intAdd(ctx *Context) *Value {
-	parameter := ctx.FindParameter("value")
-	asInt, isInt := parameter.Value.(int64)
-	if isInt {
-		result := ctx.receiver.Value.(int64) + asInt
-		return &Value{
-			Type:  IntType,
-			Value: result,
-		}
-	} else {
-		asFloat, isFloat := parameter.Value.(float64)
-		if isFloat {
-			result := float64(ctx.receiver.Value.(int64)) + asFloat
-			return &Value{
-				Type:  FloatType,
-				Value: result,
-			}
-		} else {
-			//TODO
-			//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
-			result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
-			return &Value{
-				Type:  StringType,
-				Value: result,
-			}
-		}
-	}
-}
+//func intAdd(ctx *Context) *Value {
+//	parameter := ctx.FindParameter("value")
+//	asInt, isInt := parameter.Value.(int64)
+//	if isInt {
+//		result := ctx.receiver.Value.(int64) + asInt
+//		return &Value{
+//			Type:  IntType,
+//			Value: result,
+//		}
+//	} else {
+//		asFloat, isFloat := parameter.Value.(float64)
+//		if isFloat {
+//			result := float64(ctx.receiver.Value.(int64)) + asFloat
+//			return &Value{
+//				Type:  FloatType,
+//				Value: result,
+//			}
+//		} else {
+//			//TODO
+//			//While this might work, it ignores the fact that values won't be "cast" if passed. An Int passed as Any will still try and use Int functions
+//			result := util.Stringify(ctx.receiver.Value) + util.Stringify(parameter.Value)
+//			return &Value{
+//				Type:  StringType,
+//				Value: result,
+//			}
+//		}
+//	}
+//}

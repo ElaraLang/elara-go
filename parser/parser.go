@@ -27,14 +27,14 @@ func NewEmptyParser() *Parser {
 	return &Parser{}
 }
 
-func NewParser(tokens *[]Token) *Parser {
+func NewParser(tokens []Token) *Parser {
 	return &Parser{
-		tokens: *tokens,
+		tokens: tokens,
 	}
 }
 
-func (p *Parser) Reset(tokens *[]Token) {
-	p.tokens = *tokens
+func (p *Parser) Reset(tokens []Token) {
+	p.tokens = tokens
 	p.current = 0
 }
 
@@ -72,18 +72,23 @@ func (p *Parser) parseLine(result *[]Stmt, error *[]ParseError) {
 	}
 }
 
-func (p *Parser) handleError(error *[]ParseError) {
+func (p *Parser) handleError(errors *[]ParseError) {
 	if r := recover(); r != nil {
 		switch err := r.(type) {
 		case ParseError:
-			*error = append(*error, err)
+			*errors = append(*errors, err)
 			break
 		case []ParseError:
-			*error = append(*error, err...)
-		default:
-			*error = append(*error, ParseError{
+			*errors = append(*errors, err...)
+		case error:
+			*errors = append(*errors, ParseError{
 				token:   p.previous(),
-				message: "Invalid error thrown by Parser: ",
+				message: err.Error(),
+			})
+		default:
+			*errors = append(*errors, ParseError{
+				token:   p.previous(),
+				message: "Invalid errors thrown by Parser: ",
 			})
 			break
 		}
@@ -120,6 +125,12 @@ func (p *Parser) advance() Token {
 		p.current++
 	}
 	return p.previous()
+}
+func (p *Parser) reverse() {
+	if p.current == 0 {
+		return
+	}
+	p.current--
 }
 
 func (p *Parser) match(types ...TokenType) bool {
@@ -170,7 +181,7 @@ func (p *Parser) insertBlankType(index int, value ...TokenType) {
 		blankTokens[i] = Token{
 			TokenType: value[i],
 			Text:      nil,
-			Position:  lexer.CreatePosition(nil, -1, 1),
+			Position:  lexer.CreatePosition(-1, 1),
 		}
 	}
 	p.insert(index, blankTokens...)

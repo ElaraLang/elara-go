@@ -51,8 +51,8 @@ func formatValues(values []*interpreter.Value) string {
 	str := "["
 	for i, value := range values {
 		formatted := value.String()
-		if formatted != nil {
-			str += *formatted
+		if formatted != "" {
+			str += formatted
 		} else {
 			str += "<nil>"
 		}

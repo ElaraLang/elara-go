@@ -22,7 +22,7 @@ func NewTokenReader(runes []rune) *TokenReader {
 }
 
 //Reads the current rune and moves the cursor to the next rune
-func (s *TokenReader) read() rune {
+func (s *TokenReader) Advance() rune {
 	if s.cursor >= len(s.runes) {
 		return eof
 	}
@@ -45,7 +45,7 @@ func (s *TokenReader) peek() rune {
 
 //TODO this is pretty gross, could use a cleanup
 func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
-	ch := s.read()
+	ch := s.Advance()
 
 	if ch == eof {
 		return EOF, []rune{ch}, s.line, s.col
@@ -63,8 +63,7 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 	}
 
 	if IsWhitespace(ch) {
-		s.col++ //consumeWhitespace will add any *further* whitespace counters
-		s.col += s.consumeWhitespace()
+		s.consumeWhitespace()
 		return s.Read()
 	}
 
@@ -79,17 +78,6 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 			s.col++
 		}()
 		return Colon, []rune{ch}, s.line, s.col
-	}
-
-	if ch == '_' {
-		next := s.peek()
-		if next == eof || IsWhitespace(next) {
-			defer func() {
-				s.col++
-			}()
-			return Underscore, []rune{ch}, s.line, s.col
-		}
-		s.unread()
 	}
 
 	if isAngleBracket(ch) {
@@ -147,6 +135,14 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 		return str, t, s.line, s.col
 	}
 
+	if ch == '\'' {
+		char, t := s.readChar()
+		defer func() {
+			s.col++
+		}()
+		return char, []rune{t}, s.line, s.col
+	}
+
 	if isValidIdentifier(ch) {
 		s.unread()
 		identifier, t := s.readIdentifier()
@@ -161,18 +157,23 @@ func (s *TokenReader) Read() (tok TokenType, text []rune, line int, col int) {
 
 //Consume all whitespace until we reach an eof or a non-whitespace character
 func (s *TokenReader) consumeWhitespace() int {
-	count := 0
+	count := 1 //We know this function will be called when the lexer has already encountered at least 1 whitespace
 	for {
-		ch := s.read()
+		ch := s.Advance()
 		if ch == eof {
 			break
 		}
-		if !IsWhitespace(ch) {
+		if ch == '\n' {
+			s.line++
+			s.col = 0
+		} else if ch == '\t' || ch == ' ' {
+			count++
+		} else {
 			s.unread()
 			break
 		}
-		count++
 	}
+	s.col += count
 	return count
 }
 
@@ -272,7 +273,7 @@ func (s *TokenReader) readIdentifier() (tok TokenType, text []rune) {
 }
 
 func (s *TokenReader) readBracket() (tok TokenType, text []rune) {
-	str := s.read()
+	str := s.Advance()
 	switch str {
 	case '(':
 		return LParen, []rune{str}
@@ -295,7 +296,7 @@ func (s *TokenReader) readBracket() (tok TokenType, text []rune) {
 }
 
 func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
-	ch := s.read()
+	ch := s.Advance()
 
 	switch ch {
 	case '.':
@@ -303,11 +304,11 @@ func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
 	case '=':
 		peeked := s.peek()
 		if peeked == '>' {
-			s.read()
+			s.Advance()
 			return Arrow, []rune{ch, peeked}
 		}
 		if peeked == '=' {
-			s.read()
+			s.Advance()
 			return Equals, []rune{ch, peeked}
 		}
 		return Equal, []rune{ch}
@@ -316,12 +317,12 @@ func (s *TokenReader) readSymbol() (tok TokenType, text []rune) {
 	return Illegal, []rune{ch}
 }
 func (s *TokenReader) readAngleBracket() (tok TokenType, text []rune) {
-	ch1 := s.read()
+	ch1 := s.Advance()
 	ch := s.peek()
 	if ch1 == '<' {
 		switch ch {
 		case '=':
-			s.read()
+			s.Advance()
 			return LesserEqual, []rune{ch1, ch}
 		}
 		return LAngle, []rune{ch1}
@@ -329,7 +330,7 @@ func (s *TokenReader) readAngleBracket() (tok TokenType, text []rune) {
 	if ch1 == '>' {
 		switch ch {
 		case '=':
-			s.read()
+			s.Advance()
 			return GreaterEqual, []rune{ch1, ch}
 		}
 		return RAngle, []rune{ch1}
@@ -371,6 +372,10 @@ func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
 		return Mod, str
 	case '^':
 		return Xor, str
+	case '|':
+		return TypeOr, str
+	case '&':
+		return TypeAnd, str
 
 	case '>':
 		{
@@ -424,7 +429,7 @@ func (s *TokenReader) readOperator() (tok TokenType, text []rune) {
 	return Illegal, str
 }
 
-//This function is called with the assumption that the beginning " has ALREADY been read.
+//This function is called with the assumption that the beginning " has ALREADY been Advance.
 func (s *TokenReader) readString() (tok TokenType, text []rune) {
 	start := s.cursor
 	end := start
@@ -446,6 +451,37 @@ func (s *TokenReader) readString() (tok TokenType, text []rune) {
 	return String, s.runes[start : end-1]
 }
 
+//This function is called with the assumption that the beginning ' has ALREADY been Advance.
+func (s *TokenReader) readChar() (tok TokenType, char rune) {
+	start := s.cursor
+	char = s.runes[start]
+	s.cursor++
+	if s.runes[s.cursor-1] == '\\' {
+		switch s.runes[s.cursor] {
+		case 'n':
+			char = '\n'
+		case 'r':
+			char = '\r'
+		case 't':
+			char = '\t'
+		case '\'':
+			char = '\''
+		case '\\':
+			char = '\\'
+		case 'b':
+			char = '\b'
+		default:
+			panic("Invalid escape sequence in char literal")
+		}
+		s.cursor++
+	}
+	if s.runes[s.cursor] != '\'' {
+		panic("Char literal must have only 1 symbol")
+	}
+	s.cursor++
+	return Char, char
+}
+
 func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
 	start := s.cursor
 	end := start
@@ -461,6 +497,9 @@ func (s *TokenReader) readNumber() (tok TokenType, text []rune) {
 			break
 		}
 		if r == '.' {
+			if numType == Float {
+				break
+			}
 			numType = Float
 		} else if !unicode.IsNumber(r) {
 			s.unread()

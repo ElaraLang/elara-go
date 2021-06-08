@@ -3,6 +3,7 @@ package interpreter
 import (
 	"fmt"
 	"github.com/ElaraLang/elara/parser"
+	"reflect"
 )
 
 type Interpreter struct {
@@ -13,13 +14,11 @@ type Interpreter struct {
 func NewInterpreter(code []parser.Stmt) *Interpreter {
 	return &Interpreter{
 		lines:   code,
-		context: NewContext(),
+		context: NewContext(true),
 	}
 }
 func NewEmptyInterpreter() *Interpreter {
-	return &Interpreter{
-		context: NewContext(),
-	}
+	return NewInterpreter([]parser.Stmt{})
 }
 
 func (s *Interpreter) ResetLines(lines *[]parser.Stmt) {
@@ -32,27 +31,11 @@ func (s *Interpreter) Exec(scriptMode bool) []*Value {
 	for i := 0; i < len(s.lines); i++ {
 		line := s.lines[i]
 		command := ToCommand(line)
-
-		//Ignore any top level returns
-		defer func() {
-			r := recover()
-			if r != nil {
-				_, isValue := r.(*Value)
-				if isValue {
-					return
-				}
-				panic(r)
-			}
-		}()
-		res := command.Exec(s.context)
+		res := command.Exec(s.context).Unwrap()
 		values[i] = res
 		if scriptMode {
-			formatted := res.String()
-			if formatted == nil {
-				fmt.Println("<no value>")
-			} else {
-				fmt.Println(*formatted)
-			}
+			formatted := s.context.Stringify(res) + " " + reflect.TypeOf(res).String()
+			fmt.Println(formatted)
 		}
 	}
 	return values

@@ -1,56 +1,107 @@
 package interpreter
 
 import (
-	"fmt"
 	"github.com/ElaraLang/elara/util"
+	"sync"
 )
 
 type Value struct {
-	Type  *Type
+	Type  Type
 	Value interface{}
 }
 
-func (v *Value) String() *string {
+func (v *Value) String() string {
+	if v == nil {
+		return ""
+	}
+	return util.Stringify(v.Value)
+}
+
+func (v *Value) Copy() *Value {
 	if v == nil {
 		return nil
 	}
-	formatted := fmt.Sprintf("%s (%s)", util.Stringify(v.Value), v.Type.Name)
-	return &formatted
+	return NewValue(v.Type, v.Value)
 }
 
-var unitValue = &Value{
-	Type:  UnitType,
-	Value: "Unit",
+var equalsNameHash = util.Hash("equals")
+
+func (v *Value) Equals(ctx *Context, b *Value) bool {
+	eqFunction := ctx.FindFunction(equalsNameHash, &Signature{
+		Parameters: []Parameter{
+			{Name: "this", Position: 0, Type: v.Type},
+			{Name: "other", Position: 1, Type: b.Type},
+		},
+		ReturnType: BooleanType,
+	})
+	if eqFunction != nil {
+		res := eqFunction.Exec(ctx, []*Value{v, b}).Value.(bool)
+		return res
+	}
+	return v.Value == b.Value
 }
+
+var unitValue = NewValue(UnitType, nil)
 
 func UnitValue() *Value {
 	return unitValue
 }
 
-type Variable struct {
-	Name    string
-	Mutable bool
-	Type    Type
-	Value   *Value
+var returnedValues = sync.Pool{
+	New: func() interface{} {
+		return &ReturnedValue{
+			Value:       nil,
+			IsReturning: false,
+		}
+	},
 }
 
-func (v Variable) string() string {
-	return fmt.Sprintf("Variable { name: %s, mutable: %T, type: %s, Value: %s", v.Name, v.Mutable, v.Type, v.Value)
+type ReturnedValue struct {
+	Value       *Value
+	IsReturning bool
 }
 
-func (v *Variable) Equals(other Variable) bool {
-	if v.Name != other.Name {
-		return false
+func NewReturningValue(value *Value, returning bool) *ReturnedValue {
+	r := returnedValues.Get().(*ReturnedValue)
+	r.Value = value
+	r.IsReturning = returning
+	return r
+}
+func NonReturningValue(value *Value) *ReturnedValue {
+	return NewReturningValue(value, false)
+}
+
+func ReturningValue(value *Value) *ReturnedValue {
+	return NewReturningValue(value, true)
+}
+
+func NilValue() *ReturnedValue {
+	return NewReturningValue(nil, false)
+}
+
+func (r *ReturnedValue) clean() {
+	r.Value = nil
+	r.IsReturning = false
+	returnedValues.Put(r)
+}
+
+func (r ReturnedValue) Unwrap() *Value {
+	if r.IsReturning {
+		panic("Value should return")
 	}
-	if v.Mutable != other.Mutable {
-		return false
+	val := r.Value
+	r.clean()
+	return val
+}
+
+func (r ReturnedValue) UnwrapNotNil() *Value {
+	if r.IsReturning {
+		panic("Value should return")
 	}
-	if !v.Type.Accepts(other.Type) {
-		//TODO exact equality necessary?
-		return false
+	if r.Value == nil {
+		panic("Value must not be nil")
 	}
-	if v.Value != other.Value {
-		return false
-	}
-	return true
+	val := r.Value
+	r.clean()
+	return val
 }

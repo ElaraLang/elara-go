@@ -1,6 +1,8 @@
 package parser
 
-import "github.com/ElaraLang/elara/lexer"
+import (
+	"github.com/ElaraLang/elara/lexer"
+)
 
 type FunctionArgument struct {
 	Lazy    bool
@@ -33,28 +35,26 @@ func (p *Parser) functionArguments() (args []FunctionArgument) {
 	for !p.match(lexer.RParen) {
 		arg := p.functionArgument()
 		args = append(args, arg)
+		p.cleanNewLines()
+		if !p.check(lexer.RParen) {
+			p.consume(lexer.Comma, "Expected comma to separate function arguments")
+		}
 	}
 	return
 }
 
 func (p *Parser) functionArgument() FunctionArgument {
 	lazy := p.parseProperties(lexer.Lazy)[0]
-	i1 := p.consume(lexer.Identifier, "Invalid argument in function def")
-	if p.match(lexer.Equal) {
-		return FunctionArgument{
-			Lazy:    lazy,
-			Type:    nil,
-			Name:    string(i1.Text),
-			Default: p.expression(),
-		}
+	checkIndex := p.current + 1
+	var typ Type
+	if len(p.tokens) > checkIndex && p.tokens[checkIndex].TokenType != lexer.Equal {
+		typ = p.typeContractDefinable()
 	}
 	id := p.consume(lexer.Identifier, "Invalid argument in function def")
 	var def Expr
 	if p.match(lexer.Equal) {
-
 		def = p.expression()
 	}
-	typ := ElementaryTypeContract{Identifier: string(i1.Text)}
 	return FunctionArgument{
 		Lazy:    lazy,
 		Type:    typ,
@@ -87,4 +87,19 @@ func (p *Parser) findParenClosingPoint(start int) (index int) {
 		}
 	}
 	return cur
+}
+
+func (p *Parser) isBlockPresent() bool {
+	curIdx := p.current
+
+	for curIdx < len(p.tokens) {
+		switch p.tokens[curIdx].TokenType {
+		case lexer.LBrace:
+			return true
+		case lexer.NEWLINE:
+			return false
+		}
+		curIdx++
+	}
+	return false
 }

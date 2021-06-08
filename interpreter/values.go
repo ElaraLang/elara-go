@@ -1,29 +1,33 @@
 package interpreter
 
-func IntValue(int int64) *Value {
+func NewValue(valueType Type, value interface{}) *Value {
 	return &Value{
-		Type:  IntType,
-		Value: int,
+		Type:  valueType,
+		Value: value,
 	}
+}
+
+func IntValue(int int64) *Value {
+	return NewValue(IntType, int)
 }
 
 func FloatValue(num float64) *Value {
-	return &Value{
-		Type:  FloatType,
-		Value: num,
-	}
+	return NewValue(FloatType, num)
 }
 
 func BooleanValue(value bool) *Value {
-	return &Value{
-		Type:  BooleanType,
-		Value: value,
-	}
+	return NewValue(BooleanType, value)
+}
+
+func CharValue(value rune) *Value {
+	return NewValue(CharType, value)
 }
 
 func StringValue(value string) *Value {
-	return &Value{
-		Type:  StringType,
-		Value: value,
+	chars := make([]*Value, len(value))
+	for i, c := range value {
+		chars[i] = CharValue(c)
 	}
+	val := &Collection{Elements: chars, ElementType: CharType}
+	return NewValue(NewCollectionTypeOf(CharType), val)
 }
