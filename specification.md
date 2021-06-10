@@ -85,9 +85,26 @@ Additionally, they must not match any of the following "native operator" tokens:
 - `/*`
 - `//`
 
-When referenced in any context apart from infix application, the operator's identifier must also be surrounded in parentheses. For example, to define an operator `/=` we do ```fs
+When referenced in any context apart from infix application, the operator's identifier must also be surrounded in parentheses. For example, to define an operator `/=` we do 
+```fs
 let (/=) x y = [implementation]
-
 ```
 
-```
+
+### 1.7 - Number Literals
+Number Literals are unlimited sequences of numeric characters. For clarity, any number literals may contain `_` which can be used in place of a comma or dot in real world numbers. These should be ignored by the lexer and do not affect the resultant number in any way. For example, the literal `21_539` is functionally identical to `21539`
+
+
+#### 1.7.1 - Integer Literals
+
+##### 1.7.1.1 - Decimal Integer Literals
+Decimal Integer Literals follow a base-10 notation and so any characters between `0` and `9` are accepted.
+
+##### 1.7.1.2 - Hexadecimal Integer Literals
+Hexadecimal Integer Literals represent numbers in a base-16 format. Any number literal directly preceeded by a `0x` sequence of characters should be treated as hexadecimal. Any characters between `0` and `9`, along with upper or lowercase letters between `a` and `f` are accepted.
+
+##### 1.7.1.3 - Binary Integer Literals
+These represent numbers in a base-2 format. Any number literal directly preceeded by a `0b` sequence of characters should be treated as binary. These only accept 2 characters: `0` and `1`
+
+#### 1.7.2 - Floating Point Literals
+// TODO
