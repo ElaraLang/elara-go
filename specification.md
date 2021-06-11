@@ -93,7 +93,9 @@ let (/=) x y = [implementation]
 
 
 ### 1.7 - Number Literals
-Number Literals are unlimited sequences of numeric characters. For clarity, any number literals may contain `_` which can be used in place of a comma or dot in real world numbers. These should be ignored by the lexer and do not affect the resultant number in any way. For example, the literal `21_539` is functionally identical to `21539`
+Number Literals are unlimited sequences of numeric characters. 
+
+For clarity, any number literals may contain `_` which can be used in place of a comma or dot in real world numbers. These should be ignored by the lexer and do not affect the resultant number in any way. For example, the literal `21_539` is functionally identical to `21539`
 
 
 #### 1.7.1 - Integer Literals
@@ -108,4 +110,12 @@ Hexadecimal Integer Literals represent numbers in a base-16 format. Any number l
 These represent numbers in a base-2 format. Any number literal directly preceeded by a `0b` sequence of characters should be treated as binary. These only accept 2 characters: `0` and `1`
 
 #### 1.7.2 - Floating Point Literals
-// TODO
+
+Floating point literals represent numbers with a decimal point.
+
+Only base-10 notation is supported in floating points. That is, Hexadecimal and Binary floats are illegal.
+
+A floating point literal is defined with the following grammar:
+`decint.decint`
+where `decint` describes a base-10 integer literal described in section `1.7.1.1`
+
