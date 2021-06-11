@@ -23,7 +23,7 @@ Elara recognises 3 different options for line terminator characters: `CR`, `LF`,
 Each of these patterns are treated as 1 single line terminator.
 These are used to determine when expressions start and end, and will determine line numbers in errors produced.
 
-```antlr4
+```antlr
 LineTerminator:
     | The ASCII CR Character
     | The ASCII LF Character
@@ -199,3 +199,14 @@ Floating point literals represent numbers with a decimal point.
 
 Only base-10 notation is supported in floating points. That is, Hexadecimal and Binary floats are illegal.
 
+### 1.8 - Character Literals
+
+```antlr
+EscapeSequence:
+    | \ b (backspace character, Unicode \u0008)
+    | \ s (space character, Unicode \u0020)
+    | \ h (horizontal tab, Unicode \u0009)
+    | \ n (newline LF, Unicode \u000a)
+    | 
+UnicodeEscape: 
+```
