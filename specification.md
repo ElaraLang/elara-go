@@ -9,14 +9,28 @@ Elara programs are encoded in the [Unicode character set](https://unicode.org) a
 ### 1.2 - Line Terminators
 
 Elara recognises 3 different options for line terminator characters: `CR`, `LF`, or `CR` immediately followed by `LF`.
-Each of these patterns are treated as 1 single line terminator. These are used to determine when expressions start and end, and will detemine line numbers in errors produced.
+
+Each of these patterns are treated as 1 single line terminator.
+These are used to determine when expressions start and end, and will determine line numbers in errors produced.
+
+```antlr4
+LineTerminator:
+    | The ASCII CR Character
+    | The ASCII LF Character
+    | The ASCII CR Character immediately followed by the ASCII LF Character
+```
+
 
 ### 1.3 - Whitespace
 
-White space is defined as any of the following:
+```antlr4
+WhiteSpace:
+    | The ASCII SP Character, ` `
+    | The ASCII HT Character, `\t`
+    | LineTerminator
 
-- The ASCII ` ` character, "space"
-- The ASCII ` ` character, "tab"
+InputCharacter: Any Unicode Character except WhiteSpace
+```
 
 ### 1.4 - Comments
 
@@ -32,9 +46,24 @@ Elara uses 2 main formats for comments:
 
 Single line comments are denoted with the literal text `//`. Any source code following from this pattern until a **Line Terminator** character is encountered is ignored.
 
+```antlr4
+SingleLineComment:
+    // InputCharacter+ 
+```
+
+
 #### Multi line comments
 
-Multi line comments start with `/*` and continue until `*/` is encountered. If no closing comment is found (i.e `EOF` is reached), an error should be raised by the compiler
+Multi line comments start with `/*` and continue until `*/` is encountered. 
+If no closing comment is found (i.e `EOF` is reached before a `*/`), an error should be raised by the compiler
+
+```antlr4
+StartMultiLineComment: /*
+
+EndMultiLineComment: */
+
+MultiLineComment: StartMultiLineComment InputCharacter+ EndMultiLineComment
+```
 
 ### 1.5 - Normal Identifiers
 
@@ -48,6 +77,14 @@ Additionally, a valid identifier must satisfy all of the following:
 - Must start with a character that is **NOT** a digit (i.e 0-9)
 - Must not directly match any reserved Elara keywords
 
+```antlr4
+IdentifierCharacter: Any characters of the latin alphabet, upper or lowercase 
+
+IdentifierCharacterOrDigit: IdentifierCharacter or 0-9
+
+Identifier: IdentifierCharacter IdentifierCharacterOrDigit+ but not a Keyword
+```
+
 #### 1.5.1 - Type vs Binding Identifiers
 
 If an identifier starts with an uppercase character, it is implied to be referencing a type's identifier.
@@ -60,6 +97,7 @@ This implies that all type names must start with Uppercase (excluding generics),
 Elara supports custom operators and operator overloading. A separate type of identifier is defined for these.
 These identifiers may only consist of the following symbols:
 
+#### Valid Operator Symbols
 - `.`
 - `>`
 - `<`
@@ -80,7 +118,7 @@ These identifiers may only consist of the following symbols:
 - `_`
 - `\`
 
-Additionally, they must not match any of the following "native operator" tokens:
+Additionally, they must not match any of the following "native operator" patterns:
 
 - `=`
 - `/*`
@@ -91,12 +129,44 @@ When referenced in any context apart from infix application, the operator's iden
 let (/=) x y = [implementation]
 ```
 
+```antlr4
+OperatorSymbol: Any character described in "Valid Operator Symbols" except [= | /* | //]
+
+QualifiedOperator: ( UnqualifiedOperator )
+
+UnqualifiedOperator: OperatorSymbol+
+```
 
 ### 1.7 - Number Literals
 Number Literals are unlimited sequences of numeric characters. 
 
 For clarity, any number literals may contain `_` which can be used in place of a comma or dot in real world numbers. These should be ignored by the lexer and do not affect the resultant number in any way. For example, the literal `21_539` is functionally identical to `21539`
 
+```antlr4
+
+DecimalDigit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+BinaryDigit: 0 | 1
+
+HexadecimalDigit: DecimalDigit | a | b | c | d | e | f | A | B | C | D | E | F
+
+Separator: _
+
+DecimalLiteral: (DecimalDigit | Separator)+
+
+HexadecimalPrefix: 0x
+
+HexadecimalLiteral: HexadecimalPrefix (HexadecimalDigit | Separator)+
+
+BinaryPrefix: 0b
+
+BinaryLiteral: BinaryPrefix (BinaryDigit | Separator)+
+
+
+FloatingPointSeparator: .
+
+FloatingPoint: DecimalLiteral FloatingPointSeparator DecimalLiteral
+```
 
 #### 1.7.1 - Integer Literals
 
@@ -114,8 +184,3 @@ These represent numbers in a base-2 format. Any number literal directly preceede
 Floating point literals represent numbers with a decimal point.
 
 Only base-10 notation is supported in floating points. That is, Hexadecimal and Binary floats are illegal.
-
-A floating point literal is defined with the following grammar:
-`decint.decint`
-where `decint` describes a base-10 integer literal described in section `1.7.1.1`
-
