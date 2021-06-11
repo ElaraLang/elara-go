@@ -1,10 +1,20 @@
 # Elara Programming Language Specification
 
+## Chapter 0 - Grammar Syntax
+
+This specification uses a modified form of [ANTLR4 Grammar Syntax](https://github.com/antlr/antlr4/blob/master/doc/index.md) to describe the grammar of Elara.
+
+In many cases, natural language may be used instead of a strict ANTLR-compliant syntax for the sake of simplicity.
+
+Literal patterns (for example a pattern matching the character sequence `/*`) should have their characters separated by spaces (the previous example becomes `/ *`).
+
 ## Chapter 1 - Lexical Structure
 
 ### 1.1 - Unicode
 
 Elara programs are encoded in the [Unicode character set](https://unicode.org) and almost all Unicode characters are supported in source code.
+
+Elara Source Code should either be encoded in a UTF-8 or UTF-16 format.
 
 ### 1.2 - Line Terminators
 
@@ -23,7 +33,7 @@ LineTerminator:
 
 ### 1.3 - Whitespace
 
-```antlr4
+```antlr
 WhiteSpace:
     | The ASCII SP Character, ` `
     | The ASCII HT Character, `\t`
@@ -46,9 +56,9 @@ Elara uses 2 main formats for comments:
 
 Single line comments are denoted with the literal text `//`. Any source code following from this pattern until a **Line Terminator** character is encountered is ignored.
 
-```antlr4
+```antlr
 SingleLineComment:
-    // InputCharacter+ 
+    / / InputCharacter+ 
 ```
 
 
@@ -57,10 +67,10 @@ SingleLineComment:
 Multi line comments start with `/*` and continue until `*/` is encountered. 
 If no closing comment is found (i.e `EOF` is reached before a `*/`), an error should be raised by the compiler
 
-```antlr4
-StartMultiLineComment: /*
+```antlr
+StartMultiLineComment: / *
 
-EndMultiLineComment: */
+EndMultiLineComment: * /
 
 MultiLineComment: StartMultiLineComment InputCharacter+ EndMultiLineComment
 ```
@@ -77,7 +87,7 @@ Additionally, a valid identifier must satisfy all of the following:
 - Must start with a character that is **NOT** a digit (i.e 0-9)
 - Must not directly match any reserved Elara keywords
 
-```antlr4
+```antlr
 IdentifierCharacter: Any characters of the latin alphabet, upper or lowercase 
 
 IdentifierCharacterOrDigit: IdentifierCharacter or 0-9
@@ -129,8 +139,13 @@ When referenced in any context apart from infix application, the operator's iden
 let (/=) x y = [implementation]
 ```
 
-```antlr4
-OperatorSymbol: Any character described in "Valid Operator Symbols" except [= | /* | //]
+```antlr
+InvalidOperatorSymbol: 
+    | =
+    | / *
+    | / /
+
+OperatorSymbol: Any character described in "Valid Operator Symbols" except InvalidOperatorSymbol
 
 QualifiedOperator: ( UnqualifiedOperator )
 
@@ -142,8 +157,7 @@ Number Literals are unlimited sequences of numeric characters.
 
 For clarity, any number literals may contain `_` which can be used in place of a comma or dot in real world numbers. These should be ignored by the lexer and do not affect the resultant number in any way. For example, the literal `21_539` is functionally identical to `21539`
 
-```antlr4
-
+```antlr
 DecimalDigit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
 
 BinaryDigit: 0 | 1
