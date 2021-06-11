@@ -177,7 +177,6 @@ BinaryPrefix: 0b
 
 BinaryLiteral: BinaryPrefix (BinaryDigit | Separator)+
 
-
 FloatingPointSeparator: .
 
 FloatingPoint: DecimalLiteral FloatingPointSeparator DecimalLiteral
@@ -199,3 +198,4 @@ These represent numbers in a base-2 format. Any number literal directly preceede
 Floating point literals represent numbers with a decimal point.
 
 Only base-10 notation is supported in floating points. That is, Hexadecimal and Binary floats are illegal.
+
