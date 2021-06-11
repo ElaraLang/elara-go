@@ -131,7 +131,7 @@ These identifiers may only consist of the following symbols:
 Additionally, they must not match any of the following "native operator" patterns:
 
 - `=`
-- `/*`
+- `/*` or `*/`
 - `//`
 
 When referenced in any context apart from infix application, the operator's identifier must also be surrounded in parentheses. For example, to define an operator `/=` we do 
