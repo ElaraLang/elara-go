@@ -78,6 +78,7 @@ These identifiers may only consist of the following symbols:
 - `~`
 - `#`
 - `_`
+- `\`
 
 Additionally, they must not match any of the following "native operator" tokens:
 
