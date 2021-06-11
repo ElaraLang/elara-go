@@ -143,6 +143,7 @@ let (/=) x y = [implementation]
 InvalidOperatorSymbol: 
     | =
     | / *
+    | * /
     | / /
 
 OperatorSymbol: Any character described in "Valid Operator Symbols" except InvalidOperatorSymbol
