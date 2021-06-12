@@ -207,6 +207,21 @@ EscapeSequence:
     | \ s (space character, Unicode \u0020)
     | \ h (horizontal tab, Unicode \u0009)
     | \ n (newline LF, Unicode \u000a)
-    | 
-UnicodeEscape: 
+    | \ f (form feed FF, Unicode \u000c) 
+    | \ r (carriage return CR, Unicode \u000d)
+    | \ " (double quote ")
+    | \ ' (single quote ')
+    | \ \ (backslash \)
+    | UnicodeEscape
+
+UnicodeEscape: \ u {HexadecimalDigit, 4}
+
+CharacterLiteralValue: EscapeSequence | Any Raw Unicode character
+
+CharacterLiteral: ' CharacterLiteralValue '
 ```
+
+It is a compile time error for a character literal to contain more than 1 `CharacterLiteralValue` in between the single quotes, or for a `LineTerminator` character to appear between the quotes.
+
+
+`UnicodeEscape` values may only represent UTF-16 code units. They are limited to `\u0000` to `\uffff`.
