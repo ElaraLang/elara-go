@@ -135,7 +135,7 @@ Additionally, they must not match any of the following "native operator" pattern
 - `//`
 
 When referenced in any context apart from infix application, the operator's identifier must also be surrounded in parentheses. For example, to define an operator `/=` we do 
-```fs
+```fsharp
 let (/=) x y = [implementation]
 ```
 
@@ -157,6 +157,9 @@ UnqualifiedOperator: OperatorSymbol+
 Number Literals are unlimited sequences of numeric characters. 
 
 For clarity, any number literals may contain `_` which can be used in place of a comma or dot in real world numbers. These should be ignored by the lexer and do not affect the resultant number in any way. For example, the literal `21_539` is functionally identical to `21539`
+
+
+Number Literals are translated to values of some type implementing the `Num` type class. That is, all number literals are polymorphic by default. 
 
 ```antlr
 DecimalDigit: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
@@ -225,3 +228,77 @@ It is a compile time error for a character literal to contain more than 1 `Chara
 
 
 `UnicodeEscape` values may only represent UTF-16 code units. They are limited to `\u0000` to `\uffff`.
+
+Character literals are converted to values of the `Char` type.
+
+### 1.9 - String Literals
+
+A String Literal consists of zero or more characters surrounded by double quotes (`"`). Special characters (such as newlines) must be represented rather than their literal values.
+
+```antlr
+StringCharacter:
+    | Any Unicode Character except [", \]
+    | EscapeSequence
+    
+StringLiteral: " StringCharacter+ "
+```
+
+If any Line Terminator Character appears between the opening and closing ", an compiler error will be thrown.
+
+String literals are translated to values of the `[Char]` type (a list of `Char`s).
+
+
+### 1.10 - Text Blocks
+
+A Text Block ("Multiline String") consists of zero or more characters surrounded by 3 double quotes (`"""`). Similar to String Literals, special characters must be represented with escape sequences. 
+
+```antlr
+TextBlockCharacter: 
+    | Any Unicode Character except \
+    | EscapeSequence
+    
+TextBlock: " " " TextBlockCharacter+ " " "
+```
+
+The output of a Text Block should trim any consistent indentation at compile time, and replace raw `LineTerminator` characters with their corresponding escape sequences. 
+For example, the following code: 
+
+```fsharp
+let message = """
+    hello
+    world
+    """
+```
+
+should be translated to a normal String Literal equivalent to the following: `"\nhello\nworld\n"`
+
+#### 1.10.1 - Raw Text Blocks
+
+If the indentation trimming functionality of a standard Text Block is not desired, we can use a Raw Text Block.
+These are defined as zero or more characters directly preceeded by `!"""` and directly terminated by `"""!`
+
+Adjusting the previous example to use a raw text block gives:
+
+```fsharp
+let message = !"""
+    hello
+    world
+    """!
+```
+
+Which translates to the string literal `"\n    hello\n    world\n"`
+
+### 1.11 - Keywords
+
+Keywords are special forms of identifiers that should not be allowed as a standard Identifier. They should also generally be treated as separate tokens.
+
+The following sequences of characters are reserved as keywords and are not permitted for use as identifiers:
+- `let`
+- `def`
+- `type`
+- `in`
+- `where`
+- `class`
+- `instance`
+
+TODO figure out more
