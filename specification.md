@@ -300,5 +300,8 @@ The following sequences of characters are reserved as keywords and are not permi
 - `where`
 - `class`
 - `instance`
+- `if`
+- `else`
+- `then`
 
 TODO figure out more
