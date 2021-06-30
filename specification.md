@@ -302,5 +302,6 @@ The following sequences of characters are reserved as keywords and are not permi
 - `instance`
 - `if`
 - `else`
+- `then`
 
 TODO figure out more
