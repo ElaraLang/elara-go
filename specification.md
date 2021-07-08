@@ -354,4 +354,106 @@ and are not permitted for use as identifiers:
 - `else`
 - `then`
 
-TODO figure out more
+## Chapter 2 - Parser and Grammar
+
+### 2.1 - Bindings
+
+Bindings can be declared anywhere in a source file with the following syntax:
+
+```fsharp
+    let [identifier] = [value]
+```
+
+Bindings declared in this form are accessible from anywhere in the code
+that is after the binding declaration, and in the same, or a child scope.
+
+Bindings are **NOT** expressions, and so they cannot be recursively defined.
+
+#### 2.1.1 - Verbose Binding Syntax
+
+An alternative binding form is provided that **is** an expression:
+
+```fsharp
+    let [identifier] = [value] in [expression]
+```
+
+In this form, the binding is only present in the scope of `expression`.
+The entire construct evaluates to the result of `expression`.
+
+#### 2.1.2 - Binding Type Declarations
+
+Bindings can optionally declare an expected type of their value.
+
+This is done with a colon (`:`) after the `[identifier]` section
+followed by the expected type.
+
+For example:
+
+```fsharp
+    let [identifier]: [Type] = [value]
+```
+
+If `value` (or `expression`) does not evaluate to a value of type `Type`,
+a compiler error should be raised.
+
+### 2.2 - Functions
+
+The syntax for defining functions is very similar to bindings,
+however function definitions also define the parameters of the function.
+
+```fsharp
+    let [identifier] [param1] [param2] [...] = [function_body]
+```
+
+where `param1`, `param2`, ... `paramN` are valid [Identifiers](#1.5)
+and `function_body` is any expression.
+
+For example:
+
+```fsharp
+   let f param1 param2 = param1 + param2
+```
+
+#### 2.2.1 - Multiple Expression Function Bodies
+
+Functions can also have multiple expressions in their body.
+This is denoted by a new line, and then indentation, so that every line of
+the body lines up with the function name.
+
+For example:
+
+```fsharp
+    let f param1 param2 =
+        print param1
+        print param2
+        let double = param1 * 2
+        double + param2
+```
+
+Every line in the body is evaluated, and the last line is returned.
+Therefore, a function body must end with an expression.
+
+##### 2.2.1.1 - Curly Braces in Multiple Expression Function Bodies
+
+Curly braces (`{}`) can also be used as an alternative or supplement to indentation:
+
+```fsharp
+    let f param1 param2 = {
+        print param1
+        print param2
+        let double = param1 * 2
+        double + param2
+    }
+```
+
+##### 2.2.1.2 - Semicolons in Multiple Expression Function Bodies
+
+Semicolons (`;`) can also be used as an alternative or supplement to line terminators:
+
+```fsharp
+    let f param1 param2 =
+        print param1 ; print param2
+        let double = param1 * 2
+        double + param2
+```
+
