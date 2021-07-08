@@ -433,20 +433,7 @@ For example:
 Every line in the body is evaluated, and the last line is returned.
 Therefore, a function body must end with an expression.
 
-##### 2.2.1.1 - Curly Braces in Multiple Expression Function Bodies
-
-Curly braces (`{}`) can also be used as an alternative or supplement to indentation:
-
-```fsharp
-    let f param1 param2 = {
-        print param1
-        print param2
-        let double = param1 * 2
-        double + param2
-    }
-```
-
-##### 2.2.1.2 - Semicolons in Multiple Expression Function Bodies
+##### 2.2.1.1 - Semicolons in Multiple Expression Function Bodies
 
 Semicolons (`;`) can also be used as an alternative or supplement to line terminators:
 
@@ -457,3 +444,37 @@ Semicolons (`;`) can also be used as an alternative or supplement to line termin
         double + param2
 ```
 
+#### 2.2.2 - Dec Forms
+
+It is often useful to explicitly specify the type of a function,
+for drafting out implementations or for readability in future.
+
+Whilst the let binding colon syntax can be used for functions, it is often messy.
+For example:
+
+```fsharp
+    let add a b : Int -> Int -> Int = a + b
+```
+
+To avoid this issue, the type of the function can be declared on the line above
+its implementation.
+
+```fsharp
+    dec [identifier] : [type]
+```
+
+For example:
+
+```fsharp
+    dec add : Int -> Int -> Int
+    let add a b = a + b
+```
+
+This form can also be used for standard bindings (i.e not functions):
+
+```fsharp
+    dec pi : Double
+    let pi = 3.141529
+```
+
+The dec line must be directly above the let line
