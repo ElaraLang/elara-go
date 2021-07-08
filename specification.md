@@ -405,7 +405,7 @@ however function definitions also define the parameters of the function.
     let [identifier] [param1] [param2] [...] = [function_body]
 ```
 
-where `param1`, `param2`, ... `paramN` are valid [Identifiers](#1.5)
+where `param1`, `param2`, ... `paramN` are valid [Identifiers](#15---normal-identifiers)
 and `function_body` is any expression.
 
 For example:
