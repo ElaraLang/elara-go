@@ -444,7 +444,7 @@ Semicolons (`;`) can also be used as an alternative or supplement to line termin
         double + param2
 ```
 
-#### 2.2.2 - Dec Forms
+#### 2.2.2 - Def forms
 
 It is often useful to explicitly specify the type of a function,
 for drafting out implementations or for readability in future.
@@ -460,21 +460,21 @@ To avoid this issue, the type of the function can be declared on the line above
 its implementation.
 
 ```fsharp
-    dec [identifier] : [type]
+    def [identifier] : [type]
 ```
 
 For example:
 
 ```fsharp
-    dec add : Int -> Int -> Int
+    def add : Int -> Int -> Int
     let add a b = a + b
 ```
 
 This form can also be used for standard bindings (i.e not functions):
 
 ```fsharp
-    dec pi : Double
+    def pi : Double
     let pi = 3.141529
 ```
 
-The dec line must be directly above the let line
+The def line must be directly above the let line
