@@ -478,3 +478,34 @@ This form can also be used for standard bindings (i.e not functions):
 ```
 
 The def line must be directly above the let line
+
+#### 2.2.3 - Function Types
+
+In Elara, a function is a mapping from a single input value to a single output value. 
+
+There are 2 types of functions, which are categorised based on their **purity** (for a function to be pure, it must have no _visible_ side effects)
+
+##### 2.2.3.1 - Pure Functions
+
+A pure function mapping a value of type `a` to a value of type `b` has the type `a -> b`. 
+A pure function has no side effects, meaning a compiler is permitted to replace the implementation with an optimised version. For example the function may be automatically memoised or inlined for performance benefits. This functionality can be prevented with the annotation `@NoInline`.
+
+A pure function may only call other pure functions. Calling an impure function makes this function itself impure.
+
+##### 2.2.3.2 - Impure Functions
+
+An impure function behaves similarly to a pure function, but is expected to perform side effects. An impure function mapping a value of type `a` to a value of type `b` has the type `a => b`.
+Because side effects are expected, compilers should be conservative when optimising impure functions to avoid subtle changes in behaviour.
+
+An impure function may call any other function, pure or impure.
+
+#### 2.3.4 - The main function
+
+In order for an Elara program to compile to an executable, it must define a main function that serves as an entry point for the program.
+
+This function must have the type `() => ()` and be named `main`.
+
+If the main function is present in a project, the compiler must emit an executable. Similarly, if this function is not present, the compiler is not required to emit an executable (although it is not prohibited).
+
+If multiple files in a project have the main function, the ambiguity must be resolved by the user. The process of resolving this is undefined as it is left up to the compiler implementation.
+
