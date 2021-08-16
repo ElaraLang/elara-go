@@ -485,6 +485,8 @@ In Elara, a function is a mapping from a single input value to a single output v
 
 There are 2 types of functions, which are categorised based on their **purity** (for a function to be pure, it must have no _visible_ side effects)
 
+The purity of a function can always be inferred by the compiler based on its context. If a function _only_ calls other pure functions, it is itself pure. Otherwise, it is impure.
+
 ##### 2.2.3.1 - Pure Functions
 
 A pure function mapping a value of type `a` to a value of type `b` has the type `a -> b`. 
@@ -499,7 +501,16 @@ Because side effects are expected, compilers should be conservative when optimis
 
 An impure function may call any other function, pure or impure.
 
-#### 2.3.4 - The main function
+### 2.3.4 - Function Application
+
+Calling functions is done with the form `function arg`, where `arg` is an expression and `function` is some pure or impure function
+
+This applies the function to the given argument and evaluates to some value whose type is the function's return type.
+
+Function application is left associative, so `f a b` is the same as `(f a) b`.
+
+
+#### 2.3.5 - The main function
 
 In order for an Elara program to compile to an executable, it must define a main function that serves as an entry point for the program.
 
@@ -508,4 +519,3 @@ This function must have the type `() => ()` and be named `main`.
 If the main function is present in a project, the compiler must emit an executable. Similarly, if this function is not present, the compiler is not required to emit an executable (although it is not prohibited).
 
 If multiple files in a project have the main function, the ambiguity must be resolved by the user. The process of resolving this is undefined as it is left up to the compiler implementation.
-
