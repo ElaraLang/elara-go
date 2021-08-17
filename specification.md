@@ -561,4 +561,19 @@ It is the only value of type `()`.
 *Note that this could be thought of as an empty tuple (length 0) if empty tuples were permitted* 
 (see section 2.5)  
 
+### 2.7 - Generic Types
+
+Generic types are a type that can be any type. 
+They are denoted with a lowercase identifier to distinguish them from normal types.
+All generic types are assumed to be universally quantified. 
+For example, the type expression `a -> a` means `∀a. a -> a`, i.e it must hold for every possible type.
+
+Once a generic type has been "realised", it must remain the same all throughout a type expression.
+For example, in the expression `a -> b -> (a, b)`, if `a` is inferred to `Int` then it must be `Int` everywhere in the expression.
+
+The realised type of a generic type can usually be inferred from usage by the compiler.
+If not, then they should be kept as generics.
+If the realised type can never be inferred, then a compiler error should be raised to prompt
+the user to resolve the ambiguity.
+
 
