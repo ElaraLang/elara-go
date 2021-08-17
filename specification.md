@@ -604,6 +604,15 @@ that matches the name of any one of the following:
 - Algebraic Data Type
 - Record Type
 
+#### 2.9.1 - Alias Types
+
+Alias types are simply named aliases for another type. 
+They can be used to add names to more complex type expressions.
+
+They are written as `type alias = subject` where `alias` is a valid Type Identifier, and 
+`subject` is some valid Type Expression (see Section 2.10)
+
+
 ### 2.10 - Type Expressions
 
 A type expression is some combination of types and constraints that forms an expression that describes
@@ -628,4 +637,3 @@ Examples of valid type expressions include:
 - `a -> a`
 - `a -> b -> Int -> [(a, b)]`
 - `a`
-
