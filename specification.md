@@ -558,8 +558,13 @@ For example, a tuple of length 2 has the type constructor `(,)`. Thus, `(Int, St
 The unit value is written as `()` and has type `()`.
 It is the only value of type `()`.
 
+The unit value can be used to represent computations with no useful input or output, i.e side effects.
+
+A pure function `f` with the signature `a -> ()` must have by definition `let f _ = ()`,
+as no other pure implementations exist.
+
 *Note that this could be thought of as an empty tuple (length 0) if empty tuples were permitted* 
-(see section 2.5)  
+(see section 2.5).
 
 ### 2.7 - Generic Types
 
@@ -588,3 +593,39 @@ and `expr` is some Type Expression.
 
 For example, to constrain a function `print : a => ()` to any type that is an instance of the `Show` class, 
 we could write `(Show a) := a => ()`.
+
+### 2.9 - Standard Types
+
+Standard types are the simplest form of type. 
+These are simply some valid type identifier (see Section 1.5.1) 
+that matches the name of any one of the following:
+
+- Alias Type
+- Algebraic Data Type
+- Record Type
+
+### 2.10 - Type Expressions
+
+A type expression is some combination of types and constraints that forms an expression that describes
+to a single type.
+
+Valid elements in a type expression include:
+- Lists (Section 2.4)
+- Tuples (Section 2.5)
+- The Unit Type (Section 2.6)
+- Generic Types (Section 2.7)
+- Type Class Constraints (Section 2.8)
+- Standard Types (Section 2.9)
+- Function Types (Section 2.2.3)
+
+A type expression must have at least 1 element in it, but can be arbitrarily sized otherwise.
+
+Examples of valid type expressions include:
+
+- `(Show a) := [a] => ()`
+- `(Int, String) -> (String, Int)`
+- `String`
+- `a -> a`
+- `a -> b -> Int -> [(a, b)]`
+- `a`
+
