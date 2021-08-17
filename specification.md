@@ -612,6 +612,9 @@ They can be used to add names to more complex type expressions.
 They are written as `type alias = subject` where `alias` is a valid Type Identifier, and 
 `subject` is some valid Type Expression (see Section 2.10)
 
+#### 2.9.2 - Algebraic Data Type
+
+An algebraic data type represents a closed, distinct union of other types.
 
 ### 2.10 - Type Expressions
 
