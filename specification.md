@@ -577,3 +577,14 @@ If the realised type can never be inferred, then a compiler error should be rais
 the user to resolve the ambiguity.
 
 
+### 2.8 - Type Class Constraints
+Type classes are Elara's mechanism for polymorphism. 
+Their semantics and functionality is described later in this specification (TODO link).
+
+A type expression can have place a **constraint** on some generic types to create a smaller set of possible types.
+This is written as `(Class1 i1, Class2 i2, ..., ClassN iN) := expr` 
+where `N >= 1`, `iN` is a valid Generic Type identifier, `ClassN` is the identifier of a type class,
+and `expr` is some Type Expression.
+
+For example, to constrain a function `print : a => ()` to any type that is an instance of the `Show` class, 
+we could write `(Show a) := a => ()`.
