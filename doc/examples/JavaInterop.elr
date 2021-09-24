@@ -54,4 +54,5 @@ type Player = ...
 class PlayerGroup <: Iterable Player where 
     def players : [Player] // Internally uses an Elara List
 
+    def iterator : () => Iterator Player // Similarly, when extending Java methods, they're assumed to be impure unless explicitly mentioned otherwise
     let iterator () = getJavaIterator players
