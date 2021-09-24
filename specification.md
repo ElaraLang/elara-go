@@ -540,7 +540,7 @@ For example, `[1, 2, 3]` is de-sugared to `1 : 2 : 3 : []`.
 
 ### 2.5 - Tuples
 
-Tuples are similar to lists, except heterogeneous and fixed-length. 
+Tuples are similar to lists, except heterogeneous and fixed-length.
 
 A tuple is written as `(elem1, elem2, ..., elemN)` where `N` is any integer `N >= 2`.
 
@@ -565,10 +565,10 @@ as no other pure implementations exist.
 
 ### 2.7 - Generic Types
 
-Generic types are a type that can be any type. 
+Generic types are a type that can be any type.
 They are denoted with a lowercase identifier to distinguish them from normal types.
-All generic types are assumed to be universally quantified. 
-For example, the type expression `a -> a` means `∀a. a -> a`, i.e it must hold for every possible type.
+All generic types are assumed to be universally quantified.
+For example, the type expression `a -> a` means `∀a. a -> a`, i.e it must hold for every possible type. A value of type `String -> String` is not sufficient.
 
 Once a generic type has been "realized", it must remain the same all throughout a type expression.
 For example, in the expression `a -> b -> (a, b)`, if `a` is inferred to `Int` then it must be `Int` everywhere in the expression.
@@ -602,7 +602,7 @@ that matches the name of any one of the following:
 
 #### 2.9.1 - Alias Types
 
-Alias types are simply named aliases for another type. 
+Alias types are simply named aliases for another type.
 They can be used to add names to more complex type expressions.
 
 They are written as `type alias = subject` where `alias` is a valid Type Identifier, and
