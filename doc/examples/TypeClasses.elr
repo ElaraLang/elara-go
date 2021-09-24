@@ -4,3 +4,16 @@ module TypeClasses
 type class Show a where
     show : a -> String
 
+// This creates a simple record type that just wraps a String 
+type Player = {
+    name : String
+}
+
+// Defines the Show instance for Player that produces a String in the format "Player {name}"
+instance Show Player where 
+    show p = "Player { name = " + p.name + "}
+
+
+let player = Player "A"
+
+println (show player) // prints "Player {A}"
