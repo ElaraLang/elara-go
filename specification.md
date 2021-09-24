@@ -24,7 +24,7 @@ Elara Source Code should either be encoded in a UTF-8 or UTF-16 format.
 
 ### 1.2 - Line Terminators
 
-Elara recognises 3 different options for line terminator characters:
+Elara recognizes 3 different options for line terminator characters:
 `CR`, `LF`, or `CR` immediately followed by `LF`.
 
 Each of these patterns are treated as 1 single line terminator.
@@ -481,23 +481,23 @@ The def line must be directly above the let line
 
 #### 2.2.3 - Function Types
 
-In Elara, a function is a mapping from a single input value to a single output value. 
+In Elara, a function is a mapping from a single input value to a single output value.
 
-There are 2 types of functions, which are categorised based on their **purity** (for a function to be pure, it must have no _visible_ side effects)
+There are 2 types of functions, which are categorized based on their **purity** (for a function to be pure, it must have no _visible_ side effects)
 
 The purity of a function can always be inferred by the compiler based on its context. If a function _only_ calls other pure functions, it is itself pure. Otherwise, it is impure.
 
 ##### 2.2.3.1 - Pure Functions
 
-A pure function mapping a value of type `a` to a value of type `b` has the type `a -> b`. 
-A pure function has no side effects, meaning a compiler is permitted to replace the implementation with an optimised version. For example the function may be automatically memoised or inlined for performance benefits. This functionality can be prevented with the annotation `@NoInline`.
+A pure function mapping a value of type `a` to a value of type `b` has the type `a -> b`.
+A pure function has no side effects, meaning a compiler is permitted to replace the implementation with an optimized version. For example the function may be automatically memoised or inlined for performance benefits. This functionality can be prevented with the annotation `@NoInline`.
 
 A pure function may only call other pure functions. Calling an impure function makes this function itself impure.
 
 ##### 2.2.3.2 - Impure Functions
 
 An impure function behaves similarly to a pure function, but is expected to perform side effects. An impure function mapping a value of type `a` to a value of type `b` has the type `a => b`.
-Because side effects are expected, compilers should be conservative when optimising impure functions to avoid subtle changes in behaviour.
+Because side effects are expected, compilers should be conservative when optimizing impure functions to avoid subtle changes in behavior.
 
 An impure function may call any other function, pure or impure.
 
@@ -509,7 +509,6 @@ This applies the function to the given argument and evaluates to some value whos
 
 Function application is left associative, so `f a b` is the same as `(f a) b`.
 
-
 #### 2.2.5 - The main function
 
 In order for an Elara program to compile to an executable, it must define a main function that serves as an entry point for the program.
@@ -520,7 +519,6 @@ If the main function is present in a project, the compiler must emit an executab
 
 If multiple files in a project have the main function, the ambiguity must be resolved by the user. The process of resolving this is undefined as it is left up to the compiler implementation.
 
-
 ### 2.4 - Lists
 
 Lists are written `[elem1, elem2, ..., elemN]`, where `N` is any integer `N >= 0`.
@@ -528,7 +526,7 @@ Lists are written `[elem1, elem2, ..., elemN]`, where `N` is any integer `N >= 0
 Lists are homogeneous, meaning all elements in a list must share a single type `a`.
 The type of this list is written as `[a]`
 
-The **empty list** is written as `[]` and has type `[a]` where `a` is a generic type. 
+The **empty list** is written as `[]` and has type `[a]` where `a` is a generic type.
 This means that the empty list can be used anywhere irrespective of the type of list.
 
 The **cons operator** is written as `:` and is reserved for list construction.
@@ -537,7 +535,7 @@ For example, `3 : [4]` gives `[3, 4]`.
 
 The cons operator is right associative, so `3 : 4 : [5]` is the same as `3 : (4 : [5])`
 
-List literals are merely a syntax sugar for repeated application of the cons operator. 
+List literals are merely a syntax sugar for repeated application of the cons operator.
 For example, `[1, 2, 3]` is de-sugared to `1 : 2 : 3 : []`.
 
 ### 2.5 - Tuples
@@ -549,8 +547,7 @@ A tuple is written as `(elem1, elem2, ..., elemN)` where `N` is any integer `N >
 The type of a tuple of length `N` is written as `(t1, t2, ..., tN)`.
 For example, the tuple `(3, "Hello")` has type `(Int, String)`
 
-The type constructor of a tuple of length `N` can be de-sugared to a parenthesised series of commas,
-where there are `N - 1` commas. 
+The type constructor of a tuple of length `N` can be de-sugared to a parenthesized series of commas, where there are `N - 1` commas.
 For example, a tuple of length 2 has the type constructor `(,)`. Thus, `(Int, String)` is identical to `(,) Int String`.
 
 ### 2.6 - The Unit Value
@@ -563,7 +560,7 @@ The unit value can be used to represent computations with no useful input or out
 A pure function `f` with the signature `a -> ()` must have by definition `let f _ = ()`,
 as no other pure implementations exist.
 
-*Note that this could be thought of as an empty tuple (length 0) if empty tuples were permitted* 
+*Note that this could be thought of as an empty tuple (length 0) if empty tuples were permitted*
 (see section 2.5).
 
 ### 2.7 - Generic Types
@@ -573,31 +570,30 @@ They are denoted with a lowercase identifier to distinguish them from normal typ
 All generic types are assumed to be universally quantified. 
 For example, the type expression `a -> a` means `∀a. a -> a`, i.e it must hold for every possible type.
 
-Once a generic type has been "realised", it must remain the same all throughout a type expression.
+Once a generic type has been "realized", it must remain the same all throughout a type expression.
 For example, in the expression `a -> b -> (a, b)`, if `a` is inferred to `Int` then it must be `Int` everywhere in the expression.
 
-The realised type of a generic type can usually be inferred from usage by the compiler.
+The realized type of a generic type can usually be inferred from usage by the compiler.
 If not, then they should be kept as generics.
-If the realised type can never be inferred, then a compiler error should be raised to prompt
+If the realized type can never be inferred, then a compiler error should be raised to prompt
 the user to resolve the ambiguity.
 
-
 ### 2.8 - Type Class Constraints
-Type classes are Elara's mechanism for polymorphism. 
+
+Type classes are Elara's mechanism for polymorphism.
 Their semantics and functionality is described later in this specification (TODO link).
 
 A type expression can have place a **constraint** on some generic types to create a smaller set of possible types.
-This is written as `(Class1 i1, Class2 i2, ..., ClassN iN) := expr` 
+This is written as `(Class1 i1, Class2 i2, ..., ClassN iN) := expr`
 where `N >= 1`, `iN` is a valid Generic Type identifier, `ClassN` is the identifier of a type class,
 and `expr` is some Type Expression.
 
-For example, to constrain a function `print : a => ()` to any type that is an instance of the `Show` class, 
-we could write `(Show a) := a => ()`.
+For example, to constrain a function `print : a => ()` to any type that is an instance of the `Show` class, we could write `(Show a) := a => ()`.
 
 ### 2.9 - Standard Types
 
-Standard types are the simplest form of type. 
-These are simply some valid type identifier (see Section 1.5.1) 
+Standard types are the simplest form of type.
+These are simply some valid type identifier (see Section 1.5.1)
 that matches the name of any one of the following:
 
 - Alias Type
@@ -609,7 +605,7 @@ that matches the name of any one of the following:
 Alias types are simply named aliases for another type. 
 They can be used to add names to more complex type expressions.
 
-They are written as `type alias = subject` where `alias` is a valid Type Identifier, and 
+They are written as `type alias = subject` where `alias` is a valid Type Identifier, and
 `subject` is some valid Type Expression (see Section 2.10)
 
 #### 2.9.2 - Algebraic Data Type
@@ -622,6 +618,7 @@ A type expression is some combination of types and constraints that forms an exp
 to a single type.
 
 Valid elements in a type expression include:
+
 - Lists (Section 2.4)
 - Tuples (Section 2.5)
 - The Unit Type (Section 2.6)
