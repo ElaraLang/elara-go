@@ -1,0 +1,57 @@
+module JavaInterop
+
+import java.lang.String
+import Elara.String
+import Elara.Unsafe
+
+// Calling java methods
+
+// toJavaString converts an Elara String into a java.lang.String
+def hello : java.lang.String
+let hello = toJavaString "hello world!"
+
+// Now we have an issue. Unless it is obvious (eg a constructor, or has a @Contract("pure") annotation), the compiler has no way of knowing if any given java method
+// is pure or not. 
+// As a safety measure it assumes that they are all impure, but because there will be cases when the user knows better, 
+// we can use `run!` to call an impure function as if it was pure.
+// This should be used sparingly, and only when the you can guarantee that the function is pure
+
+let upperHello = run! hello.toUpperCase ()
+
+
+// Constructing and using java objects
+
+import java.util.ArrayList
+
+def createArrayList : Int => ArrayList Int
+let createArrayList a = 
+    let list = ArrayList ()
+    list.add 1 // This is very impure and so we're not going to use `run!`
+    list.add 2
+    list.addAll [3, 4, 5, a]
+    list
+
+// However, the function as a whole is pure. It uses some impure functions internally, but due to their scoping their are no visible side effects
+// What can we do here?
+
+// We can create a wrapper function using let and use `run!`
+
+def createArrayListPure : Int -> ArrayList Int
+let createArrayListPure a = 
+    let f () = 
+        let list = ArrayList ()
+        list.add 1 // This is very impure and so we're not going to use `run!`
+        list.add 2
+        list.addAll [3, 4, 5, a]
+        list
+    run! f ()
+
+
+// Extending java classes and interfaces
+
+type Player = ...
+
+class PlayerGroup <: Iterable Player where 
+    def players : [Player] // Internally uses an Elara List
+
+    let iterator () = getJavaIterator players
