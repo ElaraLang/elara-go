@@ -1,0 +1,14 @@
+module Logic
+
+let simpleIfElse = 
+    if 3 < 4 then println "good" else println "bad"
+
+def when : Boolean -> lazy b => ()
+let when a (lazy b) = if a then b else ()
+
+let whenUsage = when (3 < 4) (println "good")
+
+// Pattern matching on booleans
+let matching = match 3 < 4
+    True -> println "good"
+    False -> println "bad"

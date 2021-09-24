@@ -1,0 +1,13 @@
+module FunctionalProgramming
+
+// Optional type declaration for compose
+def compose : (a -> b) -> (b -> c) -> (a -> c)
+let compose f g = \x -> f (g x)
+
+let add1 x = x + 1
+let double y = y * 2
+
+// Creates a new function that calls double first, then compose
+let add1AndDouble = compose add1 double
+
+let output = println (add1AndDouble 3) // prints 7

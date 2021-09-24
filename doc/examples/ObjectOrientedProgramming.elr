@@ -1,0 +1,25 @@
+module ObjectOrientedProgramming
+
+
+class Entity where
+    def name : String // Name is an immutable property of Entity
+    def health : mut Int // Health is a mutable property of Entity
+
+    // Constructor-like function, is called *after* name and health are assigned
+    let init = // This constructor does side effects
+        println "Created new entity named " + name
+
+    let doDamage damage = 
+        let newHealth = this.health - damage
+        // When is a function in the standard library that acts as syntax sugar for if / else with side effects
+        when (newHealth <= 0) (println name + " died!")
+        this.health = newHealth
+
+class Player <: Entity, Levelled where:
+    // Player is a subtype of Entity and so it will inherit name and health
+    def level : mut Int
+
+
+interface Levelled where
+    def level : mut Int
+

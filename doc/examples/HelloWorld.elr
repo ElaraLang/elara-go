@@ -1,0 +1,4 @@
+module Main // This is optional when compiling / executing a single file, but required when compiling a multiple-file project
+
+let main = 
+    println "Hello World!"

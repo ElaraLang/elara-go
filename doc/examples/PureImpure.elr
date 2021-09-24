@@ -1,0 +1,26 @@
+module PureImpure
+
+// Pure functions have type a -> b
+def pureAdd : Int -> Int
+let pureAdd a = a + 3
+
+// Impure functions have type a => bad
+def impureAdd : Int => Int
+let impureAdd a = 
+    println "Adding 3 to " + (show a) + "!"
+    a + 3
+
+// We can't call impure functions from pure ones
+def doesNotCompile : Int -> Int
+let doesNotCompile a = impureAdd a
+
+// But we can do the opposite...
+def doesCompile : Int => Int
+let doesCompile a = pureAdd a
+
+// However, the compiler always prefers pure functions and so should you
+def better : Int -> Int
+let better a = pureAdd a
+
+// Point free style
+let evenBetter = pureAdd
