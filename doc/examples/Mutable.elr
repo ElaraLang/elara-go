@@ -1,0 +1,41 @@
+// In Elara everything is immutable by default, however most things can also be made mutable
+
+let a = 3 // This creates an immutable binding between the name "a" and the value 3
+
+def pure : () -> Int
+let pure = 
+    a // Reading immutable variables is pure
+    a = 4 // Obviously, writing is very bad and won't compile
+
+let mut b = 3 // This creates a mutable variable named "b" with the initial value 3
+
+def impure : () => Int
+let impure = 
+    b // Reading OR writing to a mutable variable is an impure operation and so can't be done in a pure function
+    b = 5
+
+
+// So far we've seen "reference immutability", but we also need value immutability
+
+// Lists are immutable by default
+
+let list = [1, 2, 3]
+
+// but can be made mutable by adding the mut keyword:
+
+let mutList = mut [1, 2, 3]
+
+list.add 4 // List.add is impure
+
+// Note that this list is value-mutable, but still reference-immutable, therefore
+mutList = mut [] // this will NOT compile
+
+// but this will
+let mut doubleMut = mut []
+doubleMut = mut [1]
+doubleMut.add 2 
+
+
+// the mut prefix
+// the mut prefix can be added to any type. `mut T` means "a mutable reference to a value of type T"
+
