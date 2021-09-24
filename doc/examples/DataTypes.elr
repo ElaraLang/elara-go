@@ -1,0 +1,33 @@
+module DataTypes
+
+// Simple type alias
+type Identifier = String
+
+def id : Identifier
+let id = "12ab4c"
+
+
+// Algebraic Data Types
+
+type BinaryOperator = 
+    | Addition
+    | Subtraction
+    | Multiplication
+    | Division
+
+// More complex Algebraic Data Type with each type constructor having a different signature
+type Entity = 
+    | Empty
+    | NPC { name : String }
+    | Player { name : String, level : mut Int }
+
+// Generic record type
+
+type User = {
+    email : String,
+    passwordHash : String,
+    signUpDate: Timestamp,
+}
+
+let user = User "a@example.com" "<example>" "-1"
+println (user.email) // prints a@example.com
