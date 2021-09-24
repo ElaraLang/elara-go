@@ -17,3 +17,9 @@ instance Show Player where
 let player = Player "A"
 
 println (show player) // prints "Player {A}"
+
+
+// Type class constraints 
+
+def print : (Show a) := a => ()
+let print s = println (show s)
