@@ -15,7 +15,7 @@ class Entity where
         when (newHealth <= 0) (println name + " died!")
         this.health = newHealth
 
-class Player <: Entity, Levelled where:
+class Player <: Entity, Levelled where
     // Player is a subtype of Entity and so it will inherit name and health
     override def level : mut Int // We use override here because level is overriding from the declaration in Levelled
 

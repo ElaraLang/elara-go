@@ -21,13 +21,16 @@ type Entity =
     | NPC { name : String }
     | Player { name : String, level : mut Int }
 
-// Generic record type
+// record type
 
 type User = {
     email : String,
     passwordHash : String,
     signUpDate: Timestamp,
 }
+
+// Generic type
+type List a = Empty | Cons a (List a)
 
 let user = User "a@example.com" "<example>" "-1"
 println (user.email) // prints a@example.com
