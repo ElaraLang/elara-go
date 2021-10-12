@@ -42,6 +42,7 @@ Dot: '.';
 PureArrow: '->';
 ImpureArrow: '=>';
 Equals : '=';
+Bar : '|';
 
 // Identifiers
 TypeIdentifier: [A-Z][a-zA-Z_0-9]*;

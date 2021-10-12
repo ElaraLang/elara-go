@@ -10,7 +10,7 @@ let id = "12ab4c"
 // Algebraic Data Types
 
 type BinaryOperator = 
-    | Addition
+      Addition
     | Subtraction
     | Multiplication
     | Division
