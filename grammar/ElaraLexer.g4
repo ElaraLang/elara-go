@@ -1,6 +1,6 @@
 lexer grammar ElaraLexer;
 
-NewLine : '\r' '\n' | '\n' | '\r';
+NewLine : ('\r' '\n' | '\n' | '\r') -> skip;
 Semicolon : ';';
 
 fragment SPACE: [ \t];

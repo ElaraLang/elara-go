@@ -11,16 +11,28 @@ unit : LParen RParen;
 
 type : unit #UnitType
     | VarIdentifier #GenericType
+    | typeName typeName+ #RealizedGenericType
     | type PureArrow type # PureFunctionType
     | type ImpureArrow type #ImpureFunctionType
     | LParen type RParen #ParenthesizedType
-    | TypeIdentifier #SimpleType;
+    | TypeIdentifier #SimpleType
+    | Mut type #MutType;
 
-typeAlias : Type TypeIdentifier Equals type;
-typeConstructor : TypeIdentifier type*;
+typeName :
+      TypeIdentifier #NormalTypeName
+    | VarIdentifier #GenericTypeName;
+
+
+typeAlias : type;
+typeConstructor :
+    TypeIdentifier type* #NormalTypeCosntructor
+    | TypeIdentifier recordType #RecordTypeConstructor;
 
 sumType : typeConstructor (Bar typeConstructor)*;
+recordTypeField : VarIdentifier Colon type;
+recordType : LBrace recordTypeField (Comma recordTypeField)* RBrace;
 
-typeDeclaration : typeAlias | sumType;
+typeDeclaration : Type TypeIdentifier VarIdentifier* Equals typeDeclarationValue;
+typeDeclarationValue : typeAlias | sumType | recordType;
 
 expression : unit;

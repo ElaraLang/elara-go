@@ -26,7 +26,7 @@ type Entity =
 type User = {
     email : String,
     passwordHash : String,
-    signUpDate: Timestamp,
+    signUpDate: Timestamp
 }
 
 // Generic type
