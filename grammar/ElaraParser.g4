@@ -8,7 +8,7 @@ variable : (defClause NewLine)? letClause;
 
 unit : LParen RParen;
 
-
+// Types
 type : unit #UnitType
     | VarIdentifier #GenericType
     | typeName typeName+ #RealizedGenericType
@@ -22,7 +22,6 @@ typeName :
       TypeIdentifier #NormalTypeName
     | VarIdentifier #GenericTypeName;
 
-
 typeAlias : type;
 typeConstructor :
     TypeIdentifier type* #NormalTypeCosntructor
@@ -34,5 +33,7 @@ recordType : LBrace recordTypeField (Comma recordTypeField)* RBrace;
 
 typeDeclaration : Type TypeIdentifier VarIdentifier* Equals typeDeclarationValue;
 typeDeclarationValue : typeAlias | sumType | recordType;
+
+// Expressions
 
 expression : unit;
