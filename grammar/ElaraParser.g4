@@ -4,7 +4,7 @@ options { tokenVocab=ElaraLexer; }
 
 defClause : Def VarIdentifier Colon type;
 letClause : Let VarIdentifier Equals expression;
-variable : (defClause NewLine)? letClause;
+variable : defClause? letClause;
 
 unit : LParen RParen;
 
@@ -15,6 +15,8 @@ type : unit #UnitType
     | type PureArrow type # PureFunctionType
     | type ImpureArrow type #ImpureFunctionType
     | LParen type RParen #ParenthesizedType
+    | LParen (type (Comma type)+) RParen #TupleType
+    | LSquareParen type RSquareParen # ListType
     | TypeIdentifier #SimpleType
     | Mut type #MutType;
 
@@ -36,4 +38,12 @@ typeDeclarationValue : typeAlias | sumType | recordType;
 
 // Expressions
 
-expression : unit;
+expression :
+    unit #UnitExpression
+    | IntegerLiteral #IntExpression
+    | FloatLiteral #FloatExpression
+    | CharLiteral #CharExpression
+    | StringLiteral #StringExpression
+    | LSquareParen (expression (Comma expression)*)? RSquareParen #ListExpression
+    | LParen (expression (Comma expression)+) RParen #TupleExpression
+;

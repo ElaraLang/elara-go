@@ -15,7 +15,7 @@ fragment HexDigit: [0-9A-F];
 fragment ScientificNotation: 'E' [+-];
 
 // Literals
-AbsoluteIntegerLiteral: NonZeroDigit Digit+ (ScientificNotation Digit+);
+fragment AbsoluteIntegerLiteral: NonZeroDigit (Digit+ (ScientificNotation Digit+))?;
 IntegerLiteral : '-'? AbsoluteIntegerLiteral;
 FloatLiteral: IntegerLiteral '.' AbsoluteIntegerLiteral ;
 
