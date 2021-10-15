@@ -1,10 +1,18 @@
 lexer grammar ElaraLexer;
 
-NewLine : ('\r' '\n' | '\n' | '\r') -> skip;
+
+NewLine : ('\r' '\n' | '\n' | '\r') {
+    this.processNewLine();
+} ;
+
+Tab : [\t]+ {
+    this.processTabToken();
+} ;
+
 Semicolon : ';';
 
-fragment SPACE: [ \t];
-Whitespace : SPACE+ -> skip;
+fragment Space: [ \t];
+Whitespace : Space+ -> skip;
 
 InlineComment : '//' ~[\r\n]* -> skip;
 MultiComment : '/*' .+? '*/' -> skip;

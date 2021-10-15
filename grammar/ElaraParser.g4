@@ -26,7 +26,7 @@ typeName :
 
 typeAlias : type;
 typeConstructor :
-    TypeIdentifier type* #NormalTypeCosntructor
+    TypeIdentifier type* #NormalTypeConstructor
     | TypeIdentifier recordType #RecordTypeConstructor;
 
 sumType : typeConstructor (Bar typeConstructor)*;
